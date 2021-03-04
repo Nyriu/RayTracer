@@ -1,3 +1,4 @@
 build
 imgs
-ref_wxrt
+ref
+.cache

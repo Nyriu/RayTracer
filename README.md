@@ -6,6 +6,7 @@ I'm taking inspiration from:
 
   * *Ray Tracing from the Ground Up* by Kevin Suffern
   * *Ray Tracing in One Weekend* by Peter Shirley
+  * [scratchpixel](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields) tutorials
 
 Then I want to use graphical APIs (thinking of Vulkan)
 
