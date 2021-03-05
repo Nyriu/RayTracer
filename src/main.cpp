@@ -1,9 +1,10 @@
 //#include <algorithm>
 //#include <fstream>
 //#include <cmath>
+//#include <functional>
 #include <iostream>
 #include <vector>
-//#include <limits>
+#include <limits>
 
 #include "color.h"
 #include "vec3.h"
@@ -13,81 +14,48 @@
 
 //#include "ImplicitShape.h" // TODO use later
 
-//float evalImplicitFunction(point3 p) {
-//  //sphere
-//  //float d = p.length_squared() - 10000.f;
-//  //point3 c(0.5, 0.5, -1.3);
-//  point3 c(0.5, 0.5, -1);
-//  float r = 1;
-//  //float d = (p.x() - c.x())*(p.x() - c.x()) + 
-//  //          (p.y() - c.y())*(p.y() - c.y()) + 
-//  //          (p.z() - c.z())*(p.z() - c.z()) - r;
-//  point3 q = p - c;
-//  float d = q.length_squared() - r;
-//  std::cout << "p " << p << std::endl;
-//  std::cout << "distance " << d << "\n" << std::endl;
-//  return d;
-//}
-//
-//constexpr float kInfinity = std::numeric_limits<float>::max(); 
-//
-//color ray_color(const ray& r) {
-//  std::cout << "---" << std::endl;
-//  int tmax = 100;
-//  float t=0;
-//  //float threshold = 10e-6;
-//  float threshold = 10e-3;
-//  int n_steps = 0;
-//  while (t<tmax) {
-//    float minDistance = kInfinity;
-//
-//    std::cout << "t " << t << std::endl;
-//    //std::cout << t << std::endl;
-//    //float d = std::min(1.f, std::pow(std::fabs(evalImplicitFunction(r.at(t))), 0.3f));
-//    //float d = std::min(1.f, std::fabs(evalImplicitFunction(r.at(t))));
-//    float d = std::fabs(evalImplicitFunction(r.at(t)));
-//    if (d < minDistance) {
-//      minDistance = d;
-//    }
-//    // did we intersect the shape?
-//    if (minDistance <= threshold * t) { // threshold lin with distance
-//      //return color(n_steps); 
-//      std::cout << "color!" << std::endl;
-//      return color(1,0,0);
-//    } 
-//    t += minDistance; 
-//    n_steps++;
-//  }
-//  //return color(0);
-//  vec3 unit_direction = unit_vector(r.direction());
-//  auto k = 0.5*(unit_direction.y() + 1.0);
-//  return (1.0-k)*color(1.0) + k*color(0.5,0.7,1.0);
-//}
-//
-////// This is not SDF!
-////bool hit_sphere(const point3& center, double radius, const ray& r) {
-////  vec3 oc = r.origin() - center;
-////  auto a = dot(r.direction(), r.direction());
-////  auto b = 2.0 * dot(oc, r.direction());
-////  auto c = dot(oc, oc) - radius*radius;
-////  auto discriminant = b*b - 4*a*c;
-////  return(discriminant > 0);
-////}
-//
-////color ray_color(const ray& r) {
-////  //if (hit_sphere(point3(0,0,-1), 0.5, r))
-////  //  return color(1,0,0);
-////  vec3 unit_direction = unit_vector(r.direction());
-////  auto t = 0.5*(unit_direction.y() + 1.0);
-////  return (1.0-t)*color(1.0) + t*color(0.5,0.7,1.0);
-////}
+constexpr float kInfinity = std::numeric_limits<float>::max(); 
+
+float evalImplicitFunction(const point3 &p) {
+  //sphere
+  point3 c(0, 0, 0);
+  float r = 1;
+  float d = length(p-c) - r;
+
+  //float d = std::min(
+  //    length(p) - 1.f,
+  //    length(p-point3(0,1,0)) - 0.5f
+  //    );
+  return d;
+}
+
 
 color ray_color(const ray& r) {
-  //if (hit_sphere(point3(0,0,-1), 0.5, r))
-  //  return color(1,0,0);
+  int tmax = 100;
+  float t=0;
+  float threshold = 10e-6;
+  int n_steps = 0;
+  while (t<tmax) {
+    float minDistance = kInfinity;
+
+    //float d = std::min(1.f, std::pow(std::fabs(evalImplicitFunction(r.at(t))), 0.3f));
+    //float d = std::min(1.f, std::fabs(evalImplicitFunction(r.at(t))));
+    //float d = std::fabs(evalImplicitFunction(r.at(t)));
+    float d = evalImplicitFunction(r.at(t));
+
+    if (d < minDistance) {
+      minDistance = d;
+    }
+    // did we intersect the shape?
+    if (minDistance <= threshold * t) {
+      return color(0, float(n_steps)/tmax, 0); 
+    } 
+    t += minDistance; 
+    n_steps++;
+  }
   vec3 unit_direction = normalize(r.direction());
-  float t = 0.5*(unit_direction.y + 1.0);
-  return (1.f-t)*color(1.0) + t*color(0.5,0.7,1.0);
+  float k = 0.5*(unit_direction.y + 1.0);
+  return (1.f-k)*color(1.0) + k*color(0.5,0.7,1.0);
 }
 
 int main() {
@@ -97,8 +65,11 @@ int main() {
   //const int image_height = static_cast<int>(image_width / aspect_ratio);
   //const float scale = 2.f;
 
-  const int image_width  = 16;
-  const int image_height = 9;
+  //const int image_width  = 16;
+  //const int image_height = 9;
+  const int image_width  = 400;
+  const int image_height = 400;
+
   std::vector<color> image;
 
   // Camera
@@ -108,7 +79,7 @@ int main() {
   ////std::cout << "viewport_height:" << viewport_height << std::endl;
   //auto focal_length = 1.0;
 
-  point3 origin(0);
+  point3 origin(0, 0, 3);
   //std::cout << "origin " <<  origin << std::endl;
   //vec3 horizontal(viewport_width, 0, 0);
   //vec3 vertical(0, viewport_height, 0);
@@ -140,12 +111,10 @@ int main() {
       // TODO Field Of View
 
       // From ScreenCoords to WorldCoords
-      // for now camera-to-world matrix its identity
-      // TODO Move the camera from the origin!
-      // move to world coord and cast ray
       float wu = su;
       float wv = sv;
-      ray r(origin, vec3(wu,wv,-1));
+      vec3 direction(wu,wv,-1);
+      ray r(origin, direction);
 
       image.push_back(ray_color(r));
 
@@ -165,6 +134,8 @@ int main() {
       //}
     }
   }
+
+  ray_color(ray(origin, vec3(0,0,1)));
 
   // Write img to file
   std::ofstream ofs;

@@ -23,5 +23,13 @@ inline vec3 normalize(const vec3 &v) {
   return glm::normalize(v);
 }
 
+inline float length(const vec3 &v) {
+  return glm::length(v);
+}
+
+inline float magnitude(const vec3 &v) {
+  return glm::length(v);
+}
+
 
 #endif
