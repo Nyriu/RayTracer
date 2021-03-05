@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project(Simple_SphereTracer)
 
+set(CMAKE_CXX_FLAGS "-g")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 include_directories(include)

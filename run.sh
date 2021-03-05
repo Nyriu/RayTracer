@@ -1,5 +1,5 @@
 if [ $1 == "-b" ]; then
-  rm -rf build main
+  rm -rf build main imgs/*
   mkdir build
   cd build
   cmake ..
