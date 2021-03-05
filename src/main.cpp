@@ -11,6 +11,7 @@
 #include "mat3.h"
 #include "mat4.h"
 #include "ray.h"
+#include "camera.h"
 
 //#include "ImplicitShape.h" // TODO use later
 
@@ -60,82 +61,54 @@ color ray_color(const ray& r) {
 
 int main() {
   // Image
-  //const auto aspect_ratio = 16.0/9.0;
-  //const int image_width  = 400;
-  //const int image_height = static_cast<int>(image_width / aspect_ratio);
-  //const float scale = 2.f;
+  const auto aspect_ratio = 16.0/9.0;
+  const int image_width  = 400;
+  //const int image_width  = 16;
+  const int image_height = static_cast<int>(image_width / aspect_ratio);
+  const float scale = 1.f;
 
   //const int image_width  = 16;
   //const int image_height = 9;
-  const int image_width  = 400;
-  const int image_height = 400;
 
-  std::vector<color> image;
+  //const int image_width  = 400;
+  //const int image_height = 400;
+
+  std::vector<color> image; // TODO create class or smthing
 
   // Camera
-  //auto viewport_height = 2.0;
-  //auto viewport_width  = aspect_ratio * viewport_height;
-  ////std::cout << "viewport_width:" << viewport_width << std::endl;
-  ////std::cout << "viewport_height:" << viewport_height << std::endl;
-  //auto focal_length = 1.0;
-
   point3 origin(0, 0, 3);
-  //std::cout << "origin " <<  origin << std::endl;
-  //vec3 horizontal(viewport_width, 0, 0);
-  //vec3 vertical(0, viewport_height, 0);
-  //auto lower_left_corner = origin - horizontal/2.f - vertical/2.f - vec3(0,0,focal_length);
-  //std::cout << "lower_left_corner " <<  lower_left_corner << std::endl;
+  //point3 origin(2, 0, 3);
+  //vec3 camera_dir(0, 0, -1);
+  vec3 camera_dir(0, 0, -1);
 
+  //float fov = 45;
+  float fov = 90;
+  //float fov = 180;
 
+  camera cam(fov, aspect_ratio, origin, camera_dir);
+  //cam.translate(0,1,0);
+
+  //cam.put_at(vec3(3,3,0));
+  //cam.put_at(0,0,3);
+
+  //cam.look_at(vec3(0,0,1));
+  //cam.look_at(0,0,1);
+  //cam.look_at(-1,0,0);
 
   // Render
   // in img coord (0,0) is top-left 
-  //for (int j=image_height-1; j>=0; --j) {
   for (int j=0; j<image_height; ++j) {
     for (int i=0; i<image_width; ++i) {
-      //color pixelColor(double(i)/(image_width-1), double(j)/(image_height-1), 0.25);
-      //image.push_back(pixelColor);
-
-      //std::cout << j << " " << i << std::endl;
-
       // Put coords in [0,1]
       float u = double(i + .5) / (image_width -1); // NDC Coord
       float v = double(j + .5) / (image_height-1); // NDC Coord
 
-
-      // Put coords in [-1,1]
-      float su = 2 * u - 1; // Screen Coord
-      float sv = 1 - 2 * v; // Screen Coord (flip y axis)
-
-      // TODO Aspect Ratio
-      // TODO Field Of View
-
-      // From ScreenCoords to WorldCoords
-      float wu = su;
-      float wv = sv;
-      vec3 direction(wu,wv,-1);
-      ray r(origin, direction);
+      ray r = cam.generate_ray(u,v);
 
       image.push_back(ray_color(r));
-
-
-      //float delta  = 0.007;
-
-      //ray r(origin, lower_left_corner + u*horizontal + v*vertical - origin); // TODO check formula
-      //image.push_back(ray_color(r));
-
-      //if (0.5 - delta < u  && u < 0.5 + delta && 0.5 - delta < v  && v < 0.5 + delta) {
-      //  //image.push_back(color(0,1,0));
-      //  //std::cout << "bg" << std::endl;
-      //  ray r(origin, lower_left_corner + u*horizontal + v*vertical - origin); // TODO check formula
-      //  image.push_back(ray_color(r));
-      //} else {
-      //image.push_back(color(0.5));
-      //}
     }
   }
-
-  ray_color(ray(origin, vec3(0,0,1)));
+  //ray_color(ray(origin, vec3(0,0,1))); // DEBUG
 
   // Write img to file
   std::ofstream ofs;
