@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <memory> // shared_ptr
+ // https://en.cppreference.com/w/cpp/memory/shared_ptr
 
 #include "color.h"
 #include "vec3.h"
@@ -14,14 +16,90 @@
 #include "camera.h"
 
 #include "ImplicitShape.h"
+#include "Light.h"
+
 
 constexpr float kInfinity = std::numeric_limits<float>::max(); 
 
-color sphereTrace(const ray& r, const std::vector<const ImplicitShape *>& scene) {
+bool sphereTraceShadow(const ray& r,
+    const float& maxDistance,
+    const std::vector<const ImplicitShape *>& shapes
+    ) {
+  constexpr float threshold = 10e-6;
+  float t = 0;
+
+  while (t < maxDistance) {
+    float minDistance = kInfinity;
+    vec3 from = r.at(t);
+    for (auto shape : shapes) {
+      float d = shape->getDistance(from);
+      if (d < minDistance) {
+        minDistance = d;
+        if (minDistance <= threshold * t) {
+          return true;
+        }
+
+      }
+    }
+    t += minDistance;
+  }
+  return false;
+}
+
+
+color shade(
+    //const ray& r, const float& t, const ImplicitShape *shape,
+    const point3& p, const ImplicitShape *shape,
+    //const std::vector<const std::shared_ptr<ImplicitShape>> scene,
+    //const std::vector<const std::shared_ptr<PointLight>> lights
+    const std::vector<const ImplicitShape*> shapes,
+    const std::vector<const Light*> lights
+    ){
+
+  constexpr float delta = 10e-6;
+
+  vec3 n = normalize( vec3(
+        shape->getDistance(p+vec3(delta,0,0)) - shape->getDistance(p + vec3(-delta,0,0)),
+        shape->getDistance(p+vec3(0,delta,0)) - shape->getDistance(p + vec3(0,-delta,0)),
+        shape->getDistance(p+vec3(0,0,delta)) - shape->getDistance(p + vec3(0,0,-delta))
+        )
+      );
+
+  color shadeColor = vec3(0);
+
+  for (const auto& light : lights) {
+    //for (const auto light : lights)
+    vec3 lightDir = light->position_ - p;
+    //if (lightDir * n > 0)
+    if (glm::dot(lightDir, n) > 0) {
+      float dist2 = length2(lightDir); // squared dist
+      lightDir = normalize(lightDir);
+
+      //const ray bounceRay(p, lightDir);
+      //const ray bounceRay = ray(p, lightDir);
+
+      bool shadow = 1 - sphereTraceShadow(ray(p,lightDir), sqrtf(dist2), shapes);
+      shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_ /(float) (4 * M_PI * dist2); // with square falloff
+      //shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_ /(float) (4 * M_PI);
+      //shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_;
+
+    }
+  }
+
+  return shadeColor;
+}
+
+
+color sphereTrace(const ray& r,
+    const std::vector<const ImplicitShape *>& shapes,
+    const std::vector<const Light *>& lights
+    ) {
   int tmax = 100;
   float t=0;
   float threshold = 10e-6;
   int n_steps = 0;
+
+  const ImplicitShape *intersectedShape;
   while (t<tmax) {
     float minDistance = kInfinity;
 
@@ -29,26 +107,58 @@ color sphereTrace(const ray& r, const std::vector<const ImplicitShape *>& scene)
     //float d = std::min(1.f, std::fabs(evalImplicitFunction(r.at(t))));
     //float d = std::fabs(evalImplicitFunction(r.at(t)));
 
-    for (auto shape : scene) {
+    for (auto shape : shapes) {
       float d = shape->getDistance(r.at(t));
       if (d < minDistance) {
         minDistance = d;
-        //intersectedShape = shape; // TODO
+        intersectedShape = shape;
       }
     }
 
     // did we intersect the shape?
     if (minDistance <= threshold * t) {
-      return color(0, float(n_steps)/tmax, 0); 
-      //return falseColor(numSteps); // TODO
+      return shade(r.at(t), intersectedShape, shapes, lights);
+      //return intersectedShape->color_;
+      //return color(0, float(n_steps)/tmax, 0); 
+      //return falseColor(numSteps);
     } 
     t += minDistance; 
     n_steps++;
   }
-  vec3 unit_direction = normalize(r.direction());
-  float k = 0.5*(unit_direction.y + 1.0);
-  return (1.f-k)*color(1.0) + k*color(0.5,0.7,1.0);
-  //return color(0);
+  //vec3 unit_direction = normalize(r.direction());
+  //float k = 0.5*(unit_direction.y + 1.0);
+  //return (1.f-k)*color(1.0) + k*color(0.5,0.7,1.0);
+  return color(0);
+}
+
+
+std::vector<const ImplicitShape *> makeShapes() {
+  std::vector<const ImplicitShape *> shapes;
+
+  //shapes.push_back(new Sphere(vec3(0), 1));
+  //shapes.push_back(new Sphere(vec3(0.5), 1));
+  //shapes.push_back(new Sphere(vec3(0,0,-13), 3));
+
+  shapes.push_back(new Sphere(vec3(0,.5,0), .5, color(1,0,1)));
+  shapes.push_back(new Sphere(vec3(1,1,0),  1 , color(1,0,0)));
+  shapes.push_back(new Sphere(vec3(2,2,0),  1 , color(0,1,0)));
+  shapes.push_back(new Sphere(vec3(3,3,0),  1 , color(0,0,1)));
+
+  //shapes.push_back(new Sphere(vec3(1.5,1.5,3),  1 , color(0,1,0)));
+
+  // terrain
+  shapes.push_back(new Sphere(vec3(0,-100,0), 100, color(.5)));
+
+  return shapes;
+}
+
+std::vector<const Light *> makeLights() {
+  std::vector<const Light *> lights;
+
+  lights.push_back(new PointLight(point3(10,10,0), color(1), 4000) );
+  lights.push_back(new PointLight(point3(2,2,3), color(.8, .8, 0), 30) );
+
+  return lights;
 }
 
 int main() {
@@ -68,7 +178,9 @@ int main() {
   std::vector<color> image; // TODO create class or smthing
 
   // Scene
-  auto scene = makeScene();
+  //auto scene = makeScene();
+  auto shapes = makeShapes();
+  auto lights = makeLights();
 
   // Camera
   point3 camera_origin(0, 0, 10);
@@ -98,7 +210,7 @@ int main() {
       ray r = cam.generate_ray(u,v);
 
       //image.push_back(ray_color(r));
-      image.push_back(sphereTrace(r,scene));
+      image.push_back(sphereTrace(r,shapes, lights));
     }
   }
 
