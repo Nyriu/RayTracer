@@ -1,23 +1,23 @@
 #!/bin/sh
-if [ "$1" == "-b" ]; then
+#if [ "$1" == "-b" ]; then
   rm -rf build main imgs/*
   mkdir build
   cd build
   cmake ..
   make
   cd ..
-fi
+#fi
 
-if [ ! -f "./main" ]; then
-  echo "main not found!"
-  echo "building..."
-  rm -rf build
-  mkdir build
-  cd build
-  cmake ..
-  make
-  cd ..
-fi
+#if [ ! -f "./main" ]; then
+#  echo "main not found!"
+#  echo "building..."
+#  rm -rf build
+#  mkdir build
+#  cd build
+#  cmake ..
+#  make
+#  cd ..
+#fi
 
 ./main
 

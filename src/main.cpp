@@ -13,25 +13,11 @@
 #include "ray.h"
 #include "camera.h"
 
-//#include "ImplicitShape.h" // TODO use later
+#include "ImplicitShape.h"
 
 constexpr float kInfinity = std::numeric_limits<float>::max(); 
 
-float evalImplicitFunction(const point3 &p) {
-  //sphere
-  point3 c(0, 0, 0);
-  float r = 1;
-  float d = length(p-c) - r;
-
-  //float d = std::min(
-  //    length(p) - 1.f,
-  //    length(p-point3(0,1,0)) - 0.5f
-  //    );
-  return d;
-}
-
-
-color ray_color(const ray& r) {
+color sphereTrace(const ray& r, const std::vector<const ImplicitShape *>& scene) {
   int tmax = 100;
   float t=0;
   float threshold = 10e-6;
@@ -42,14 +28,19 @@ color ray_color(const ray& r) {
     //float d = std::min(1.f, std::pow(std::fabs(evalImplicitFunction(r.at(t))), 0.3f));
     //float d = std::min(1.f, std::fabs(evalImplicitFunction(r.at(t))));
     //float d = std::fabs(evalImplicitFunction(r.at(t)));
-    float d = evalImplicitFunction(r.at(t));
 
-    if (d < minDistance) {
-      minDistance = d;
+    for (auto shape : scene) {
+      float d = shape->getDistance(r.at(t));
+      if (d < minDistance) {
+        minDistance = d;
+        //intersectedShape = shape; // TODO
+      }
     }
+
     // did we intersect the shape?
     if (minDistance <= threshold * t) {
       return color(0, float(n_steps)/tmax, 0); 
+      //return falseColor(numSteps); // TODO
     } 
     t += minDistance; 
     n_steps++;
@@ -57,6 +48,7 @@ color ray_color(const ray& r) {
   vec3 unit_direction = normalize(r.direction());
   float k = 0.5*(unit_direction.y + 1.0);
   return (1.f-k)*color(1.0) + k*color(0.5,0.7,1.0);
+  //return color(0);
 }
 
 int main() {
@@ -75,25 +67,25 @@ int main() {
 
   std::vector<color> image; // TODO create class or smthing
 
-  // Camera
-  point3 origin(0, 0, 3);
-  //point3 origin(2, 0, 3);
-  //vec3 camera_dir(0, 0, -1);
-  vec3 camera_dir(0, 0, -1);
+  // Scene
+  auto scene = makeScene();
 
-  //float fov = 45;
-  float fov = 90;
+  // Camera
+  point3 camera_origin(0, 0, 10);
+  vec3 camera_dir = normalize(vec3(0, 0, -1));
+
+  //point3 camera_origin(0, 0, -10);
+  //vec3 camera_dir = normalize(vec3(0, -.2, 1));
+
+  float fov = 45;
+  //float fov = 90;
   //float fov = 180;
 
-  camera cam(fov, aspect_ratio, origin, camera_dir);
+  camera cam(fov, aspect_ratio, camera_origin, camera_dir);
+
   //cam.translate(0,1,0);
-
   //cam.put_at(vec3(3,3,0));
-  //cam.put_at(0,0,3);
-
   //cam.look_at(vec3(0,0,1));
-  //cam.look_at(0,0,1);
-  //cam.look_at(-1,0,0);
 
   // Render
   // in img coord (0,0) is top-left 
@@ -105,10 +97,10 @@ int main() {
 
       ray r = cam.generate_ray(u,v);
 
-      image.push_back(ray_color(r));
+      //image.push_back(ray_color(r));
+      image.push_back(sphereTrace(r,scene));
     }
   }
-  //ray_color(ray(origin, vec3(0,0,1))); // DEBUG
 
   // Write img to file
   std::ofstream ofs;

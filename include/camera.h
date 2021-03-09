@@ -3,7 +3,9 @@
 
 #include "vec3.h"
 #include "mat3.h"
+#include "mat4.h"
 #include "ray.h"
+#include <glm/ext/matrix_transform.hpp>
 //#include <glm/ext/matrix_transform.hpp>
 //#include <glm/geometric.hpp>
 //KK##include <glm/gtc/look_at
@@ -11,12 +13,8 @@
 class camera {
   private:
     point3 orig; // = point3(0);
-    vec3   dir; // = normalize(vec3(0,0,-1));
+    vec3   dir;  // cam dir
     float fov, aspect;
-
-    //mat3 rotation(1,0,0,
-    vec3 translation;
-
 
   public:
     camera() {}
@@ -25,8 +23,10 @@ class camera {
       this->aspect = aspect_ratio;
     }
 
+    //camera(const point3& origin, const point3& target) : orig(origin) {
     camera(const point3& origin, const vec3& direction) : orig(origin) {
       this->dir = normalize(direction);
+      //this->target = target;
       this->fov = 90;
       this->aspect = 1;
     }
@@ -35,8 +35,10 @@ class camera {
     //camera(float fov=90, float aspect_ratio=1,
     //    const point3& origin=point3(0), const vec3& direction=vec3(0,0,-1)) : orig(origin) {
     camera(float fov, float aspect_ratio,
+        //const point3& origin, const point3& target) : orig(origin) {
         const point3& origin, const vec3& direction) : orig(origin) {
       this->dir = normalize(direction);
+      //this->target = target;
       this->fov = fov;
       this->aspect = aspect_ratio;
     }
@@ -54,23 +56,45 @@ class camera {
       su *= std::tan(fov/2);
       sv *= std::tan(fov/2);
 
+      //float scale = 1;
       //// Scale // TODO needed? meaning?
       //// like a zoom?
       //su *= scale;
       //sv *= scale;
 
       // From ScreenCoords to WorldCoords
-      float wu = su;
-      float wv = sv;
-      vec3 direction(wu,wv,-1);
-      //vec3 direction(wu,wv,0);
-      //return ray(orig,direction * dir); // dir can be un-normalized
+      vec3 direction = worldDir(vec3(su,sv,-1));
       return ray(orig, direction); // dir can be un-normalized
-      //return ray(orig, direction * lookAt(vec3(0,0,0))); // dir can be un-normalized
+    }
+
+    //vec3 worldDir(float su, float sv, float sz) {
+    vec3 worldDir(const vec3& rayDir) {
+      //vec3 up(0,1,0);
+      //vec3 f = normalize(target - orig);
+      //vec3 s = normalize(cross(f, up));
+      //mat4 viewMat(
+      //    vec4(s,0.0),
+      //    vec4(cross(s,f),0.0),
+      //    vec4(-f,0.0),
+      //    vec4(vec3(0), 1)
+      //    );
+      //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
+      //return normalize(vec3(
+      //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
+      //      ); // extremely ugly
+
+      // --------------------
+
+      vec3 up(0,1,0);
+      mat4 viewMat = glm::lookAt(orig, orig + normalize(dir), up);
+      vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
+      return normalize(vec3(
+            worldRayDir.x, worldRayDir.y, worldRayDir.z)
+            ); // extremely ugly
+
     }
 
 
-    // TODO translate
     //void translate(const vec3& v) {
     //  orig += v;
     //}
@@ -79,59 +103,19 @@ class camera {
     //}
 
 
-    // TODO
-    //void put_at(const point3& v) {
-    //  orig = v;
+    //void put_at(const point3& p) {
+    //  orig = p;
     //}
     //void put_at(float x, float y, float z) {
     //  put_at(point3(x,y,z));
     //}
 
-    // TODO
-    //void look_at(const point3& v) {
-    //  //dir = normalize(v);
-    //  //cam direction = glm::normalize(cameraPos - cameraTarget);
-
-    //  //cam pos, target, up
-    //  glm::mat4x4 view =
-    //    glm::lookAt(
-    //        orig,
-    //        v,
-    //        vec3(0.0f, 1.0f, 0.0f));
-    //}
-
-    //void look_at(const point3& v) {
-    //  dir = normalize(v);
+    // rework because now we work with directions
+    //void look_at(const point3& p) {
+    //  target = p;
     //}
     //void look_at(float x, float y, float z) {
     //  look_at(point3(x,y,z));
-    //}
-
-    //mat3 lookAt(const point3& to, const point3& tmp = point3(0, 1, 0)) {
-    //  vec3 from = orig;
-    //  vec3 forward = normalize(from - to);
-    //  //vec3 right = crossProduct(normalize(tmp), forward);
-    //  vec3 right = normalize(tmp) * forward;
-    //  //vec3 up = crossProduct(forward, right);
-    //  vec3 up = forward * right;
-
-    //  mat3 camToWorld;
-
-    //  camToWorld[0][0] = right.x;
-    //  camToWorld[0][1] = right.y;
-    //  camToWorld[0][2] = right.z;
-    //  camToWorld[1][0] = up.x;
-    //  camToWorld[1][1] = up.y;
-    //  camToWorld[1][2] = up.z;
-    //  camToWorld[2][0] = forward.x;
-    //  camToWorld[2][1] = forward.y;
-    //  camToWorld[2][2] = forward.z;
-
-    //  //camToWorld[3][0] = from.x;
-    //  //camToWorld[3][1] = from.y;
-    //  //camToWorld[3][2] = from.z;
-
-    //  return camToWorld;
     //}
 
 };

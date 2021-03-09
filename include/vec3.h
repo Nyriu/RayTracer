@@ -31,5 +31,8 @@ inline float magnitude(const vec3 &v) {
   return glm::length(v);
 }
 
+inline vec3 cross(const vec3 &v1, const vec3 &v2) {
+  return glm::cross(v1, v2);
+}
 
 #endif

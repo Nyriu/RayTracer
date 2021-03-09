@@ -16,6 +16,8 @@ inline std::ostream& operator<<(std::ostream &out, const glm::vec4 &v) {
 //Type aliases
 using mat4 = glm::mat4x4;
 
+using vec4 = glm::vec4; // TODO That's not the right place
+
 inline std::ostream& operator<<(std::ostream &out, const mat4 &m) {
   return  out << "["
     << m[0] << "\n "
