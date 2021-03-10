@@ -1,6 +1,7 @@
 #!/bin/sh
 #if [ "$1" == "-b" ]; then
-  rm -rf build main imgs/*
+  #rm -rf build main imgs/*
+  rm -rf build main
   mkdir build
   cd build
   cmake ..
