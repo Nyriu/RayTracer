@@ -1,5 +1,5 @@
 build
 main
-imgs
+imgs/*.ppm
 ref
 .cache

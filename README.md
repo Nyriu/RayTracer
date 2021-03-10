@@ -26,3 +26,9 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 
 * *look_at* with position instead of cam direction
 
+## Examples
+
+### Without Blending and Anti-Aliasing
+![](./imgs/img_00.png)
+![](./imgs/img_01.png)
+![](./imgs/img_02.png)
