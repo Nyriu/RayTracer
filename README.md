@@ -14,12 +14,18 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 
 ## TODO
 
+* Constructive Solid Geometry (CSG)
+  * [here](https://www.iquilezles.org/www/articles/smin/smin.htm)
+    and [here](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/constructive-solid-geometry-blends-deformers) (C++ impl. with *functors* and *variadic arguments*)
+    for theory
+
 * transformations
   * [here for theory](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer)
   * keep translation and rotation separate to avoid 4x4 matrix, that can also scale (scaling is tricky)
   * we need to move the ray into obj space to calc the ray
 
 * blending and anti-aliasing
+  * multi-sampling or with cones (maybe better with sphere tracer)
   * [here for theory](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer)
 
 * create Image class
@@ -32,3 +38,7 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 ![](./imgs/img_00.png)
 ![](./imgs/img_01.png)
 ![](./imgs/img_02.png)
+
+Simple CSG
+
+![](./imgs/img_03.png)

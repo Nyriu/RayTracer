@@ -3,19 +3,20 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include<vector>
 #include "vec3.h"
 #include "color.h"
 
 class ImplicitShape {
   public:
-    color color_;
-  public:
     virtual float getDistance(const point3& from) const = 0;
     virtual ~ImplicitShape() {}
 };
 
 class Sphere : public ImplicitShape {
+  public:
+    color color_;
   private:
     point3 center;
     float radius;
@@ -32,6 +33,8 @@ class Sphere : public ImplicitShape {
 };
 
 class Torus : public ImplicitShape {
+  public:
+    color color_;
   private:
     point3 center_;
     float r0_, r1_;
@@ -73,5 +76,82 @@ class Torus : public ImplicitShape {
 //};
 
 
+//class Plane : public ImplicitShape
+
+
+//class CSGShape : public ImplicitShape {
+//  protected:
+//    const ImplicitShape* shape1_;
+//    const ImplicitShape* shape2_;
+//    CSGShape(const ImplicitShape& shape1, const ImplicitShape& shape2) :
+//      shape1_(&shape1), shape2_(&shape2) {}
+//};
+
+class UnionShape : public ImplicitShape {
+  private:
+   std::shared_ptr<ImplicitShape> shape1_;
+   std::shared_ptr<ImplicitShape> shape2_;
+
+  public:
+    UnionShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
+      shape1_(shape1), shape2_(shape2) {}
+
+    float getDistance(const point3& from) const {
+      return std::min(
+          shape1_->getDistance(from),
+          shape2_->getDistance(from)
+          );
+    }
+};
+
+class IntersectShape : public ImplicitShape {
+  private:
+   std::shared_ptr<ImplicitShape> shape1_;
+   std::shared_ptr<ImplicitShape> shape2_;
+  public:
+    IntersectShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
+      shape1_(shape1), shape2_(shape2) {}
+
+    float getDistance(const point3& from) const {
+      return std::max(
+          shape1_->getDistance(from),
+          shape2_->getDistance(from)
+          );
+    }
+};
+
+class SubtractShape : public ImplicitShape {
+  private:
+   std::shared_ptr<ImplicitShape> shape1_;
+   std::shared_ptr<ImplicitShape> shape2_;
+  public:
+    SubtractShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
+      shape1_(shape1), shape2_(shape2) {}
+
+    float getDistance(const point3& from) const {
+      return std::max(
+          -shape1_->getDistance(from),
+          shape2_->getDistance(from)
+          );
+    }
+};
+
+// TODO blend
+// TODO mix
+
+
+class ExperimShape : public ImplicitShape {
+  private:
+   std::shared_ptr<ImplicitShape> shape1_;
+   //std::shared_ptr<ImplicitShape> shape2_;
+  public:
+    //ExperimShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
+    ExperimShape(const std::shared_ptr<ImplicitShape> shape1) :
+      shape1_(shape1) {}
+
+    float getDistance(const point3& from) const {
+      return std::fmod(shape1_->getDistance(from), 10.f);
+    }
+};
 
 #endif

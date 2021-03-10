@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include <memory> // shared_ptr
+#include <memory> // shared_ptr // todo use
  // https://en.cppreference.com/w/cpp/memory/shared_ptr
 
 #include "color.h"
@@ -23,7 +23,7 @@ constexpr float kInfinity = std::numeric_limits<float>::max();
 
 bool sphereTraceShadow(const ray& r,
     const float& maxDistance,
-    const std::vector<const ImplicitShape *>& shapes
+    std::vector<std::shared_ptr<ImplicitShape>>& shapes
     ) {
   constexpr float threshold = 10e-6;
   float t = 0;
@@ -48,11 +48,8 @@ bool sphereTraceShadow(const ray& r,
 
 
 color shade(
-    //const ray& r, const float& t, const ImplicitShape *shape,
     const point3& p, const ImplicitShape *shape,
-    //const std::vector<const std::shared_ptr<ImplicitShape>> scene,
-    //const std::vector<const std::shared_ptr<PointLight>> lights
-    const std::vector<const ImplicitShape*> shapes,
+    std::vector<std::shared_ptr<ImplicitShape>>& shapes,
     const std::vector<const Light*> lights
     ){
 
@@ -68,21 +65,14 @@ color shade(
   color shadeColor = vec3(0);
 
   for (const auto& light : lights) {
-    //for (const auto light : lights)
     vec3 lightDir = light->position_ - p;
-    //if (lightDir * n > 0)
     if (glm::dot(lightDir, n) > 0) {
       float dist2 = length2(lightDir); // squared dist
       lightDir = normalize(lightDir);
 
-      //const ray bounceRay(p, lightDir);
-      //const ray bounceRay = ray(p, lightDir);
-
+      // TODO use surface color
       bool shadow = 1 - sphereTraceShadow(ray(p,lightDir), sqrtf(dist2), shapes);
       shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_ /(float) (4 * M_PI * dist2); // with square falloff
-      //shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_ /(float) (4 * M_PI);
-      //shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_;
-
     }
   }
 
@@ -91,7 +81,8 @@ color shade(
 
 
 color sphereTrace(const ray& r,
-    const std::vector<const ImplicitShape *>& shapes,
+    std::vector<std::shared_ptr<ImplicitShape>>& shapes,
+    //const std::vector<const ImplicitShape *>& shapes,
     const std::vector<const Light *>& lights
     ) {
   int tmax = 100;
@@ -103,28 +94,24 @@ color sphereTrace(const ray& r,
   while (t<tmax) {
     float minDistance = kInfinity;
 
-    //float d = std::min(1.f, std::pow(std::fabs(evalImplicitFunction(r.at(t))), 0.3f));
-    //float d = std::min(1.f, std::fabs(evalImplicitFunction(r.at(t))));
-    //float d = std::fabs(evalImplicitFunction(r.at(t)));
-
     for (auto shape : shapes) {
       float d = shape->getDistance(r.at(t));
       if (d < minDistance) {
         minDistance = d;
-        intersectedShape = shape;
+        intersectedShape = shape.get();
       }
     }
 
     // did we intersect the shape?
     if (minDistance <= threshold * t) {
-      return shade(r.at(t), intersectedShape, shapes, lights);
-      //return intersectedShape->color_;
-      //return color(0, float(n_steps)/tmax, 0); 
-      //return falseColor(numSteps);
+      return shade(r.at(t), intersectedShape, shapes, lights); // use lights
+      //return intersectedShape->color_;          // use only surf color
+      //return color(0, float(n_steps)/tmax, 0);  // highlight comput heavy pixels
     } 
     t += minDistance; 
     n_steps++;
   }
+  // simple sky color
   //vec3 unit_direction = normalize(r.direction());
   //float k = 0.5*(unit_direction.y + 1.0);
   //return (1.f-k)*color(1.0) + k*color(0.5,0.7,1.0);
@@ -132,8 +119,9 @@ color sphereTrace(const ray& r,
 }
 
 
-std::vector<const ImplicitShape *> makeShapes() {
-  std::vector<const ImplicitShape *> shapes;
+//std::vector<const ImplicitShape *> makeShapes() {
+std::vector<std::shared_ptr<ImplicitShape>> makeShapes() { 
+  //std::vector<const ImplicitShape *> shapes;
 
   //shapes.push_back(new Sphere(vec3(0), 1));
   //shapes.push_back(new Sphere(vec3(0.5), 1));
@@ -144,14 +132,44 @@ std::vector<const ImplicitShape *> makeShapes() {
   //shapes.push_back(new Sphere(vec3(2,2,0),  1 , color(0,1,0)));
   //shapes.push_back(new Sphere(vec3(3,3,0),  1 , color(0,0,1)));
 
-  shapes.push_back(new Torus(point3(0,3,0),1,0.2));
-  shapes.push_back(new Torus(point3(0,1.5,0),1.5,0.4));
-  shapes.push_back(new Torus(2,0.65));
+  //shapes.push_back(new Torus(point3(0,3,0),1,0.2));
+  //shapes.push_back(new Torus(point3(0,1.5,0),1.5,0.4));
+  //shapes.push_back(new Torus(2,0.65));
+
+
+  std::vector<std::shared_ptr<ImplicitShape>> shapes; 
+  //shapes.push_back(std::make_shared<Sphere>(vec3(0), 1));
+
+
+  point3 sph_c(0,1,0.3);
+  point3 tor_c(0.5,1,0);
+
+  shapes.push_back(
+      std::make_shared<UnionShape>(
+        std::make_shared<Sphere>(sph_c, 1),
+        std::make_shared<Torus> (tor_c, 1, .2)
+        ));
+  float off_val = -4;
+  vec3 offset1(off_val,0,0);
+  shapes.push_back(
+      std::make_shared<IntersectShape>(
+        std::make_shared<Sphere>(offset1 + sph_c, 1),
+        std::make_shared<Torus> (offset1 + tor_c, 1, .2)
+        ));
+  vec3 offset2(-off_val,0,0);
+  shapes.push_back(
+      std::make_shared<SubtractShape>(
+        std::make_shared<Sphere>(offset2 + sph_c, 1),
+        std::make_shared<Torus> (offset2 + tor_c, 1, .2)
+        ));
+
+
+
 
   //shapes.push_back(new Cube(point3(.25)));
 
   // terrain
-  shapes.push_back(new Sphere(vec3(0,-100,0), 100, color(.5)));
+  //shapes.push_back(new Sphere(vec3(0,-100,0), 100, color(.5)));
 
   return shapes;
 }
@@ -170,10 +188,10 @@ std::vector<const Light *> makeLights() {
 int main() {
   // Image
   const auto aspect_ratio = 16.0/9.0;
-  //const int image_width  = 300;
+  const int image_width  = 300;
   //const int image_width  = 400;
   //const int image_width  = 900;
-  const int image_width  = 1800;
+  //const int image_width  = 1800;
   //const int image_width  = 16;
   const int image_height = static_cast<int>(image_width / aspect_ratio);
   const float scale = 1.f;
@@ -192,11 +210,13 @@ int main() {
   auto lights = makeLights();
 
   // Camera
-  point3 camera_origin(0, 4, 8);
+  point3 camera_origin(0, 4, 5);
+  //point3 camera_origin(0, 4, 8);
   //point3 camera_origin(0, 2, 7);
   //point3 camera_origin(1,1,3);
   //vec3 camera_dir = normalize(vec3(0, 0, -1));
-  vec3 camera_dir = normalize(vec3(0, 0.2, -1));
+  vec3 camera_dir = normalize(vec3(0, 0.5, -1));
+  //vec3 camera_dir = normalize(vec3(0, 0.2, -1));
   //vec3 camera_dir = normalize(vec3(0, -1, -1));
 
   //point3 camera_origin(0, 0, -10);
