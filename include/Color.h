@@ -2,7 +2,7 @@
 #define COLOR_H
 
 //#include <iostream>
-#include <ostream>
+//#include <ostream>
 #include <fstream>
 
 //#include <glm/vec3.hpp> // glm::vec3

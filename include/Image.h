@@ -1,24 +1,30 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+//#include <string>
+#include <fstream>
+
 #include "Color.h"
 
 class Image {
-  private:
-      const float aspect_ratio_;
-      const int width_, height_;
+  //private:
+  public:
+      const float aspect_ratio;
+      const int width, height;
 
+  private:
       Color* img_;
       const void init_img() {
-        img_ = new Color[width_ * height_];
+        img_ = new Color[width * height];
       }
-      int at(int i1, int i2) {
-        return i1 * width_ + i2;
+      int at(int i1, int i2) const {
+        //return i1 * width + i2;
+        return i1 * height + i2;
       }
 
   public:
       Image(const int image_width, const float aspect_ratio) :
-        width_(image_width), aspect_ratio_(aspect_ratio), height_((int)(width_ / aspect_ratio_)) {
+        width(image_width), aspect_ratio(aspect_ratio), height((int)(width / aspect_ratio)) {
         init_img();
       }
 
@@ -31,11 +37,24 @@ class Image {
         img_[at(x,y)] = c;
       }
 
-      Color getPixel(const int x, const int y) {
+      Color getPixel(const int x, const int y) const {
         return img_[at(x,y)];
       }
 
-      // TODO write to file
+
+      //bool writePPM(const string& filepath) {
+      void writePPM(const char* filepath) {
+        // TODO check if path exists or error on open
+        std::ofstream ofs;
+        ofs.open(filepath);
+        ofs << "P3\n" << width << " " << height << "\n255\n";
+        for (int j=0; j<height; ++j) {
+          for (int i=0; i<width; ++i) {
+            write_color(ofs, img_[at(i,j)]);
+          }
+        }
+        ofs.close();
+      }
 };
 
 
