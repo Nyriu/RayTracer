@@ -181,9 +181,9 @@ int main() {
     for (int i=0; i<image_width; ++i) {
       Color pc = image[i][j];
       SDL_SetRenderDrawColor(renderer,
-          pc.r(),
-          pc.g(),
-          pc.b(),
+          pc.r255(),
+          pc.g255(),
+          pc.b255(),
           255);
       SDL_RenderDrawPoint(renderer, i, j);
     }

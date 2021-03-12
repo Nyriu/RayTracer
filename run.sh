@@ -21,7 +21,7 @@
 #  cd ..
 #fi
 
-./main
+./main &
 
 viewnior ./imgs/img.ppm &
 
