@@ -8,12 +8,10 @@
 #include <memory> // shared_ptr // todo use
  // https://en.cppreference.com/w/cpp/memory/shared_ptr
 
-#include "color.h"
-#include "vec3.h"
-#include "mat3.h"
-#include "mat4.h"
-#include "ray.h"
-#include "camera.h"
+#include "Color.h"
+#include "geometry.h"
+#include "Ray.h"
+#include "Camera.h"
 
 #include "ImplicitShape.h"
 #include "Light.h"
@@ -26,16 +24,16 @@
 
 constexpr float kInfinity = std::numeric_limits<float>::max(); 
 
-bool sphereTraceShadow(const ray& r,
+bool sphereTraceShadow(const Ray& r,
     const float& maxDistance,
-    std::vector<std::shared_ptr<ImplicitShape>>& shapes
+    const std::vector<std::shared_ptr<ImplicitShape>>& shapes
     ) {
   constexpr float threshold = 10e-6;
   float t = 0;
 
   while (t < maxDistance) {
     float minDistance = kInfinity;
-    vec3 from = r.at(t);
+    Vec3 from = r.at(t);
     for (auto shape : shapes) {
       float d = shape->getDistance(from);
       if (d < minDistance) {
@@ -52,42 +50,41 @@ bool sphereTraceShadow(const ray& r,
 }
 
 
-color shade(
-    const point3& p, const ImplicitShape *shape,
-    std::vector<std::shared_ptr<ImplicitShape>>& shapes,
-    const std::vector<const Light*> lights
+Color shade(
+    const Point3& p, const ImplicitShape *shape,
+    const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
+    const std::vector<std::shared_ptr<Light>>& lights
     ){
 
   constexpr float delta = 10e-6;
 
-  vec3 n = normalize( vec3(
-        shape->getDistance(p+vec3(delta,0,0)) - shape->getDistance(p + vec3(-delta,0,0)),
-        shape->getDistance(p+vec3(0,delta,0)) - shape->getDistance(p + vec3(0,-delta,0)),
-        shape->getDistance(p+vec3(0,0,delta)) - shape->getDistance(p + vec3(0,0,-delta))
-        )
-      );
+  Vec3 n = Vec3(
+        shape->getDistance(p+Vec3(delta,0,0)) - shape->getDistance(p + Vec3(-delta,0,0)),
+        shape->getDistance(p+Vec3(0,delta,0)) - shape->getDistance(p + Vec3(0,-delta,0)),
+        shape->getDistance(p+Vec3(0,0,delta)) - shape->getDistance(p + Vec3(0,0,-delta))
+        );
+  n.normalize();
 
-  color shadeColor = vec3(0);
+  Color shadeColor = Color(0);
 
   for (const auto& light : lights) {
-    vec3 lightDir = light->position_ - p;
-    if (glm::dot(lightDir, n) > 0) {
-      float dist2 = length2(lightDir); // squared dist
-      lightDir = normalize(lightDir);
+    Vec3 lightDir = light->getPosition() - p;
+    if (lightDir.dot(n) > 0) {
+      float dist2 = lightDir.length2(); // squared dist
+      lightDir.normalize();
 
       // TODO use surface color
-      bool shadow = 1 - sphereTraceShadow(ray(p,lightDir), sqrtf(dist2), shapes);
-      shadeColor += shadow * glm::dot(lightDir,n) * light->color_ * light->intensity_ /(float) (4 * M_PI * dist2); // with square falloff
+      bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), shapes);
+      shadeColor += shadow * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
     }
   }
-
   return shadeColor;
 }
 
 
-color sphereTrace(const ray& r,
-    std::vector<std::shared_ptr<ImplicitShape>>& shapes,
-    const std::vector<const Light *>& lights
+Color sphereTrace(const Ray& r,
+    const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
+    const std::vector<std::shared_ptr<Light>>& lights
     ) {
   int tmax = 100;
   float t=0;
@@ -115,7 +112,7 @@ color sphereTrace(const ray& r,
     t += minDistance; 
     n_steps++;
   }
-  return color(0);
+  return Color(0);
 }
 
 int main() {
@@ -124,7 +121,7 @@ int main() {
   const int image_width  = 400;
   const int image_height = static_cast<int>(image_width / aspect_ratio);
 
-  color image[image_width][image_height]; // TODO create class or smthing
+  Color image[image_width][image_height]; // TODO create class or smthing
 
   // Scene
   //auto scene = makeScene();
@@ -132,12 +129,13 @@ int main() {
   auto lights = makeLights();
 
   // Camera
-  point3 camera_origin(0, 4, 5);
-  vec3 camera_dir = normalize(vec3(0, 0.5, -1));
+  Point3 camera_origin(0, 4, 5);
+  Vec3 camera_dir = Vec3(0, 0.5, -1);
+  camera_dir.normalize();
 
   float fov = 45;
 
-  camera cam(fov, aspect_ratio, camera_origin, camera_dir);
+  Camera cam(fov, aspect_ratio, camera_origin, camera_dir);
 
   // Render
   // in img coord (0,0) is top-left 
@@ -147,7 +145,7 @@ int main() {
       float u = double(i + .5) / (image_width -1); // NDC Coord
       float v = double(j + .5) / (image_height-1); // NDC Coord
 
-      ray r = cam.generate_ray(u,v);
+      Ray r = cam.generate_ray(u,v);
 
       image[i][j] = sphereTrace(r,shapes, lights);
     }
@@ -181,11 +179,11 @@ int main() {
 
   for (int j=0; j<image_height; ++j) {
     for (int i=0; i<image_width; ++i) {
-      color pc = image[i][j];
+      Color pc = image[i][j];
       SDL_SetRenderDrawColor(renderer,
-          red(pc),
-          green(pc),
-          blue(pc),
+          pc.r(),
+          pc.g(),
+          pc.b(),
           255);
       SDL_RenderDrawPoint(renderer, i, j);
     }

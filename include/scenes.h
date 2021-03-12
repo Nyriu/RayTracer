@@ -8,7 +8,6 @@
 #include "Light.h"
 
 std::vector<std::shared_ptr<ImplicitShape>> makeShapes();
-std::vector<const Light *> makeLights();
+std::vector<std::shared_ptr<Light>> makeLights();
 
 #endif
-

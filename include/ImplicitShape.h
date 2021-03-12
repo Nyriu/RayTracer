@@ -1,56 +1,50 @@
 #ifndef IMPLICIT_SHAPE_H
 #define IMPLICIT_SHAPE_H
 
-#include <algorithm>
-#include <cmath>
+//#include <algorithm>
+//#include <cmath>
 #include <memory>
-#include<vector>
-#include "vec3.h"
-#include "color.h"
+//#include<vector>
+
+#include "geometry.h"
+#include "Color.h"
 
 class ImplicitShape {
   public:
-    virtual float getDistance(const point3& from) const = 0;
+    virtual float getDistance(const Point3& from) const = 0;
     virtual ~ImplicitShape() {}
 };
 
 class Sphere : public ImplicitShape {
   public:
-    color color_;
+    Color color_;
   private:
-    point3 center;
-    float radius;
+    Point3 center_;
+    float radius_;
   public:
-    Sphere(const point3& c, const float& r) : center(c), radius(r) {
-      color_ = color(0.5);
-    }
-    Sphere(const point3& c, const float& r, const color& col) : center(c), radius(r) {
-      color_ = col;
-    }
-    float getDistance(const point3& from) const {
-      return length(from - center) - radius;
+    Sphere(const Point3& c, const float& r) : center_(c), radius_(r), color_(0.5) {}
+    Sphere(const Point3& c, const float& r, const Color& col) : center_(c), radius_(r), color_(col) {}
+    float getDistance(const Point3& from) const {
+      return (from - center_).length() - radius_;
     }
 };
 
 class Torus : public ImplicitShape {
   public:
-    color color_;
+    Color color_;
   private:
-    point3 center_;
+    Point3 center_;
     float r0_, r1_;
   public:
-    Torus(const float& r0, const float& r1) : center_(point3(0)), r0_(r0), r1_(r1) {
-      color_ = color(.5);
-    }
-    Torus(const point3& c, const float& r0, const float& r1) : center_(c), r0_(r0), r1_(r1) {
-      color_ = color(.5);
-    }
+    Torus(const float& r0, const float& r1) : center_(0), r0_(r0), r1_(r1), color_(.5) {}
 
-    float getDistance(const point3& from) const {
-      point3 p = from - center_;
+    Torus(const Point3& c, const float& r0, const float& r1) : center_(c), r0_(r0), r1_(r1), color_(.5) {}
+
+    float getDistance(const Point3& from) const {
+      Point3 p = from - center_;
       // to 2D plane
-      float tmpx = std::sqrt(p.x * p.x + p.z * p.z) - r0_;
-      float tmpy = p.y;
+      float tmpx = std::sqrt(p.x() * p.x() + p.z() * p.z()) - r0_;
+      float tmpy = p.y();
       return std::sqrt(tmpx * tmpx + tmpy * tmpy) - r1_;
     }
 
@@ -96,7 +90,7 @@ class UnionShape : public ImplicitShape {
     UnionShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
       shape1_(shape1), shape2_(shape2) {}
 
-    float getDistance(const point3& from) const {
+    float getDistance(const Point3& from) const {
       return std::min(
           shape1_->getDistance(from),
           shape2_->getDistance(from)
@@ -112,7 +106,7 @@ class IntersectShape : public ImplicitShape {
     IntersectShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
       shape1_(shape1), shape2_(shape2) {}
 
-    float getDistance(const point3& from) const {
+    float getDistance(const Point3& from) const {
       return std::max(
           shape1_->getDistance(from),
           shape2_->getDistance(from)
@@ -128,7 +122,7 @@ class SubtractShape : public ImplicitShape {
     SubtractShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
       shape1_(shape1), shape2_(shape2) {}
 
-    float getDistance(const point3& from) const {
+    float getDistance(const Point3& from) const {
       return std::max(
           -shape1_->getDistance(from),
           shape2_->getDistance(from)

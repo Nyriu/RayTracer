@@ -3,3 +3,8 @@ main
 imgs/*.ppm
 ref
 .cache
+
+test
+src_old
+include_old
+*_old*

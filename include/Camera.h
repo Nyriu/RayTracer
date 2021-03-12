@@ -1,60 +1,52 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "vec3.h"
-#include "mat3.h"
-#include "mat4.h"
-#include "ray.h"
+#include "geometry.h"
+#include "Ray.h"
 #include <glm/ext/matrix_transform.hpp>
-//#include <glm/ext/matrix_transform.hpp>
-//#include <glm/geometric.hpp>
-//KK##include <glm/gtc/look_at
 
-class camera {
+class Camera {
   private:
-    point3 orig; // = point3(0);
-    vec3   dir;  // cam dir
-    float fov, aspect;
+    Point3 orig_;
+    Vec3   dir_;
+    float fov_, aspect_;
 
   public:
-    camera() {}
+    //Camera() = default;
 
-    camera(float fov, float aspect_ratio) : orig(0), dir(0,0,-1) { this->fov = fov;
-      this->aspect = aspect_ratio;
-    }
+    Camera(float fov, float aspect_ratio) :
+      orig_(0), dir_(0,0,-1), fov_(fov), aspect_(aspect_ratio) {
+        dir_.normalize();
+      }
 
     //camera(const point3& origin, const point3& target) : orig(origin) {
-    camera(const point3& origin, const vec3& direction) : orig(origin) {
-      this->dir = normalize(direction);
+    Camera(const Point3& origin, const Vec3& direction) :
+      orig_(origin), dir_(direction), fov_(45), aspect_(1) {
+      dir_.normalize();
       //this->target = target;
-      this->fov = 90;
-      this->aspect = 1;
     }
 
-    // TODO default values
-    //camera(float fov=90, float aspect_ratio=1,
-    //    const point3& origin=point3(0), const vec3& direction=vec3(0,0,-1)) : orig(origin) {
-    camera(float fov, float aspect_ratio,
-        //const point3& origin, const point3& target) : orig(origin) {
-        const point3& origin, const vec3& direction) : orig(origin) {
-      this->dir = normalize(direction);
-      //this->target = target;
-      this->fov = fov;
-      this->aspect = aspect_ratio;
-    }
+    Camera(
+        float fov, float aspect_ratio,
+        const Point3& camera_origin,
+        const Vec3& camera_dir
+        ) :
+      orig_(camera_origin), dir_(camera_dir), fov_(fov), aspect_(aspect_ratio) {
+        dir_.normalize();
+      }
 
-    ray generate_ray(float u, float v) { // input NDC Coords
+    Ray generate_ray(float u, float v) { // input NDC Coords
       // Put coords in [-1,1]
       float su = 2 * u - 1; // Screen Coord
       float sv = 1 - 2 * v; // Screen Coord (flip y axis)
 
       // Aspect Ratio
-      su *= aspect; // x in [-asp ratio, asp ratio]
+      su *= aspect_; // x in [-asp ratio, asp ratio]
       // y in [-1,1] (as before)
 
       // Field Of View
-      su *= std::tan(fov/2);
-      sv *= std::tan(fov/2);
+      su *= std::tan(fov_/2);
+      sv *= std::tan(fov_/2);
 
       //float scale = 1;
       //// Scale // TODO needed? meaning?
@@ -63,12 +55,12 @@ class camera {
       //sv *= scale;
 
       // From ScreenCoords to WorldCoords
-      vec3 direction = worldDir(vec3(su,sv,-1));
-      return ray(orig, direction); // dir can be un-normalized
+      Vec3 direction = worldDir(Vec3(su,sv,-1));
+      return Ray(orig_, direction); // dir can be un-normalized
     }
 
     //vec3 worldDir(float su, float sv, float sz) {
-    vec3 worldDir(const vec3& rayDir) {
+    Vec3 worldDir(const Vec3& rayDir) {
       //vec3 up(0,1,0);
       //vec3 f = normalize(target - orig);
       //vec3 s = normalize(cross(f, up));
@@ -85,13 +77,17 @@ class camera {
 
       // --------------------
 
-      vec3 up(0,1,0);
-      mat4 viewMat = glm::lookAt(orig, orig + normalize(dir), up);
-      vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
-      return normalize(vec3(
-            worldRayDir.x, worldRayDir.y, worldRayDir.z)
-            ); // extremely ugly
+      //vec3 up(0,1,0);
+      //mat4 viewMat = glm::lookAt(orig, orig + normalize(dir), up);
+      //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
+      //return normalize(vec3(
+      //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
+      //      ); // extremely ugly
 
+      // --------------------
+
+      Vec3 up(0,1,0);
+      return myLookAt(orig_, orig_ + dir_, up, rayDir);
     }
 
 

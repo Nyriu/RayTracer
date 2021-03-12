@@ -2,26 +2,34 @@
 #define LIGHT_H
 
 #include<vector>
-#include "vec3.h"
-#include "color.h"
+#include "geometry.h"
+#include "Color.h"
 
 class Light {
-  public:
-  //protected:
-    point3 position_;
-    color color_;
+  //public:
+  protected:
+  //private:
+    Point3 position_;
+    Color color_;
     float intensity_;
   public:
     virtual ~Light() {}
+
+    Point3 getPosition() const { return position_; }
+
+    Color getColor() const { return color_; }
+
+    float getIntensity() const { return intensity_; }
 };
 
 class PointLight : public Light {
   public:
-    PointLight(const vec3& position, const vec3& color, const float& intensity) {
+    PointLight(const Point3& position, const Color& color, const float& intensity) {
       position_ = position;
       color_ = color;
       intensity_ = intensity;
     }
+
 
 };
 

@@ -1,4 +1,5 @@
 #!/bin/sh
+
 #if [ "$1" == "-b" ]; then
   #rm -rf build main imgs/*
   rm -rf build main
@@ -20,7 +21,7 @@
 #  cd ..
 #fi
 
-./main &
+./main
 
 viewnior ./imgs/img.ppm &
 
