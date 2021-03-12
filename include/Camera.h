@@ -26,6 +26,12 @@ class Camera {
       //this->target = target;
     }
 
+    Camera(float fov, const Point3& origin, const Vec3& direction) :
+      orig_(origin), dir_(direction), fov_(fov), aspect_(1) {
+      dir_.normalize();
+      //this->target = target;
+    }
+
     Camera(
         float fov, float aspect_ratio,
         const Point3& camera_origin,

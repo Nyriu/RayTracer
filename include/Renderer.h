@@ -14,6 +14,7 @@
 #include "Ray.h"
 #include "Camera.h"
 #include "Image.h"
+#include "Window.h"
 
 #include "ImplicitShape.h"
 #include "Light.h"
@@ -29,18 +30,19 @@ constexpr float kInfinity = std::numeric_limits<float>::max();
 
 class Renderer {
   private:
-    // window
+    Window win_;
+    Camera cam_;
     // tracer
     // scene
-    // camera
 
     //temporarly and img instead of a window
     Image img_;
   public:
     //Renderer(Image& img) : img_(img) {}
-    Renderer(const int image_width, const float aspect_ratio) :
-      img_(image_width, aspect_ratio) {}
-
+    //Renderer(const int image_width, const float aspect_ratio) :
+    //  img_(image_width, aspect_ratio), win_(image_width, aspect_ratio) {}
+    Renderer(const Window& window, const Camera& camera) :
+      win_(window), cam_(camera), img_(win_.width, win_.aspect_ratio) {}
 
     bool sphereTraceShadow(const Ray& r,
         const float& maxDistance,
@@ -140,14 +142,7 @@ class Renderer {
       auto shapes = makeShapes();
       auto lights = makeLights();
 
-      // Camera
-      Point3 camera_origin(0, 4, 5);
-      Vec3 camera_dir = Vec3(0, 0.5, -1);
-      camera_dir.normalize();
-
-      float fov = 45;
-
-      Camera cam(fov, img_.aspect_ratio, camera_origin, camera_dir);
+      //Image img_(win_.width, win_.aspect_ratio);
 
 
       // Render
@@ -158,48 +153,19 @@ class Renderer {
           float u = double(i + .5) / (img_.width -1); // NDC Coord
           float v = double(j + .5) / (img_.height-1); // NDC Coord
 
-          Ray r = cam.generate_ray(u,v);
+          Ray r = cam_.generate_ray(u,v);
 
           img_.setPixel(sphereTrace(r,shapes, lights), i,j);
         }
       }
 
       img_.writePPM("./imgs/img.ppm");
+      win_.drawImage(img_);
 
-      // // ----------------------------------------------------------
-      // // SDL
-      // // ----------------------------------------------------------
-      // SDL_Event event;
-      // SDL_Renderer *renderer;
-      // SDL_Window *window;
-      // int i;
-
-      // SDL_Init(SDL_INIT_VIDEO);
-      // SDL_CreateWindowAndRenderer(image_width, image_height, 0, &window, &renderer);
-      // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-      // SDL_RenderClear(renderer);
-
-      // for (int j=0; j<image_height; ++j) {
-      //   for (int i=0; i<image_width; ++i) {
-      //     Color pc = image[i][j];
-      //     SDL_SetRenderDrawColor(renderer,
-      //         pc.r255(),
-      //         pc.g255(),
-      //         pc.b255(),
-      //         255);
-      //     SDL_RenderDrawPoint(renderer, i, j);
-      //   }
-      // }
-
-
-      // SDL_RenderPresent(renderer);
-      // while (1) {
-      //   if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
-      //     break;
-      // }
-      // SDL_DestroyRenderer(renderer);
-      // SDL_DestroyWindow(window);
-      // SDL_Quit();
+      while (win_.keepRendering()) {
+        //img_.writePPM("./imgs/img.ppm");
+        //win_.drawImage(img_);
+      }
     }
 
 };

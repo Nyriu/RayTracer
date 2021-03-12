@@ -3,6 +3,7 @@
 #if [ "$1" == "-b" ]; then
   #rm -rf build main imgs/*
   rm -rf build main
+  rm -f ./imgs/img.ppm
   mkdir build
   cd build
   cmake ..
@@ -21,7 +22,7 @@
 #  cd ..
 #fi
 
-./main &
+./main
 
 viewnior ./imgs/img.ppm &
 
