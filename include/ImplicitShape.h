@@ -140,18 +140,18 @@ class SubtractShape : public ImplicitShape {
 // TODO mix
 
 
-class ExperimShape : public ImplicitShape {
-  private:
-   std::shared_ptr<ImplicitShape> shape1_;
-   //std::shared_ptr<ImplicitShape> shape2_;
-  public:
-    //ExperimShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
-    ExperimShape(const std::shared_ptr<ImplicitShape> shape1) :
-      shape1_(shape1) {}
-
-    float getDistance(const point3& from) const {
-      return std::fmod(shape1_->getDistance(from), 10.f);
-    }
-};
+//class ExperimShape : public ImplicitShape {
+//  private:
+//   std::shared_ptr<ImplicitShape> shape1_;
+//   //std::shared_ptr<ImplicitShape> shape2_;
+//  public:
+//    //ExperimShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
+//    ExperimShape(const std::shared_ptr<ImplicitShape> shape1) :
+//      shape1_(shape1) {}
+//
+//    float getDistance(const point3& from) const {
+//      return std::fmod(shape1_->getDistance(from), 10.f);
+//    }
+//};
 
 #endif

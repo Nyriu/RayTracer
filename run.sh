@@ -20,9 +20,9 @@
 #  cd ..
 #fi
 
-./main
+./main &
 
-viewnior ./imgs/img.ppm
+viewnior ./imgs/img.ppm &
 
 #convert ./imgs/img.ppm ./imgs/img.png
 #feh ./imgs/img.png

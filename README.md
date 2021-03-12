@@ -11,6 +11,11 @@ I'm taking inspiration from:
 First I'll put together something ugly but that get's the job done.
 Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 
+## Dependencies
+* SDL2
+* GLM (maybe removable, depends)
+
+
 
 ## TODO
 

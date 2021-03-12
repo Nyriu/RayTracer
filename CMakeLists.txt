@@ -14,13 +14,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../")
 
 add_executable(main ${SOURCES})
 
-#target_link_libraries(main
-#  -lglfw
-#  #-lvulkan
-#  #-ldl
-#  #-lpthread
-#  #-lX11
-#  #-lXxf86vm
-#  #-lXrandr
-#  #-lXi
-#  )
+target_link_libraries(main
+  -lSDL2
+  #-lglfw
+  #-lvulkan
+  #-ldl
+  #-lpthread
+  #-lX11
+  #-lXxf86vm
+  #-lXrandr
+  #-lXi
+  )
