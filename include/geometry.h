@@ -207,7 +207,7 @@ inline std::ostream& operator<<(std::ostream& out, const Mat3& m) {
 
 
 inline Vec3 myLookAt(
-    const Point3& eye, const Vec3& target,
+    const Point3& eye, const Point3& target,
     const Vec3& up, const Vec3& dirToMove) {
   // extremely ugly
   glm::mat4 viewMat = glm::lookAt(eye.v_, target.v_, up.v_);

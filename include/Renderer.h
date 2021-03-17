@@ -23,8 +23,6 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "scenes.h"
-
 constexpr float kInfinity = std::numeric_limits<float>::max();
 
 
@@ -37,12 +35,31 @@ class Renderer {
 
     //temporarly and img instead of a window
     Image img_;
+
+    bool no_window = false;
+
+  private:
+    // Scene stuff
+    std::vector<std::shared_ptr<ImplicitShape>> shapes_;
+    std::vector<std::shared_ptr<Light>> lights_;
+
+
   public:
     //Renderer(Image& img) : img_(img) {}
     //Renderer(const int image_width, const float aspect_ratio) :
     //  img_(image_width, aspect_ratio), win_(image_width, aspect_ratio) {}
     Renderer(const Window& window, const Camera& camera) :
       win_(window), cam_(camera), img_(win_.width, win_.aspect_ratio) {}
+
+
+    void setScene(
+        const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
+        const std::vector<std::shared_ptr<Light>>& lights
+        ){
+      // bad
+      shapes_ = shapes;
+      lights_ = lights;
+    }
 
     bool sphereTraceShadow(const Ray& r,
         const float& maxDistance,
@@ -125,9 +142,9 @@ class Renderer {
 
         // did we intersect the shape?
         if (minDistance <= threshold * t) {
-          return shade(r.at(t), intersectedShape, shapes, lights); // use lights
+          //return shade(r.at(t), intersectedShape, shapes, lights); // use lights
           //return intersectedShape->color_;          // use only surf color
-          //return color(0, float(n_steps)/tmax, 0);  // color by pixel comput cost
+          return Color(float(n_steps)/tmax,0, 0);  // color by pixel comput cost
         }
         t += minDistance;
         n_steps++;
@@ -137,35 +154,57 @@ class Renderer {
 
 
     void render() {
-      // Scene
-      //auto scene = makeScene();
-      auto shapes = makeShapes();
-      auto lights = makeLights();
+      // check if scene exists
+      //generateFrame(shapes, lights);
+      img_.writePPM("./imgs/img.ppm");
 
-      //Image img_(win_.width, win_.aspect_ratio);
+      if (!no_window) {
+        if (!win_.isOpen()) {
+          std::cout << "open win" << std::endl;
+          win_.openWindow();
+        }
+        mainLoop();
+      }
+    }
 
 
-      // Render
-      // in img coord (0,0) is top-left
-      for (int j=0; j<img_.height; ++j) {
-        for (int i=0; i<img_.width; ++i) {
-          // Put coords in [0,1]
-          float u = double(i + .5) / (img_.width -1); // NDC Coord
-          float v = double(j + .5) / (img_.height-1); // NDC Coord
+    void generateFrame() {
+      if (cam_.update()) {
+        // in img coord (0,0) is top-left
+        for (int j=0; j<img_.height; ++j) {
+          for (int i=0; i<img_.width; ++i) {
+            // Put coords in [0,1]
+            float u = double(i + .5) / (img_.width -1); // NDC Coord
+            float v = double(j + .5) / (img_.height-1); // NDC Coord
 
-          Ray r = cam_.generate_ray(u,v);
+            Ray r = cam_.generate_ray(u,v);
 
-          img_.setPixel(sphereTrace(r,shapes, lights), i,j);
+            img_.setPixel(sphereTrace(r,shapes_, lights_), i,j);
+          }
         }
       }
+    }
 
-      img_.writePPM("./imgs/img.ppm");
-      win_.drawImage(img_);
-
+    void mainLoop() {
+      //while (cam_.isToUpdate() && win_.keepRendering())
+      int t_ = 0;
       while (win_.keepRendering()) {
+        cam_.translate(Vec3(t_,0,0));
+        //std::cout << "main loop" << std::endl;
+        //cam_.isToUpdate();
+        generateFrame();
+        win_.drawImage(img_);
         //img_.writePPM("./imgs/img.ppm");
-        //win_.drawImage(img_);
+        t_++;
       }
+    }
+
+
+    void disableWindow(){
+      this->no_window = true;
+    }
+    void enableWindow(){
+      this->no_window = false;
     }
 
 };

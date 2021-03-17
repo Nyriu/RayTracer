@@ -11,6 +11,8 @@ class Camera {
     Vec3   dir_;
     float fov_, aspect_;
 
+    float updated_ = false; // if the camera has been updated
+
   public:
     //Camera() = default;
 
@@ -61,11 +63,13 @@ class Camera {
       //sv *= scale;
 
       // From ScreenCoords to WorldCoords
-      Vec3 direction = worldDir(Vec3(su,sv,-1));
-      return Ray(orig_, direction); // dir can be un-normalized
+      Vec3 direction = Vec3(su,sv,-1);
+      direction.normalize();
+      return Ray(orig_, worldDir(direction)); // dir can be un-normalized
+      // compute viewMat iff !updated_
     }
 
-    //vec3 worldDir(float su, float sv, float sz) {
+    //vec3 worldDir(float su, float sv, float sz)
     Vec3 worldDir(const Vec3& rayDir) {
       //vec3 up(0,1,0);
       //vec3 f = normalize(target - orig);
@@ -96,10 +100,23 @@ class Camera {
       return myLookAt(orig_, orig_ + dir_, up, rayDir);
     }
 
+    bool isToUpdate() const { return !updated_; }
 
-    //void translate(const vec3& v) {
-    //  orig += v;
-    //}
+    bool update() {
+      if (isToUpdate()) {
+        updated_ = true;
+        return true;
+      }
+      return false;
+    }
+
+  private:
+    void toUpdate() { updated_ = false; }
+  public:
+    void translate(const Vec3& v) {
+      orig_ = orig_ + v;
+      toUpdate();
+    }
     //void translate(float x, float y, float z) {
     //  translate(vec3(x,y,z));
     //}

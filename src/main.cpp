@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Window.h"
 #include "Renderer.h"
+#include "scenes.h"
 
 int main() {
   // Image
@@ -20,7 +21,16 @@ int main() {
   float fov = 45;
   Camera cam(fov, camera_origin, camera_dir);
 
+  // Scene
+  auto shapes = makeShapes();
+  auto lights = makeLights();
+
   Renderer renderer(window, cam);
+  //renderer.disableWindow();
+  renderer.enableWindow();
+
+
+  renderer.setScene(shapes, lights);
   renderer.render();
 
   return 0;

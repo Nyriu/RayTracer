@@ -15,14 +15,32 @@ class Window {
     SDL_Renderer *sdl_renderer;
     SDL_Window *sdl_window;
 
+    bool is_window_open = false;
+
   public:
     Window(const int win_width, const float aspect_ratio) :
       width(win_width), aspect_ratio(aspect_ratio), height((int)(width / aspect_ratio)) {
         SDL_Init(SDL_INIT_VIDEO);
-        SDL_CreateWindowAndRenderer(width, height, 0, &sdl_window, &sdl_renderer);
-        //SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 0);
-        SDL_RenderClear(sdl_renderer);
       }
+
+    void openWindow() {
+      if (!is_window_open) {
+        SDL_CreateWindowAndRenderer(width, height, 0, &sdl_window, &sdl_renderer);
+        SDL_RenderClear(sdl_renderer);
+        is_window_open = true;
+      }
+    }
+
+    void quitWindow() {
+      if (is_window_open) {
+        SDL_DestroyRenderer(sdl_renderer);
+        SDL_DestroyWindow(sdl_window);
+        SDL_Quit();
+        is_window_open = false;
+      }
+    }
+
+    bool isOpen() const { return is_window_open; }
 
     void drawImage(const Image& image) {
       // TODO check if image inside window
@@ -39,14 +57,15 @@ class Window {
     }
 
     bool keepRendering() {
+    	SDL_Delay(16);
       if (SDL_PollEvent(&sdl_event) && sdl_event.type == SDL_QUIT) {
-        SDL_DestroyRenderer(sdl_renderer);
-        SDL_DestroyWindow(sdl_window);
-        SDL_Quit();
+        quitWindow();
         return false;
       }
       return true;
     }
+
+
 
 };
 
