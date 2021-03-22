@@ -3,7 +3,9 @@
 
 
 // TODO remove useless imports
+#include <exception>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <limits>
 #include <memory> // shared_ptr // todo use
@@ -18,6 +20,7 @@
 
 #include "ImplicitShape.h"
 #include "Light.h"
+#include "Scene.h"
 
 // SDL
 #include <stdlib.h>
@@ -28,10 +31,8 @@ constexpr float kInfinity = std::numeric_limits<float>::max();
 
 class Renderer {
   private:
-    Window win_;
-    Camera cam_;
-    // tracer
-    // scene
+    Window *win_ = nullptr;
+    Camera *cam_ = nullptr;
 
     //temporarly and img instead of a window
     Image img_;
@@ -40,30 +41,51 @@ class Renderer {
 
   private:
     // Scene stuff
-    std::vector<std::shared_ptr<ImplicitShape>> shapes_;
-    std::vector<std::shared_ptr<Light>> lights_;
+    const Scene* scene_ = nullptr;
 
 
   public:
-    //Renderer(Image& img) : img_(img) {}
-    //Renderer(const int image_width, const float aspect_ratio) :
-    //  img_(image_width, aspect_ratio), win_(image_width, aspect_ratio) {}
-    Renderer(const Window& window, const Camera& camera) :
-      win_(window), cam_(camera), img_(win_.width, win_.aspect_ratio) {}
+    Renderer() = default;
+
+    Renderer(Window* window) :
+      win_(window), img_(win_->width, win_->aspect_ratio) { }
+
+    Renderer(Window* window, Camera* camera) :
+      win_(window), cam_(camera), img_(win_->width, win_->aspect_ratio) {
+        cam_->setAspectRatio(win_->aspect_ratio);
+      }
 
 
-    void setScene(
-        const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
-        const std::vector<std::shared_ptr<Light>>& lights
-        ){
-      // bad
-      shapes_ = shapes;
-      lights_ = lights;
+    bool hasCamera() { return cam_ != nullptr; }
+
+    Renderer setScene(Scene* scene) {
+      scene_ = scene;
+      if (!hasCamera()) {
+        if (!scene->hasCamera()) {
+          // TODO
+          // throw error and ask for a camera!
+          std::cerr << "Neither the Scene nor the Renderer has a Camera!" << std::endl;
+          std::cerr << "Noooooow! Segfault!" << std::endl;
+          return nullptr;
+        }
+        setCamera(scene->getCamera());
+      }
+      return *this;
     }
+
+    Renderer setCamera(Camera* camera) {
+      cam_ = camera;
+      cam_->setAspectRatio(win_->aspect_ratio);
+      return *this;
+    }
+
+
+
+
 
     bool sphereTraceShadow(const Ray& r,
         const float& maxDistance,
-        const std::vector<std::shared_ptr<ImplicitShape>>& shapes
+        const Scene* scene
         ) {
       constexpr float threshold = 10e-6;
       float t = 0;
@@ -71,7 +93,7 @@ class Renderer {
       while (t < maxDistance) {
         float minDistance = kInfinity;
         Vec3 from = r.at(t);
-        for (auto shape : shapes) {
+        for (auto shape : scene->getShapes()) {
           float d = shape->getDistance(from);
           if (d < minDistance) {
             minDistance = d;
@@ -89,8 +111,7 @@ class Renderer {
 
     Color shade(
         const Point3& p, const ImplicitShape *shape,
-        const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
-        const std::vector<std::shared_ptr<Light>>& lights
+        const Scene* scene
         ){
 
       constexpr float delta = 10e-6;
@@ -104,14 +125,15 @@ class Renderer {
 
       Color shadeColor = Color(0);
 
-      for (const auto& light : lights) {
+      for (const auto& light : scene->getLights()) {
+        //std::cout << "light" << std::endl;
         Vec3 lightDir = light->getPosition() - p;
         if (lightDir.dot(n) > 0) {
           float dist2 = lightDir.length2(); // squared dist
           lightDir.normalize();
 
           // TODO use surface color
-          bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), shapes);
+          bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), scene);
           shadeColor += shadow * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
         }
       }
@@ -119,10 +141,7 @@ class Renderer {
     }
 
 
-    Color sphereTrace(const Ray& r,
-        const std::vector<std::shared_ptr<ImplicitShape>>& shapes,
-        const std::vector<std::shared_ptr<Light>>& lights
-        ) {
+    Color sphereTrace(const Ray& r, const Scene* scene) {
       int tmax = 100;
       float t=0;
       float threshold = 10e-6;
@@ -132,19 +151,22 @@ class Renderer {
       while (t<tmax) {
         float minDistance = kInfinity;
 
-        for (auto shape : shapes) {
+        for (auto shape : scene->getShapes()) {
           float d = shape->getDistance(r.at(t));
           if (d < minDistance) {
+            //std::cout << "intersected shape" << std::endl;
             minDistance = d;
-            intersectedShape = shape.get();
+            intersectedShape = shape;
           }
         }
 
         // did we intersect the shape?
         if (minDistance <= threshold * t) {
-          //return shade(r.at(t), intersectedShape, shapes, lights); // use lights
-          //return intersectedShape->color_;          // use only surf color
-          return Color(float(n_steps)/tmax,0, 0);  // color by pixel comput cost
+          //std::cout << "Color a pixel" << std::endl;
+          return shade(r.at(t), intersectedShape, scene); // use lights
+          //return intersectedShape->color_;                // use only surf color
+          //return Color(float(n_steps)/tmax,0, 0);         // color by pixel comput cost
+          //return Color(1,0,0);                            // fixed color
         }
         t += minDistance;
         n_steps++;
@@ -156,20 +178,22 @@ class Renderer {
     void render() {
       // check if scene exists
       //generateFrame(shapes, lights);
-      img_.writePPM("./imgs/img.ppm");
+      //img_.writePPM("./imgs/img.ppm");
 
       if (!no_window) {
-        if (!win_.isOpen()) {
+        if (!win_->isOpen()) {
           std::cout << "open win" << std::endl;
-          win_.openWindow();
+          win_->openWindow();
         }
-        mainLoop();
       }
+      mainLoop();
     }
 
 
     void generateFrame() {
-      if (cam_.update()) {
+      //std::cout << *cam_ << std::endl;
+
+      if (cam_->update()) {
         // in img coord (0,0) is top-left
         for (int j=0; j<img_.height; ++j) {
           for (int i=0; i<img_.width; ++i) {
@@ -177,9 +201,9 @@ class Renderer {
             float u = double(i + .5) / (img_.width -1); // NDC Coord
             float v = double(j + .5) / (img_.height-1); // NDC Coord
 
-            Ray r = cam_.generate_ray(u,v);
+            Ray r = cam_->generate_ray(u,v);
 
-            img_.setPixel(sphereTrace(r,shapes_, lights_), i,j);
+            img_.setPixel(sphereTrace(r,scene_), i,j);
           }
         }
       }
@@ -188,14 +212,29 @@ class Renderer {
     void mainLoop() {
       //while (cam_.isToUpdate() && win_.keepRendering())
       int t_ = 0;
-      while (win_.keepRendering()) {
-        cam_.translate(Vec3(t_,0,0));
-        //std::cout << "main loop" << std::endl;
-        //cam_.isToUpdate();
-        generateFrame();
-        win_.drawImage(img_);
-        //img_.writePPM("./imgs/img.ppm");
-        t_++;
+      if (!no_window) {
+        while (win_->keepRendering()) {
+          //cam_->translate(Vec3(t_,0,0));
+          //std::cout << "main loop" << std::endl;
+          //cam_.isToUpdate();
+          generateFrame();
+          win_->drawImage(img_);
+          //img_.writePPM("./imgs/img.ppm");
+          t_++;
+        }
+      } else {
+        //const int tmax_ = 10;
+        const int tmax_ = 1;
+        std::string prefix = "./wip_imgs/seq_";
+        std::string suffix = ".ppm";
+        while (t_ < tmax_) {
+          //cam_.translate(Vec3(-2 + t_,0,0));
+          cam_->translate(Vec3(t_,0,0));
+          //std::cout << "main loop" << std::endl;
+          generateFrame();
+          img_.writePPM(prefix + std::to_string(t_) + suffix);
+          t_++;
+        }
       }
     }
 

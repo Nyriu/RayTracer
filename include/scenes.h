@@ -1,13 +1,10 @@
 #ifndef SCENES_H
 #define SCENES_H
 
-#include <vector>
-#include <memory>
+#include "Scene.h"
 
-#include "ImplicitShape.h"
-#include "Light.h"
-
-std::vector<std::shared_ptr<ImplicitShape>> makeShapes();
-std::vector<std::shared_ptr<Light>> makeLights();
+Scene makeScene_1();
+Scene makeScene_Spheres();
+Scene makeScene_Toruses();
 
 #endif

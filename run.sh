@@ -22,10 +22,11 @@
 #  cd ..
 #fi
 
+rm -fr wip_imgs/*
+
 ./main
 
-#viewnior ./imgs/img.ppm &
+viewnior wip_imgs/seq_0.ppm
+#viewnior ./wip_imgs/img.ppm &
 
-#convert ./imgs/img.ppm ./imgs/img.png
-#feh ./imgs/img.png
-#feh --scale-down --auto-zoom ./imgs/img.png
+rm -fr wip_imgs/*

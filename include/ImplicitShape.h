@@ -11,6 +11,8 @@
 
 class ImplicitShape {
   public:
+    Color color_;
+  public:
     virtual float getDistance(const Point3& from) const = 0;
     virtual ~ImplicitShape() {}
 };

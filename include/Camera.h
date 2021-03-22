@@ -6,30 +6,33 @@
 #include <glm/ext/matrix_transform.hpp>
 
 class Camera {
+  friend std::ostream& operator<<(std::ostream& out, const Camera& c);
+
+
   private:
-    Point3 orig_;
-    Vec3   dir_;
-    float fov_, aspect_;
+    Point3 orig_ = Point3(0);
+    Vec3   dir_  = Vec3(0,0,-1);
+    float fov_=45, aspect_=1;
 
     float updated_ = false; // if the camera has been updated
 
   public:
-    //Camera() = default;
+    Camera() = default;
 
     Camera(float fov, float aspect_ratio) :
-      orig_(0), dir_(0,0,-1), fov_(fov), aspect_(aspect_ratio) {
+      fov_(fov), aspect_(aspect_ratio) {
         dir_.normalize();
       }
 
     //camera(const point3& origin, const point3& target) : orig(origin) {
     Camera(const Point3& origin, const Vec3& direction) :
-      orig_(origin), dir_(direction), fov_(45), aspect_(1) {
+      orig_(origin), dir_(direction) {
       dir_.normalize();
       //this->target = target;
     }
 
     Camera(float fov, const Point3& origin, const Vec3& direction) :
-      orig_(origin), dir_(direction), fov_(fov), aspect_(1) {
+      orig_(origin), dir_(direction), fov_(fov) {
       dir_.normalize();
       //this->target = target;
     }
@@ -117,6 +120,13 @@ class Camera {
       orig_ = orig_ + v;
       toUpdate();
     }
+
+    Camera setAspectRatio(const float& aspect_ratio) {
+      aspect_ = aspect_ratio;
+      toUpdate();
+      return *this;
+    }
+
     //void translate(float x, float y, float z) {
     //  translate(vec3(x,y,z));
     //}
@@ -138,6 +148,19 @@ class Camera {
     //}
 
 };
+
+
+inline std::ostream& operator<<(std::ostream& out, const Camera& c) {
+  return out << "Camera {" <<
+    "\n\torigin    = " << c.orig_ <<
+    "\n\tdirection = " << c.dir_  <<
+    "\n\tfov       = " << c.fov_  <<
+    "\n\taspect    = " << c.aspect_ <<
+    "\n} End Camera\n";
+}
+
+
+
 
 #endif
 

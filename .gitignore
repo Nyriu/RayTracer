@@ -1,6 +1,7 @@
 build
 main
 imgs/*.ppm
+wip_imgs
 ref
 .cache
 

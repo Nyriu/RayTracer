@@ -1,7 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-//#include <string>
+#include <string>
 #include <fstream>
 
 #include "Color.h"
@@ -9,8 +9,9 @@
 class Image {
   //private:
   public:
-      const float aspect_ratio;
-      const int width, height;
+      const float aspect_ratio = 1;
+      const int width  = 300;
+      const int height = 300;
 
   private:
       Color* img_;
@@ -23,6 +24,7 @@ class Image {
       }
 
   public:
+      Image() = default;
       Image(const int image_width, const float aspect_ratio) :
         width(image_width), aspect_ratio(aspect_ratio), height((int)(width / aspect_ratio)) {
         init_img();
@@ -43,7 +45,8 @@ class Image {
 
 
       //bool writePPM(const string& filepath) {
-      void writePPM(const char* filepath) {
+      void writePPM(const char* filepath) { writePPM(std::string(filepath)); }
+      void writePPM(const std::string& filepath) {
         // TODO check if path exists or error on open
         std::ofstream ofs;
         ofs.open(filepath);
