@@ -42,7 +42,10 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 ### Without Blending and Anti-Aliasing
 ![](./imgs/img_00.png)
 ![](./imgs/img_01.png)
+![](./imgs/2020_03_22_spheres.png)
+
 ![](./imgs/img_02.png)
+![](./imgs/2020_03_22_toruses.png)
 
 Simple CSG
 
