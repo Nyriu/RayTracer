@@ -20,11 +20,13 @@
 #include <glm/mat4x4.hpp>
 
 
+class Vec3;
+class Vec4;
+class Mat4;
 
 // ------------------------------
 // POINTS
 // ------------------------------
-class Vec3;
 
 class Point3 {
   public:
@@ -32,6 +34,7 @@ class Point3 {
 
     friend inline Point3 operator+(const Point3& u, const Point3& v);
     friend inline Vec3 operator-(const Point3& u, const Point3& v);
+    friend inline Vec3 operator-(const Vec3& u, const Point3& v);
     friend inline Point3 operator*(const Point3& u, const Point3& v);
     friend inline Point3 operator*(const Point3& v, const float& f);
     friend inline Point3 operator*(const float& f, const Point3& v);
@@ -39,6 +42,9 @@ class Point3 {
     friend inline Vec3 myLookAt(
         const Point3& eye, const Point3& target,
         const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
+
+    friend inline Mat4 geom_lookAt(
+        const Point3& eye, const Point3& center, const Vec3& up);
 
     friend inline Point3 operator+(const Point3& u, const Vec3& v);
     friend inline Point3 operator+(const Vec3& u, const Point3& v);
@@ -108,6 +114,7 @@ inline std::ostream& operator<<(std::ostream& out, const Point3& v) {
 class Vec3 {
   public:
     friend class Point3;
+    friend class Vec4;
     friend class Mat3;
 
     friend inline Vec3 operator+(const Vec3& u, const Vec3& v);
@@ -116,13 +123,17 @@ class Vec3 {
     friend inline Vec3 operator*(const Vec3& v, const float& f);
     friend inline Vec3 operator*(const float& f, const Vec3& v);
 
+
     friend inline Vec3 myLookAt(
         const Point3& eye, const Point3& target,
         const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
 
+    friend inline Vec3 operator-(const Vec3& u, const Point3& v);
     friend inline Point3 operator+(const Point3& u, const Vec3& v);
     friend inline Point3 operator+(const Vec3& u, const Point3& v);
 
+    friend inline Mat4 geom_lookAt(
+        const Point3& eye, const Point3& center, const Vec3& up);
 
   private:
     glm::vec3 v_;
@@ -132,7 +143,7 @@ class Vec3 {
     Vec3(float x) : v_(x,x,x) {};
     Vec3(const glm::vec3 v) : v_(v) {};
     Vec3(const Vec3& v) : v_(v.v_) {};
-    Vec3(const Point3& v) : v_(v.v_) {};
+    //Vec3(const Point3& v) : v_(v.v_) {};
 
     float x() const { return v_.x; }
     float y() const { return v_.y; }
@@ -191,6 +202,9 @@ inline std::ostream& operator<<(std::ostream& out, const Vec3& v) {
 // POINT 3 and VECTOR 3 Operators
 // ------------------------------
 inline Vec3 operator-(const Point3& u, const Point3& v) {
+  return Vec3(u.v_ - v.v_);
+}
+inline Vec3 operator-(const Vec3& u, const Point3& v) {
   return Vec3(u.v_ - v.v_);
 }
 
@@ -253,6 +267,7 @@ inline Mat3 operator*(const Mat3& m1, const Mat3& m2) {
 
 class Vec4 {
   public:
+    friend class Vec3;
     friend class Mat4;
 
     friend inline Vec4 operator+(const Vec4& u, const Vec4& v);
@@ -260,6 +275,8 @@ class Vec4 {
     friend inline Vec4 operator*(const Vec4& u, const Vec4& v);
     friend inline Vec4 operator*(const Vec4& v, const float& f);
     friend inline Vec4 operator*(const float& f, const Vec4& v);
+
+    friend inline Vec4 operator*(const Mat4& m, const Vec4& v);
 
   private:
     glm::vec4 v_;
@@ -269,6 +286,7 @@ class Vec4 {
     Vec4(float x) : v_(x,x,x,x) {};
     Vec4(const glm::vec4 v) : v_(v) {};
     Vec4(const Vec4& v) : v_(v.v_) {};
+    Vec4(const Vec3& v, const float w) : v_(glm::vec4(v.v_,0)) {};
 
     float x() const { return v_.x; }
     float y() const { return v_.y; }
@@ -295,6 +313,23 @@ class Vec4 {
     //  // Needs to change the state of "this"?
     //  return Vec4(glm::cross(v_, v2.v_));
     //}
+
+    Vec3 drop(const int dim) {
+      if (dim < 0 || dim > 3)
+        throw "Vec4 has 3 dims! Must drop in [0,3]";
+
+      switch (dim) {
+        case 0:
+          return Vec3(v_.y, v_.z, v_.w);
+        case 1:
+          return Vec3(v_.x, v_.z, v_.w);
+        case 2:
+          return Vec3(v_.x, v_.y, v_.w);
+        case 3:
+          return Vec3(v_.x, v_.y, v_.z);
+      }
+      throw "Vec4 unexpected drop dim";
+    }
 
     float dot(const Vec4 &v2) {
       return glm::dot(v_, v2.v_);
@@ -327,6 +362,8 @@ class Mat4 {
 
   //friend inline std::ostream& operator<<(std::ostream& out, const Mat3& m);
 
+  friend inline Vec4 operator*(const Mat4& m, const Vec4& v);
+
   private:
     glm::mat4x4  m_;
   public:
@@ -339,6 +376,11 @@ class Mat4 {
 
     // Operators
 };
+
+
+inline Vec4 operator*(const Mat4& m, const Vec4& v) {
+  return Vec4(m.m_ * v.v_);
+}
 
 //inline Mat4 operator+(const Mat4& m1, const Mat4& m2) {
 //  return Mat4( m1.m_ + m2.m_);
@@ -355,7 +397,6 @@ class Mat4 {
 // UTILITIES
 // ------------------------------
 
-// TODO
 inline Vec3 myLookAt(
     const Point3& eye, const Point3& target,
     const Vec3& up, const Vec3& dirToMove) {
@@ -371,6 +412,10 @@ inline Vec3 myLookAt(
           )));
 }
 
+inline Mat4 geom_lookAt(
+    const Point3& eye, const Point3& center, const Vec3& up) {
+  return Mat4(glm::lookAt(eye.v_, center.v_, up.v_));
+}
 
 
 
