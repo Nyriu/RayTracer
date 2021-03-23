@@ -26,7 +26,44 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   // compute viewMat iff !updated_
 }
 
-// TODO IMPORTANT 
+bool Camera::update() {
+  if (isToUpdate()) {
+    // here update dir_, target_, viewMat
+    // TODO
+    updated_ = true;
+    return true;
+  }
+  return false;
+}
+
+
+
+//Vec3 Camera::lookAt(const Point3 target) {
+void Camera::lookAt(const Point3 target) {
+  use_target = true;
+  // TODO
+
+  toUpdate();
+  //update();
+  //return dir_;
+
+  throw "lookAt target not implemented yet!";
+}
+
+//Vec3 Camera::lookAt(const Vec3 direction) {
+void Camera::lookAt(const Vec3 direction) {
+  use_target = false;
+
+  // TODO
+  dir_ = direction;
+  dir_.normalize();
+
+  toUpdate();
+  //update();
+  //return dir_;
+}
+
+
 Vec3 Camera::worldDir(const Vec3& rayDir) {
   //vec3 up(0,1,0);
   //vec3 f = normalize(target - orig);
@@ -55,7 +92,6 @@ Vec3 Camera::worldDir(const Vec3& rayDir) {
 
   Vec3 up(0,1,0);
   return myLookAt(orig_, orig_ + dir_, up, rayDir);
-  //return myLookAt(orig_, Vec3(orig_ + dir_), up, rayDir);
 }
 
 

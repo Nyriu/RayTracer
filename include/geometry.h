@@ -13,8 +13,11 @@
 #include <glm/vec3.hpp>
 #include <glm/gtx/norm.hpp>
 
-#include <glm/vec4.hpp>   // needed for lookAt
-#include <glm/mat4x4.hpp> // needed for lookAt
+#include <glm/mat3x3.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 
 
@@ -24,20 +27,21 @@
 class Vec3;
 
 class Point3 {
-  friend class Vec3;
+  public:
+    friend class Vec3;
 
-  friend inline Point3 operator+(const Point3& u, const Point3& v);
-  friend inline Vec3 operator-(const Point3& u, const Point3& v);
-  friend inline Point3 operator*(const Point3& u, const Point3& v);
-  friend inline Point3 operator*(const Point3& v, const float& f);
-  friend inline Point3 operator*(const float& f, const Point3& v);
+    friend inline Point3 operator+(const Point3& u, const Point3& v);
+    friend inline Vec3 operator-(const Point3& u, const Point3& v);
+    friend inline Point3 operator*(const Point3& u, const Point3& v);
+    friend inline Point3 operator*(const Point3& v, const float& f);
+    friend inline Point3 operator*(const float& f, const Point3& v);
 
-  friend inline Vec3 myLookAt(
-    const Point3& eye, const Point3& target,
-    const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
+    friend inline Vec3 myLookAt(
+        const Point3& eye, const Point3& target,
+        const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
 
-  friend inline Point3 operator+(const Point3& u, const Vec3& v);
-  friend inline Point3 operator+(const Vec3& u, const Point3& v);
+    friend inline Point3 operator+(const Point3& u, const Vec3& v);
+    friend inline Point3 operator+(const Vec3& u, const Point3& v);
 
   private:
     glm::vec3 v_;
@@ -53,9 +57,6 @@ class Point3 {
     float y() const { return v_.y; }
     float z() const { return v_.z; }
 
-    void normalize() {
-      v_ = glm::normalize(v_);
-    }
 
     float length() {
       return glm::length(v_);
@@ -102,24 +103,25 @@ inline std::ostream& operator<<(std::ostream& out, const Point3& v) {
 
 
 // ------------------------------
-// VECTORS
+// VECTORS 3
 // ------------------------------
 class Vec3 {
-  friend class Point3;
-  friend class Mat3;
+  public:
+    friend class Point3;
+    friend class Mat3;
 
-  friend inline Vec3 operator+(const Vec3& u, const Vec3& v);
-  friend inline Vec3 operator-(const Vec3& u, const Vec3& v);
-  friend inline Vec3 operator*(const Vec3& u, const Vec3& v);
-  friend inline Vec3 operator*(const Vec3& v, const float& f);
-  friend inline Vec3 operator*(const float& f, const Vec3& v);
+    friend inline Vec3 operator+(const Vec3& u, const Vec3& v);
+    friend inline Vec3 operator-(const Vec3& u, const Vec3& v);
+    friend inline Vec3 operator*(const Vec3& u, const Vec3& v);
+    friend inline Vec3 operator*(const Vec3& v, const float& f);
+    friend inline Vec3 operator*(const float& f, const Vec3& v);
 
-  friend inline Vec3 myLookAt(
-    const Point3& eye, const Point3& target,
-    const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
+    friend inline Vec3 myLookAt(
+        const Point3& eye, const Point3& target,
+        const Vec3& up, const Vec3& dirToMove); // TODO serve sul serio?
 
- friend inline Point3 operator+(const Point3& u, const Vec3& v);
- friend inline Point3 operator+(const Vec3& u, const Point3& v);
+    friend inline Point3 operator+(const Point3& u, const Vec3& v);
+    friend inline Point3 operator+(const Vec3& u, const Point3& v);
 
 
   private:
@@ -136,8 +138,9 @@ class Vec3 {
     float y() const { return v_.y; }
     float z() const { return v_.z; }
 
-    void normalize() {
+    Vec3 normalize() {
       v_ = glm::normalize(v_);
+      return *this;
     }
 
     float length() {
@@ -185,7 +188,7 @@ inline std::ostream& operator<<(std::ostream& out, const Vec3& v) {
 }
 
 // ------------------------------
-// POINT and VECTOR Operators
+// POINT 3 and VECTOR 3 Operators
 // ------------------------------
 inline Vec3 operator-(const Point3& u, const Point3& v) {
   return Vec3(u.v_ - v.v_);
@@ -202,18 +205,15 @@ inline Point3 operator+(const Vec3& u, const Point3& v) {
 
 
 // ------------------------------
-// MATRICES
+// MATRICES 3x3
 // ------------------------------
-
-#include <glm/mat3x3.hpp>
-#include <glm/gtx/string_cast.hpp>
-
 class Mat3 {
-  friend inline Mat3 operator+(const Mat3& m1, const Mat3& m2);
-  friend inline Mat3 operator-(const Mat3& m1, const Mat3& m2);
-  friend inline Mat3 operator*(const Mat3& m1, const Mat3& m2);
+  public:
+    friend inline Mat3 operator+(const Mat3& m1, const Mat3& m2);
+    friend inline Mat3 operator-(const Mat3& m1, const Mat3& m2);
+    friend inline Mat3 operator*(const Mat3& m1, const Mat3& m2);
 
-  friend inline std::ostream& operator<<(std::ostream& out, const Mat3& m);
+    friend inline std::ostream& operator<<(std::ostream& out, const Mat3& m);
 
   private:
     glm::mat3x3  m_;
@@ -246,11 +246,116 @@ inline Mat3 operator*(const Mat3& m1, const Mat3& m2) {
 
 
 
+// ------------------------------
+// 4x4 MATRICES and VECTORS 4
+// ------------------------------
+// Needed for ViewMatrix
+
+class Vec4 {
+  public:
+    friend class Mat4;
+
+    friend inline Vec4 operator+(const Vec4& u, const Vec4& v);
+    friend inline Vec4 operator-(const Vec4& u, const Vec4& v);
+    friend inline Vec4 operator*(const Vec4& u, const Vec4& v);
+    friend inline Vec4 operator*(const Vec4& v, const float& f);
+    friend inline Vec4 operator*(const float& f, const Vec4& v);
+
+  private:
+    glm::vec4 v_;
+  public:
+    Vec4() = default;
+    Vec4(float x, float y, float z, float w) : v_(x,y,z,w) {};
+    Vec4(float x) : v_(x,x,x,x) {};
+    Vec4(const glm::vec4 v) : v_(v) {};
+    Vec4(const Vec4& v) : v_(v.v_) {};
+
+    float x() const { return v_.x; }
+    float y() const { return v_.y; }
+    float z() const { return v_.z; }
+    float w() const { return v_.w; }
+
+    void normalize() {
+      v_ = glm::normalize(v_);
+    }
+
+    float length() {
+      return glm::length(v_);
+    }
+
+    float length2() {
+      return glm::length2(v_);
+    }
+
+    float magnitude() {
+      return this->length();
+    }
+
+    //Vec4 cross(const Vec4 &v2) {
+    //  // Needs to change the state of "this"?
+    //  return Vec4(glm::cross(v_, v2.v_));
+    //}
+
+    float dot(const Vec4 &v2) {
+      return glm::dot(v_, v2.v_);
+    }
+};
+
+inline Vec4 operator+(const Vec4& u, const Vec4& v) {
+  return Vec4(u.v_ + v.v_);
+}
+inline Vec4 operator-(const Vec4& u, const Vec4& v) {
+  return Vec4(u.v_ - v.v_);
+}
+inline Vec4 operator*(const Vec4& u, const Vec4& v) {
+  return Vec4(u.v_ * v.v_);
+}
+
+inline Vec4 operator*(const Vec4& v, const float& f) {
+  return Vec4(v.v_ * f);
+}
+inline Vec4 operator*(const float& f, const Vec4& v) {
+  return v*f;
+}
+
+
+class Mat4 {
+  public:
+  //friend inline Mat3 operator+(const Mat3& m1, const Mat3& m2);
+  //friend inline Mat3 operator-(const Mat3& m1, const Mat3& m2);
+  //friend inline Mat3 operator*(const Mat3& m1, const Mat3& m2);
+
+  //friend inline std::ostream& operator<<(std::ostream& out, const Mat3& m);
+
+  private:
+    glm::mat4x4  m_;
+  public:
+    Mat4() = default;
+    Mat4(const Vec4& v) : m_(v.v_, v.v_, v.v_, v.v_) {};
+    Mat4(const Vec4& v1, const Vec4& v2, const Vec4& v3, const Vec4& v4) :
+      m_(v1.v_, v2.v_, v3.v_, v4.v_) {};
+    Mat4(const glm::mat4x4& m) : m_(m) {};
+    Mat4(const Mat4& m) : m_(m.m_) {};
+
+    // Operators
+};
+
+//inline Mat4 operator+(const Mat4& m1, const Mat4& m2) {
+//  return Mat4( m1.m_ + m2.m_);
+//}
+//inline Mat4 operator-(const Mat4& m1, const Mat4& m2) {
+//  return Mat4( m1.m_ - m2.m_);
+//}
+//inline Mat4 operator*(const Mat4& m1, const Mat4& m2) {
+//  return Mat4( m1.m_ * m2.m_);
+//}
+
 
 // ------------------------------
 // UTILITIES
 // ------------------------------
 
+// TODO
 inline Vec3 myLookAt(
     const Point3& eye, const Point3& target,
     const Vec3& up, const Vec3& dirToMove) {

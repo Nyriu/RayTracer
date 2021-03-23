@@ -11,7 +11,6 @@ if [ -d "./build" ]; then
 fi
 
 if [ ! -f "./main" ]; then
-  echo "Main not found!"
   echo "Building..."
   rm -rf build main
   mkdir build
