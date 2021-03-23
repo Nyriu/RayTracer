@@ -43,7 +43,7 @@ class Torus : public ImplicitShape {
     Torus(const Point3& c, const float& r0, const float& r1) : center_(c), r0_(r0), r1_(r1), color_(.5) {}
 
     float getDistance(const Point3& from) const {
-      Point3 p = from - center_;
+      Vec3 p = from - center_;
       // to 2D plane
       float tmpx = std::sqrt(p.x() * p.x() + p.z() * p.z()) - r0_;
       float tmpy = p.y();

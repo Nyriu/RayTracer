@@ -34,7 +34,7 @@ bool Renderer::sphereTraceShadow(const Ray& r,
 
   while (t < maxDistance) {
     float minDistance = kInfinity;
-    Vec3 from = r.at(t);
+    Point3 from = r.at(t);
     for (auto shape : scene->getShapes()) {
       float d = shape->getDistance(from);
       if (d < minDistance) {

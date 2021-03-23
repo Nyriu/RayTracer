@@ -55,6 +55,7 @@ Vec3 Camera::worldDir(const Vec3& rayDir) {
 
   Vec3 up(0,1,0);
   return myLookAt(orig_, orig_ + dir_, up, rayDir);
+  //return myLookAt(orig_, Vec3(orig_ + dir_), up, rayDir);
 }
 
 
