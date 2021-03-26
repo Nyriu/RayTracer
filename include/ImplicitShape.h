@@ -10,37 +10,42 @@
 #include "Color.h"
 
 class ImplicitShape {
-  public:
+  protected:
     Color color_;
   public:
     virtual float getDistance(const Point3& from) const = 0;
     virtual ~ImplicitShape() {}
+
+    Color getColor() const { return color_; }
 };
 
 class Sphere : public ImplicitShape {
-  public:
-    Color color_;
   private:
     Point3 center_;
     float radius_;
   public:
-    Sphere(const Point3& c, const float& r) : center_(c), radius_(r), color_(0.5) {}
-    Sphere(const Point3& c, const float& r, const Color& col) : center_(c), radius_(r), color_(col) {}
+    Sphere(const Point3& center, const float& radius) : center_(center), radius_(radius) {
+      color_ = 0.5;
+    }
+    Sphere(const Point3& center, const float& radius, const Color& color) : center_(center), radius_(radius) {
+      color_ = color;
+    }
     float getDistance(const Point3& from) const {
       return (from - center_).length() - radius_;
     }
 };
 
 class Torus : public ImplicitShape {
-  public:
-    Color color_;
   private:
     Point3 center_;
     float r0_, r1_;
   public:
-    Torus(const float& r0, const float& r1) : center_(0), r0_(r0), r1_(r1), color_(.5) {}
-
-    Torus(const Point3& c, const float& r0, const float& r1) : center_(c), r0_(r0), r1_(r1), color_(.5) {}
+    Torus(const float& r0, const float& r1) : center_(0), r0_(r0), r1_(r1) {
+      color_ = .5;
+    }
+    Torus(const Point3& center, const float& r0, const float& r1) : center_(center), r0_(r0), r1_(r1) {
+      color_ = .5;
+    }
 
     float getDistance(const Point3& from) const {
       Vec3 p = from - center_;

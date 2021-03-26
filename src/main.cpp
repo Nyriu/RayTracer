@@ -12,9 +12,9 @@ int main() {
   //const float aspect_ratio = 16.0/9.0;
   const float aspect_ratio = 1;
 
-  //const int width = 300;
+  const int width = 300;
   //const int width = 200;
-  const int width = 100;
+  //const int width = 100;
   //const int width = 400 * 2;
 
   // Window

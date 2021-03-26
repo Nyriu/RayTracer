@@ -47,6 +47,7 @@ class Color {
     friend inline Color operator+(const float& f, const Color& c);
     friend inline Color operator*(const Color& c, const float& f);
     friend inline Color operator*(const float& f, const Color& c);
+    friend inline Color operator*(const Color& c1, const Color& c2);
     friend inline Color operator/(const Color& c, const float& f);
     friend inline Color operator/(const float& f, const Color& c);
 };
@@ -67,6 +68,12 @@ inline Color operator*(const Color& c, const float& f) {
       c.r_ * f,
       c.g_ * f,
       c.b_ * f);
+}
+inline Color operator*(const Color& c1, const Color& c2) {
+  return Color(
+      c1.r_ * c2.r_,
+      c1.g_ * c2.g_,
+      c1.b_ * c2.b_);
 }
 inline Color operator*(const float& f, const Color& c) {
   return c*f;

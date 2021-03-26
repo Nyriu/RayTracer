@@ -8,20 +8,15 @@ Scene makeScene_1() {
   scene.addLight(new PointLight(Point3(0,0,-3), Color(.3,.8,.3), 20));
 
   // Shapes
-  scene.addShape(new Sphere(Point3(0),1.5));
+  //scene.addShape(new Sphere(Point3(0),1.5));
+  scene.addShape(new Sphere(Point3(0),1.5, Color(.5,.5,.5)));
 
   // Camera
   Point3 camera_origin(0,0,5);
 
-  //auto view =
-    //Vec3(0, -1, 0);
-    //Vec3(0, 10, 0);
   Point3 view(0, -1, 0);
-  //Vec3 view(0.1, 0.1, 0.1);
-  //Vec3 view(0, 1, 0);
 
   float fov = 45;
-  //Camera cam(fov, camera_origin, camera_dir);
   Camera cam(fov, camera_origin, view);
   scene.addCamera(cam);
 
