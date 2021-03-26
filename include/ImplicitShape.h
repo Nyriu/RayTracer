@@ -3,7 +3,7 @@
 
 //#include <algorithm>
 //#include <cmath>
-#include <memory>
+//#include <memory>
 //#include<vector>
 
 #include "geometry.h"
@@ -11,12 +11,28 @@
 
 class ImplicitShape {
   protected:
-    Color color_;
+    Color color_ = Color(0.3);
+
+  private:
+    float gradient_delta_ = 10e-6; // delta used to compute gradient (normal)
+
   public:
     virtual float getDistance(const Point3& from) const = 0;
     virtual ~ImplicitShape() {}
 
-    Color getColor() const { return color_; }
+    virtual Color getColor() const { return color_; }
+    virtual Color getColor(const Point3& p) const { return getColor(); }
+
+    Vec3 getNormalAt(const Point3& p) const {
+      return Vec3(
+          getDistance(
+            p+Vec3(gradient_delta_,0,0)) - getDistance(p + Vec3(-gradient_delta_,0,0)),
+          getDistance(
+            p+Vec3(0,gradient_delta_,0)) - getDistance(p + Vec3(0,-gradient_delta_,0)),
+          getDistance(
+            p+Vec3(0,0,gradient_delta_)) - getDistance(p + Vec3(0,0,-gradient_delta_))
+          ).normalize();
+    }
 };
 
 class Sphere : public ImplicitShape {
@@ -80,22 +96,30 @@ class Torus : public ImplicitShape {
 //class Plane : public ImplicitShape
 
 
-//class CSGShape : public ImplicitShape {
-//  protected:
-//    const ImplicitShape* shape1_;
-//    const ImplicitShape* shape2_;
-//    CSGShape(const ImplicitShape& shape1, const ImplicitShape& shape2) :
-//      shape1_(&shape1), shape2_(&shape2) {}
-//};
+class CSGShape : public ImplicitShape {
+  protected:
+   const ImplicitShape* shape1_ = nullptr;
+   const ImplicitShape* shape2_ = nullptr;
 
-class UnionShape : public ImplicitShape {
-  private:
-   std::shared_ptr<ImplicitShape> shape1_;
-   std::shared_ptr<ImplicitShape> shape2_;
+   void setShapes(const ImplicitShape* shape1, const ImplicitShape* shape2) {
+     shape1_ = shape1;
+     shape2_ = shape2;
+     color_ = (0.5 * shape1_->getColor()) + (0.5 * shape2_->getColor());
+   }
+   void setShapes(const ImplicitShape& shape1, const ImplicitShape& shape2) {
+     setShapes(&shape1, &shape2);
+   }
 
+   Color getColor(const Point3& p) const {
+     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor() : shape2_->getColor();
+   }
+
+};
+
+class UnionShape : public CSGShape {
   public:
-    UnionShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
-      shape1_(shape1), shape2_(shape2) {}
+    UnionShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    UnionShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       return std::min(
@@ -105,13 +129,10 @@ class UnionShape : public ImplicitShape {
     }
 };
 
-class IntersectShape : public ImplicitShape {
-  private:
-   std::shared_ptr<ImplicitShape> shape1_;
-   std::shared_ptr<ImplicitShape> shape2_;
+class IntersectShape : public CSGShape {
   public:
-    IntersectShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
-      shape1_(shape1), shape2_(shape2) {}
+    IntersectShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    IntersectShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       return std::max(
@@ -121,18 +142,15 @@ class IntersectShape : public ImplicitShape {
     }
 };
 
-class SubtractShape : public ImplicitShape {
-  private:
-   std::shared_ptr<ImplicitShape> shape1_;
-   std::shared_ptr<ImplicitShape> shape2_;
+class SubtractShape : public CSGShape {
   public:
-    SubtractShape(const std::shared_ptr<ImplicitShape> shape1, const std::shared_ptr<ImplicitShape> shape2) :
-      shape1_(shape1), shape2_(shape2) {}
+    SubtractShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    SubtractShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       return std::max(
-          -shape1_->getDistance(from),
-          shape2_->getDistance(from)
+          shape1_->getDistance(from),
+          -shape2_->getDistance(from)
           );
     }
 };

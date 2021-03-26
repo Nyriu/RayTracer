@@ -74,14 +74,17 @@ void Renderer::mainLoop() {
   } else {
     //const int tmax_ = 10;
     const int tmax_ = 1;
-    std::string prefix = "./wip_imgs/seq_";
+    std::string prefix = "./wip_imgs/time_";
+    //std::string prefix = "./wip_imgs/seq_";
     std::string suffix = ".ppm";
     while (t_ < tmax_) {
       //cam_.translate(Vec3(-2 + t_,0,0));
       cam_->translate(Vec3(t_,0,0));
       //std::cout << "main loop" << std::endl;
       generateFrame();
-      img_.writePPM(prefix + std::to_string(t_) + suffix);
+      //img_.writePPM(prefix + std::to_string(t_) + suffix);
+      img_.writePPM(prefix + std::to_string(std::time(0)) + suffix);
+
       t_++;
     }
   }

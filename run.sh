@@ -20,9 +20,13 @@ if [ ! -f "./main" ]; then
   cd ..
 fi
 
-rm -fr wip_imgs
-mkdir wip_imgs
+DIR="wip_imgs/"
+if [ ! -d "$DIR" ]; then
+  mkdir "$DIR$IMG"
+fi
 
 ./main
 
-viewnior wip_imgs/seq_0.ppm
+IMG=$(ls -t "$DIR" | head -1)
+echo "$DIR$IMG"
+viewnior "$DIR$IMG"

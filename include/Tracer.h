@@ -37,8 +37,6 @@ class Tracer {
     int   max_distance_  = 100; // max n of steps along a ray // draw distance?
     float hit_threshold_ = 10e-6; // min distance to signal a ray-sruface hit
 
-    float gradient_delta_ = 10e-6; // delta used to compute gradient (normal)
-
 
   public:
     Tracer() = default;
@@ -52,7 +50,8 @@ class Tracer {
 
     Color sphereTrace(const Ray& r); // better with pointer?
     Color shade(const Point3& p, const ImplicitShape *shape);
-    bool sphereTraceShadow(const Ray& r);
+    //bool sphereTraceShadow(const Ray& r);
+    bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 
 };
 

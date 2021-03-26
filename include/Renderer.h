@@ -8,8 +8,9 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <memory> // shared_ptr // todo use
+//#include <memory> // shared_ptr // todo use not
 // https://en.cppreference.com/w/cpp/memory/shared_ptr
+#include<ctime>
 
 #include "Color.h"
 #include "geometry.h"

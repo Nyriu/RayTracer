@@ -74,3 +74,35 @@ Scene makeScene_Toruses() {
 }
 
 
+Scene makeScene_ShadowDebug() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,4), Color(1), 200));
+
+  //scene.addLight(new PointLight(Point3(4,0,3), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(-4,0,3), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(0, 4,0), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(0,-4,0), Color(1), 200));
+
+  // Shapes
+  scene.addShape(
+      new UnionShape(
+      //new SubtractShape(
+        new Sphere(Point3(0),2, Color(1,0,0)),
+  //);
+  //scene.addShape(
+        new Sphere(Point3(1,0,2),.5, Color(0,1,0))
+        )
+      );
+
+  // Camera
+  Point3 camera_origin(0,0,5);
+  Point3 view(0, 0, 0);
+
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}
+

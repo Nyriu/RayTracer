@@ -1,37 +1,55 @@
 #include "Tracer.h"
 
+// DEBUG STUFF
+#include "utilities.h" // for DEBUG_message
+bool DEBUG_sphereTraceShadow = false;
 
-bool Tracer::sphereTraceShadow(const Ray& r) {
+
+// END // DEBUG STUFF
+
+
+
+
+bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow) {
+  bool &D = DEBUG_sphereTraceShadow;
+
+  DEBUG_message(D,
+      "[-------------------------\ninside sphereTraceShadow"
+      );
+
+
   float t = 0;
   while (t < max_distance_) {
     float min_distance = infinity;
     Point3 from = r.at(t);
     for (auto shape : scene_->getShapes()) {
+      if (shape == shapeToShadow)
+        continue;
+
       float d = shape->getDistance(from);
       if (d < min_distance) {
         min_distance = d;
         if (min_distance <= hit_threshold_ * t) {
+  DEBUG_message(D,
+      "exiting sphereTraceShadow (true)\n-------------------------]\n"
+      );
           return true;
         }
-
       }
     }
     t += min_distance;
   }
+
+  DEBUG_message(D,
+      "exiting sphereTraceShadow (false)\n-------------------------]\n"
+      );
+
   return false;
 }
 
 
 Color Tracer::shade(const Point3& p, const ImplicitShape *shape) {
-  Vec3 n = Vec3(
-      shape->getDistance(
-        p+Vec3(gradient_delta_,0,0)) - shape->getDistance(p + Vec3(-gradient_delta_,0,0)),
-      shape->getDistance(
-        p+Vec3(0,gradient_delta_,0)) - shape->getDistance(p + Vec3(0,-gradient_delta_,0)),
-      shape->getDistance(
-        p+Vec3(0,0,gradient_delta_)) - shape->getDistance(p + Vec3(0,0,-gradient_delta_))
-      );
-  n.normalize();
+  Vec3 n = shape->getNormalAt(p);
 
   Color shadeColor = Color(0);
 
@@ -44,11 +62,18 @@ Color Tracer::shade(const Point3& p, const ImplicitShape *shape) {
 
       // TODO use surface color
       //bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), scene);
-      bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir));
+      bool shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+      // DEBUG CODE
+      if (shadow){
+        DEBUG_sphereTraceShadow = true;
+        sphereTraceShadow(Ray(p,lightDir), shape);
+        DEBUG_sphereTraceShadow = false;
+      }
+      // END // DEBUG CODE
 
       // TODO HERE USE SHAPE
-      //shadeColor += shadow * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
-      shadeColor += lightDir.dot(n) * shape->getColor() * light->getColor(); // light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
+      //shadeColor += (1-shadow) * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
+      shadeColor += (1-shadow) * lightDir.dot(n) * shape->getColor(p) * light->getColor();
     }
   }
   return shadeColor;
@@ -83,6 +108,7 @@ Color Tracer::sphereTrace(const Ray& r) {
     t += minDistance;
     //n_steps++;
   }
-  return Color(0);
+  //return Color(0);
+  return Color(1,0,0);
 }
 
