@@ -120,6 +120,7 @@ Color Tracer::sphereTrace(const Ray& r) {
     //n_steps++;
   }
   //return Color(0);
-  return Color(1,0,0);
+  //return Color(1,0,0);
+  return Color(0.2,.2,.7);
 }
 

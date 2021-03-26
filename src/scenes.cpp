@@ -77,7 +77,7 @@ Scene makeScene_Toruses() {
 Scene makeScene_ShadowDebug() {
   Scene scene;
   // Lights
-  scene.addLight(new PointLight(Point3(4,3,4), Color(1), 200));
+  scene.addLight(new PointLight(Point3(4,3,3.5), Color(1), 200));
 
   //scene.addLight(new PointLight(Point3(4,0,3), Color(1), 200));
   //scene.addLight(new PointLight(Point3(-4,0,3), Color(1), 200));
@@ -87,9 +87,11 @@ Scene makeScene_ShadowDebug() {
   // Shapes
   scene.addShape(
       new UnionShape(
-      //new SubtractShape(
-        new Sphere(Point3(0),2, Color(1,0,0)),
-        new Sphere(Point3(1,0,2),.5, Color(0,1,0))
+        new SubtractShape(
+          new Sphere(Point3(0),2, Color(1,0,0)),
+          new Sphere(Point3(1,0,2),.5, Color(0,1,0))
+          ),
+        new Sphere(Point3(.5,1,1.7),.5, Color(0,1,1))
         )
       );
 
