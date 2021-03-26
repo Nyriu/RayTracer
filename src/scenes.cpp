@@ -16,8 +16,9 @@ Scene makeScene_1() {
   //auto view =
     //Vec3(0, -1, 0);
     //Vec3(0, 10, 0);
-  Point3 view(0, 1, 0);
+  Point3 view(0, -1, 0);
   //Vec3 view(0.1, 0.1, 0.1);
+  //Vec3 view(0, 1, 0);
 
   float fov = 45;
   //Camera cam(fov, camera_origin, camera_dir);

@@ -85,6 +85,7 @@ class Camera {
   public:
     //Vec3 worldDir(const Vec3& rayDir);
     Vec3 intoWorldDir(const Vec3& rayDir);
+    Point3 intoWorld(const Point3& p);
 
     void toUpdate() { updated_ = false; }
     void updateViewMatrix();

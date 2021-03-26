@@ -31,6 +31,7 @@ class Mat4;
 class Point3 {
   public:
     friend class Vec3;
+    friend class Vec4;
 
     friend inline Point3 operator+(const Point3& u, const Point3& v);
     friend inline Vec3 operator-(const Point3& u, const Point3& v);
@@ -287,6 +288,7 @@ class Vec4 {
     Vec4(const glm::vec4 v) : v_(v) {};
     Vec4(const Vec4& v) : v_(v.v_) {};
     Vec4(const Vec3& v, const float w) : v_(glm::vec4(v.v_,0)) {};
+    Vec4(const Point3& v, const float w) : v_(glm::vec4(v.v_,0)) {};
 
     float x() const { return v_.x; }
     float y() const { return v_.y; }
@@ -330,6 +332,8 @@ class Vec4 {
       }
       throw "Vec4 unexpected drop dim";
     }
+
+    Point3 asPoint3() { return Point3(v_.x, v_.y, v_.z); }
 
     float dot(const Vec4 &v2) {
       return glm::dot(v_, v2.v_);
@@ -397,25 +401,27 @@ inline Vec4 operator*(const Mat4& m, const Vec4& v) {
 // UTILITIES
 // ------------------------------
 
-inline Vec3 myLookAt(
-    const Point3& eye, const Point3& target,
-    const Vec3& up, const Vec3& dirToMove) {
-  // extremely ugly
-
-  glm::mat4 viewMat = glm::lookAt(eye.v_, target.v_, up.v_);
-  glm::vec4 worldRayDir = (viewMat * glm::vec4(dirToMove.v_, 0));
-
-  return Vec3(
-      normalize(
-        glm::vec3(
-          worldRayDir.x, worldRayDir.y, worldRayDir.z
-          )));
-}
+// Deprecated, remove
+//inline Vec3 myLookAt(
+//    const Point3& eye, const Point3& target,
+//    const Vec3& up, const Vec3& dirToMove) {
+//  // extremely ugly
+//
+//  glm::mat4 viewMat = glm::lookAt(eye.v_, target.v_, up.v_);
+//  glm::vec4 worldRayDir = (viewMat * glm::vec4(dirToMove.v_, 0));
+//
+//  return Vec3(
+//      normalize(
+//        glm::vec3(
+//          worldRayDir.x, worldRayDir.y, worldRayDir.z
+//          )));
+//}
 
 inline Mat4 geom_lookAt(
     const Point3& eye, const Point3& center, const Vec3& up) {
   return Mat4(glm::lookAt(eye.v_, center.v_, up.v_));
 }
+
 
 
 

@@ -24,8 +24,17 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   //sv *= scale;
 
   // From ScreenCoords to WorldCoords
-  Vec3 direction = Vec3(su,sv,-1).normalize();
-  return Ray(orig_, intoWorldDir(direction)) ; //  - orig_);
+  //Vec3 direction = Vec3(su,sv,-1).normalize();
+  //return Ray(orig_, intoWorldDir(direction));
+
+  Point3 p = Point3(su,sv,-1);
+  return Ray(
+      //intoWorld(Point3(0)),
+      //intoWorld(orig_),
+      orig_,
+      //((intoWorld(p) - orig_) - Point3(0)).normalize()
+      (intoWorld(p) - Point3(0)).normalize()
+       ); //  - orig_);
 }
 
 bool Camera::update() {
@@ -113,7 +122,11 @@ Vec3 Camera::intoWorldDir(const Vec3& rayDir) {
 }
 
 
+Point3 Camera::intoWorld(const Point3& p) {
+  if (isToUpdate()) update();
 
+  return (viewMatrix_ * Vec4(p,0)).asPoint3(); // drop the exceding dimension
+}
 
 
 
