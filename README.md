@@ -47,3 +47,7 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 Simple CSG
 
 ![](./imgs/img_03.png)
+
+CSG Shadow Debug Process
+
+![](./imgs/funny_shadow_debug_process.gif)
