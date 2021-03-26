@@ -17,16 +17,27 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
       "[-------------------------\ninside sphereTraceShadow"
       );
 
-
   float t = 0;
   while (t < max_distance_) {
     float min_distance = infinity;
     Point3 from = r.at(t);
     for (auto shape : scene_->getShapes()) {
-      if (shape == shapeToShadow)
-        continue;
-
       float d = shape->getDistance(from);
+
+      // First method // Problems where actualy should be in shadow
+      //if (shape == shapeToShadow && d < anti_selfhit_shadow_threshold_)
+      //  continue;
+
+      // Second method
+      if (shape == shapeToShadow && d <= hit_threshold_ * t) {
+        // move "from" a bit over the surface (along the normal direction)
+        d = shape->getDistance(
+            from + shape->getNormalAt(from) * 10e-7
+            );
+      // Third method // Try to descend into the CSG and exclude only current shape
+
+      }
+
       if (d < min_distance) {
         min_distance = d;
         if (min_distance <= hit_threshold_ * t) {
@@ -63,13 +74,13 @@ Color Tracer::shade(const Point3& p, const ImplicitShape *shape) {
       // TODO use surface color
       //bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), scene);
       bool shadow = sphereTraceShadow(Ray(p,lightDir), shape);
-      // DEBUG CODE
-      if (shadow){
-        DEBUG_sphereTraceShadow = true;
-        sphereTraceShadow(Ray(p,lightDir), shape);
-        DEBUG_sphereTraceShadow = false;
-      }
-      // END // DEBUG CODE
+      // // DEBUG CODE
+      // if (shadow){
+      //   DEBUG_sphereTraceShadow = true;
+      //   sphereTraceShadow(Ray(p,lightDir), shape);
+      //   DEBUG_sphereTraceShadow = false;
+      // }
+      // // END // DEBUG CODE
 
       // TODO HERE USE SHAPE
       //shadeColor += (1-shadow) * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff

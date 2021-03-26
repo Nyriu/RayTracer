@@ -89,8 +89,6 @@ Scene makeScene_ShadowDebug() {
       new UnionShape(
       //new SubtractShape(
         new Sphere(Point3(0),2, Color(1,0,0)),
-  //);
-  //scene.addShape(
         new Sphere(Point3(1,0,2),.5, Color(0,1,0))
         )
       );

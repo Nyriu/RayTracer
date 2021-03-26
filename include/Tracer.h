@@ -36,6 +36,8 @@ class Tracer {
     // Tracer Options
     int   max_distance_  = 100; // max n of steps along a ray // draw distance?
     float hit_threshold_ = 10e-6; // min distance to signal a ray-sruface hit
+    //float anti_selfhit_shadow_threshold_ = 10e-15;
+
 
 
   public:
