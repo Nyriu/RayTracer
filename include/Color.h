@@ -4,6 +4,7 @@
 //#include <iostream>
 //#include <ostream>
 #include <fstream>
+#include <string>
 
 //#include <glm/vec3.hpp> // glm::vec3
 
@@ -31,9 +32,9 @@ class Color {
     float g() const { return g_; }
     float b() const { return b_; }
 
-    int r255() const { return clamp(static_cast<int>(r_ * 255.999f), 0, 255); }
-    int g255() const { return clamp(static_cast<int>(g_ * 255.999f), 0, 255); }
-    int b255() const { return clamp(static_cast<int>(b_ * 255.999f), 0, 255); }
+    int r255() const { return utilities::clamp(static_cast<int>(r_ * 255.999f), 0, 255); }
+    int g255() const { return utilities::clamp(static_cast<int>(g_ * 255.999f), 0, 255); }
+    int b255() const { return utilities::clamp(static_cast<int>(b_ * 255.999f), 0, 255); }
 
     Color& operator +=(const Color &c){
       r_ += c.r_;
@@ -42,13 +43,40 @@ class Color {
       return *this;
     }
 
+    Color& clamp(const float minVal, float maxVal) {
+      r_ = utilities::clamp(r_, minVal, maxVal);
+      g_ = utilities::clamp(g_, minVal, maxVal);
+      b_ = utilities::clamp(b_, minVal, maxVal);
+      return *this;
+    }
+
+    std::string to_string() const {
+      return "Color: " +
+        std::to_string(r_) + " " +
+        std::to_string(g_) + " " +
+        std::to_string(b_);
+    }
+
+
+
+
+
+
+
+
+
+
     // Friends
     friend inline Color operator+(const Color& c, const float& f);
     friend inline Color operator+(const float& f, const Color& c);
     friend inline Color operator+(const Color& c1, const Color& c2);
+
+    friend inline Color operator-(const Color& c1, const Color& c2);
+
     friend inline Color operator*(const Color& c, const float& f);
     friend inline Color operator*(const float& f, const Color& c);
     friend inline Color operator*(const Color& c1, const Color& c2);
+
     friend inline Color operator/(const Color& c, const float& f);
     friend inline Color operator/(const float& f, const Color& c);
 };
@@ -69,6 +97,15 @@ inline Color operator+(const Color& c1, const Color& c2) {
       c1.g_ + c2.g_,
       c1.b_ + c2.b_);
 }
+
+
+inline Color operator-(const Color& c1, const Color& c2) {
+  return Color(
+      c1.r_ - c2.r_,
+      c1.g_ - c2.g_,
+      c1.b_ - c2.b_);
+}
+
 
 inline Color operator*(const Color& c, const float& f) {
   return Color(
@@ -108,6 +145,14 @@ inline std::ostream& operator<<(std::ostream &out, const Color &c) {
     << c.r255() << " "
     << c.g255() << " "
     << c.b255() << " ";
+}
+
+inline Color pow(const Color& base_c, const Color& exp_c) {
+  return Color(
+      base_c.r() * exp_c.r(),
+      base_c.g() * exp_c.g(),
+      base_c.b() * exp_c.b()
+      );
 }
 
 #endif

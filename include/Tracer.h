@@ -51,7 +51,7 @@ class Tracer {
     }
 
     Color sphereTrace(const Ray& r); // better with pointer?
-    Color shade(const Point3& p, const ImplicitShape *shape);
+    Color shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape);
     //bool sphereTraceShadow(const Ray& r);
     bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 

@@ -65,24 +65,24 @@ class Point3 {
     float z() const { return v_.z; }
 
 
-    float length() {
+    float length() const {
       return glm::length(v_);
     }
 
-    float length2() {
+    float length2() const {
       return glm::length2(v_);
     }
 
-    float magnitude() {
+    float magnitude() const {
       return this->length();
     }
 
-    Point3 cross(const Point3 &v2) {
+    Point3 cross(const Point3 &v2) const {
       // Needs to change the state of "this"?
       return Point3(glm::cross(v_, v2.v_));
     }
 
-    float dot(const Point3 &v2) {
+    float dot(const Point3 &v2) const {
       return glm::dot(v_, v2.v_);
     }
 };
@@ -155,26 +155,28 @@ class Vec3 {
       return *this;
     }
 
-    float length() {
+    float length() const {
       return glm::length(v_);
     }
 
-    float length2() {
+    float length2() const {
       return glm::length2(v_);
     }
 
-    float magnitude() {
+    float magnitude() const {
       return this->length();
     }
 
-    Vec3 cross(const Vec3 &v2) {
+    Vec3 cross(const Vec3 &v2) const {
       // Needs to change the state of "this"?
       return Vec3(glm::cross(v_, v2.v_));
     }
 
-    float dot(const Vec3 &v2) {
+    float dot(const Vec3 &v2) const {
       return glm::dot(v_, v2.v_);
     }
+
+
 };
 
 inline Vec3 operator+(const Vec3& u, const Vec3& v) {
@@ -318,7 +320,7 @@ class Vec4 {
 
     Vec3 drop(const int dim) {
       if (dim < 0 || dim > 3)
-        throw "Vec4 has 3 dims! Must drop in [0,3]";
+        throw "Vec4 has 4 dims! Must drop in [0,3]";
 
       switch (dim) {
         case 0:
@@ -335,7 +337,7 @@ class Vec4 {
 
     Point3 asPoint3() { return Point3(v_.x, v_.y, v_.z); }
 
-    float dot(const Vec4 &v2) {
+    float dot(const Vec4 &v2) const {
       return glm::dot(v_, v2.v_);
     }
 };

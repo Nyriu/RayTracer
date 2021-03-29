@@ -25,10 +25,10 @@ int main() {
 
   // Scene
   auto scene =
-    //makeScene_1();
+    makeScene_1();
     //makeScene_Spheres();
     //makeScene_Toruses();
-    makeScene_ShadowDebug();
+    //makeScene_ShadowDebug();
 
 
   Renderer renderer(&window);

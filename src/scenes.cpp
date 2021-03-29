@@ -1,15 +1,19 @@
 #include "scenes.h"
 
 Scene makeScene_1() {
+
+  float intensity_scale = .02;
+
   Scene scene;
   // Lights
-  scene.addLight(new PointLight(Point3(4,3,3), Color(1), 200));
-  scene.addLight(new PointLight(Point3(0,-3,3), Color(.8,.2,.5), 50));
-  scene.addLight(new PointLight(Point3(0,0,-3), Color(.3,.8,.3), 20));
+  scene.addLight(new PointLight(Point3(4,3,3), Color(1), 200 * intensity_scale));
+  //scene.addLight(new PointLight(Point3(0,-3,3), Color(.8,.2,.5), 50));
+  //scene.addLight(new PointLight(Point3(0,0,-3), Color(.3,.8,.3), 20));
+  scene.addLight(new PointLight(Point3(0,-3,3), Color(1), 50 * intensity_scale));
 
   // Shapes
   //scene.addShape(new Sphere(Point3(0),1.5));
-  scene.addShape(new Sphere(Point3(0),1.5, Color(.5,.5,.5)));
+  scene.addShape(new Sphere(Point3(0),1.5, Color(.9,.2,.2)));
 
   // Camera
   Point3 camera_origin(0,0,5);

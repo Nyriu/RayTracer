@@ -2,7 +2,11 @@
 
 // DEBUG STUFF
 #include "utilities.h" // for DEBUG_message
+#include <string>
 bool DEBUG_sphereTraceShadow = false;
+bool DEBUG_general = true;
+
+using namespace utilities;
 
 
 // END // DEBUG STUFF
@@ -59,35 +63,138 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
 }
 
 
-Color Tracer::shade(const Point3& p, const ImplicitShape *shape) {
+/// OLD
+Color BRDF_Specular_GGX_Environment( const Vec3& viewDir, const Vec3& normal, const Color& specularColor, const float& roughness) {
+  float dotNV = clamp(normal.dot(viewDir), 0.0, 1.0 );
+
+  const Vec4 c0 = Vec4( - 1, - 0.0275, - 0.572, 0.022 );
+  const Vec4 c1 = Vec4( 1, 0.0425, 1.04, - 0.04 );
+
+  Vec4 r = roughness * c0 + c1;
+
+  float a004 = std::min( r.x() * r.x(), std::exp2f( - 9.28 * dotNV ) ) * r.x() + r.y();
+
+  //Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + r.zw;
+  Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + Vec3(r.z(), r.w(), 0);
+
+  return specularColor * brdf.x() + brdf.y();
+}
+
+Color FSchlick(const float& vDoth, const Color& f0) {
+  return f0 + (Color(1.0) - f0)*pow(1.0 - vDoth,5.0);
+}
+
+float DGGX(float NoH, float alpha) {
+  float alpha2 = alpha * alpha;
+  float k = NoH*NoH * (alpha2 - 1.0) + 1.0;
+  return alpha2 / (M_PI * k * k );
+}
+
+float G1(float nDotv, float alpha) {
+  float alpha2 = alpha*alpha;
+  return 2.0 * (nDotv / (nDotv + std::sqrt(alpha2 + (1.0-alpha2)*nDotv*nDotv )));
+}
+
+float GSmith(float nDotv, float nDotl, float alpha) {
+  DEBUG_message(DEBUG_general, "GSmith :" + std::to_string(
+        G1(nDotl,alpha)*G1(nDotv,alpha)
+        ));
+  return G1(nDotl,alpha)*G1(nDotv,alpha);
+}
+/// END // OLD
+
+Color fschlick(const float& angle, const Color& cspec) { // fresnel approximation
+  float angle_pos = clamp_lower(angle, 0);
+  return cspec + (Color(1.0) - cspec)*pow(1.0 - angle_pos,5.0);
+}
+
+//float g1(const float& nDots, const float& alpha) { // Smith G_1 approximation by Karis
+//  return 2 * nDots / (nDots * (2-alpha) + alpha);
+//
+//}
+
+float gsmith(const float& nDotv, const float& nDotl, const float& alpha) { // Hammon approx
+  return 0.5 / (
+      lerp(
+        2 * abs(nDotl) * abs(nDotv),
+        abs(nDotl) + nDotv,
+        alpha
+        )
+      );
+}
+
+
+
+Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape) {
   Vec3 n = shape->getNormalAt(p);
 
-  Color shadeColor = Color(0);
+  //Color shadeColor = Color(0);
+  Color outRadiance = Color(0);
+
+  // TODO init all things inside for here
+  //bool shadow;
+  //float dist2 = 0;
+
+  ////float metalness, roughness, alpha = 0;
+  //Color cdiff, cspec, fresnel, brdf = Color(0);
+  //Vec3 h = Vec3(0);
+  //float nDotv, nDoth, vDoth, nDotl = 0;
+
+  Vec3 lightDir(0);
+  float nDotl = 0;
+  float nDotv = 0;
+  float nDoth = 0;
+  //float vDotl = 0;
+  Vec3 h = Vec3(0);
+  float vDoth = 0;
+  Color cspec(0);
+  Color cdiff(0);
+  Color brdf(0);
+  Color fresnel(0);
+  float roughness = 0;
+  float alpha = 0;
+
 
   for (const auto& light : scene_->getLights()) {
-    //std::cout << "light" << std::endl;
-    Vec3 lightDir = light->getPosition() - p;
-    if (lightDir.dot(n) > 0) {
-      float dist2 = lightDir.length2(); // squared dist
-      lightDir.normalize();
+    lightDir = (light->getPosition() - p).normalize();
+    nDotl = n.dot(lightDir);
 
-      // TODO use surface color
-      //bool shadow = 1 - sphereTraceShadow(Ray(p,lightDir), sqrtf(dist2), scene);
-      bool shadow = sphereTraceShadow(Ray(p,lightDir), shape);
-      // // DEBUG CODE
-      // if (shadow){
-      //   DEBUG_sphereTraceShadow = true;
-      //   sphereTraceShadow(Ray(p,lightDir), shape);
-      //   DEBUG_sphereTraceShadow = false;
-      // }
-      // // END // DEBUG CODE
+    if (nDotl > 0) {
+      //outRadiance += shape->getColor() * light->getColor() * nDotl; // Lambertian // M_PI canceled out
 
-      // TODO HERE USE SHAPE
-      //shadeColor += (1-shadow) * lightDir.dot(n) * light->getColor() * light->getIntensity() /(float) (4 * M_PI * dist2); // with square falloff
-      shadeColor += (1-shadow) * lightDir.dot(n) * shape->getColor(p) * light->getColor();
+      //vDotl = viewDir.dot(lightDir);
+      h = (viewDir+lightDir).normalize();
+      vDoth = viewDir.dot(h);
+      nDotv = viewDir.dot(h);
+      nDoth = n.dot(h);
+
+      // Plastic example
+      cdiff = shape->getColor();
+      cspec = Color(0.04);
+      roughness = 0;
+
+      // // Metal example
+      // cdiff = Color(0);
+      // cspec = shape->getColor();
+      // roughness = 0;
+
+      alpha = roughness * roughness;
+
+      fresnel = fschlick(vDoth, cspec);
+      brdf =
+        (Color(1) - fresnel) * cdiff / M_PI //+                       // diffuse
+        //fresnel // / (4.0*abs(nDotv)*abs(nDotl));
+        //fresnel * gsmith(nDotv, nDotl, alpha) * DGGX(nDoth,alpha)
+      ; // specular
+
+      //outRadiance += brdf * light->getColor() * nDotl;
+      outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl;
     }
   }
-  return shadeColor;
+
+  // outRadiance += ambientLight*cdiff; // TODO ambient lights
+
+  return outRadiance;
 }
 
 
@@ -111,7 +218,7 @@ Color Tracer::sphereTrace(const Ray& r) {
     // did we intersect the shape?
     if (minDistance <= hit_threshold_ * t) {
       //std::cout << "Color a pixel" << std::endl;
-      return shade(r.at(t), intersectedShape);  // use lights
+      return shade(r.at(t), r.direction(), intersectedShape);  // use lights
       //return intersectedShape->color_;        // use only surf color
       //return Color(float(n_steps)/tmax,0, 0); // color by pixel comput cost
       //return Color(1,0,0);                    // fixed color
