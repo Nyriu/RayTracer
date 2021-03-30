@@ -154,9 +154,13 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
   float roughness = 0;
   float alpha = 0;
 
+  bool shadow;
+  float dist2 = 0;
 
   for (const auto& light : scene_->getLights()) {
-    lightDir = (light->getPosition() - p).normalize();
+    lightDir = (light->getPosition() - p);
+    dist2 = lightDir.length2(); // squared dist
+    lightDir.normalize();
     nDotl = n.dot(lightDir);
 
     if (nDotl > 0) {
@@ -180,19 +184,35 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
 
       alpha = roughness * roughness;
 
-      fresnel = fschlick(vDoth, cspec);
+      //fresnel = fschlick(vDoth, cspec);
       brdf =
-        (Color(1) - fresnel) * cdiff / M_PI //+                       // diffuse
+        cdiff / M_PI //+                       // diffuse
+        //(Color(1) - fresnel) * cdiff / M_PI //+                       // diffuse
         //fresnel // / (4.0*abs(nDotv)*abs(nDotl));
         //fresnel * gsmith(nDotv, nDotl, alpha) * DGGX(nDoth,alpha)
       ; // specular
 
       //outRadiance += brdf * light->getColor() * nDotl;
-      outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl;
+      //outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl;
+
+      // With shadows below
+     shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+     outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+       / (float) (4 * dist2) // with square falloff
+       ;
+
+    //shadeColor += (1-shadow) * lightDir.dot(n) * light->getColor() * light->getIntensity()
     }
+
   }
 
-  // outRadiance += ambientLight*cdiff; // TODO ambient lights
+  cdiff = shape->getColor();
+  if (scene_->hasAmbientLight()) {
+    //outRadiance += ambientLight*cdiff; // TODO ambient lights
+    //outRadiance += Color(0.15) * cdiff; // TODO ambient lights
+    Light* ambientLight = scene_->getAmbientLight();
+    outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff; // TODO ambient lights
+  }
 
   return outRadiance;
 }
@@ -226,8 +246,8 @@ Color Tracer::sphereTrace(const Ray& r) {
     t += minDistance;
     //n_steps++;
   }
-  //return Color(0);
+  return Color(0);
   //return Color(1,0,0);
-  return Color(0.2,.2,.7);
+  //return Color(0.2,.2,.7);
 }
 

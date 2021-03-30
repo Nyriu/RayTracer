@@ -40,6 +40,9 @@ class Sphere : public ImplicitShape {
     Point3 center_;
     float radius_;
   public:
+    Sphere(const float& radius) : center_(Point3(0)), radius_(radius) {
+      color_ = 0.5;
+    }
     Sphere(const Point3& center, const float& radius) : center_(center), radius_(radius) {
       color_ = 0.5;
     }

@@ -176,6 +176,10 @@ class Vec3 {
       return glm::dot(v_, v2.v_);
     }
 
+    Point3 as_Point() {
+      return Point3(v_);
+    }
+
 
 };
 

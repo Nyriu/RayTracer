@@ -21,6 +21,7 @@ class Scene {
     //  TODO shared_ptr no more needed?
     Shapes shapes_;
     Lights lights_;
+    AmbientLight* ambientLight_ = nullptr;
     //bool to_update
     //Camera *camera_ = nullptr;
     Camera camera_;
@@ -40,7 +41,11 @@ class Scene {
     void addLight(Light* light) {
       lights_.push_back(light);
     }
+    void addAmbientLight(AmbientLight* light) {
+      ambientLight_ = light;
+    }
 
+    bool hasAmbientLight() const { return ambientLight_ != nullptr; }
     bool hasCamera() const { return has_camera_; }
     //bool hasCamera() const { return camera_ != nullptr; }
     //void addCamera(Camera* camera) { camera_ = camera; }
@@ -52,6 +57,7 @@ class Scene {
     //addLight()
     Shapes getShapes() const { return shapes_; }
     Lights getLights() const { return lights_; }
+    Light* getAmbientLight() const { return ambientLight_; }
     //Camera* getCamera() const { return camera_; }
     Camera* getCamera() { return &camera_; }
 };
