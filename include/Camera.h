@@ -3,65 +3,97 @@
 
 #include "geometry.h"
 #include "Ray.h"
-#include <glm/ext/matrix_transform.hpp>
+//#include <glm/ext/matrix_transform.hpp>
 
 class Camera {
   friend std::ostream& operator<<(std::ostream& out, const Camera& c);
 
   private:
     Point3 orig_ = Point3(0);
-    Vec3   dir_  = Vec3(0,0,-1);
+
+    Point3 target_ = Point3(0,0,0);
+    Vec3   dir_    = Vec3(0,0,-1).normalize();
+    bool use_target = false; // true iff the user gave a target point to look at
+
     float fov_=45, aspect_=1;
 
+    Mat4 viewMatrix_;
+
     float updated_ = false; // if the camera has been updated
+                            // if false need to update (e.g. viewMatrix)
 
   public:
     Camera() = default;
 
     Camera(float fov, float aspect_ratio) :
-      fov_(fov), aspect_(aspect_ratio) {
-        dir_.normalize();
+      fov_(fov), aspect_(aspect_ratio) { }
+
+    Camera(const Point3& origin, const Vec3& direction) :
+      orig_(origin) {
+        lookAt(direction);
+        update();
       }
 
-    //camera(const point3& origin, const point3& target) : orig(origin) {
-    Camera(const Point3& origin, const Vec3& direction) :
-      orig_(origin), dir_(direction) {
-      dir_.normalize();
-      //this->target = target;
-    }
+    Camera(const Point3& origin, const Point3& target) :
+      orig_(origin) {
+        lookAt(target);
+        update();
+      }
+
+    Camera(float fov, const Point3& origin, const Point3& target) :
+      orig_(origin), fov_(fov) {
+        lookAt(target);
+        update();
+      }
 
     Camera(float fov, const Point3& origin, const Vec3& direction) :
-      orig_(origin), dir_(direction), fov_(fov) {
-      dir_.normalize();
-      //this->target = target;
-    }
+      orig_(origin), fov_(fov) {
+        lookAt(direction);
+        update();
+      }
 
     Camera(
         float fov, float aspect_ratio,
-        const Point3& camera_origin,
-        const Vec3& camera_dir
+        const Point3& origin,
+        const Point3& target
         ) :
-      orig_(camera_origin), dir_(camera_dir), fov_(fov), aspect_(aspect_ratio) {
-        dir_.normalize();
+      orig_(origin), fov_(fov), aspect_(aspect_ratio) {
+        lookAt(target);
+        update();
+      }
+
+    Camera(
+        float fov, float aspect_ratio,
+        const Point3& origin,
+        const Vec3& direction
+        ) :
+      orig_(origin), fov_(fov), aspect_(aspect_ratio) {
+        lookAt(direction);
+        update();
       }
 
     Ray generate_ray(float u, float v); // input NDC Coord
 
-    Vec3 worldDir(const Vec3& rayDir);
-
-    bool isToUpdate() const { return !updated_; }
-
-    bool update() {
-      if (isToUpdate()) {
-        updated_ = true;
-        return true;
-      }
-      return false;
-    }
-
+    //Vec3 lookAt(const Point3 p);
+    //Vec3 lookAt(const Vec3 direction);
+    void lookAt(const Point3 p);
+    void lookAt(const Vec3 direction);
   private:
-    void toUpdate() { updated_ = false; }
+    Mat4 lookAt_(const Point3& eye, const Point3& center, const Vec3& up) {
+      return geom_lookAt(eye, center, up);
+    }
   public:
+    //Vec3 worldDir(const Vec3& rayDir);
+    Vec3 intoWorldDir(const Vec3& rayDir);
+    Point3 intoWorld(const Point3& p);
+
+    void toUpdate() { updated_ = false; }
+    void updateViewMatrix();
+
+  public:
+    bool isToUpdate() const { return !updated_; }
+    bool update(); // actually updates the camera
+
     void translate(const Vec3& v) {
       orig_ = orig_ + v;
       toUpdate();

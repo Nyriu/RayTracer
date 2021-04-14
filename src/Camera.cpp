@@ -1,5 +1,9 @@
 #include "Camera.h"
 
+//#include "geometry.h"
+#include <iostream>
+
+
 Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   // Put coords in [-1,1]
   float su = 2 * u - 1; // Screen Coord
@@ -20,44 +24,109 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   //sv *= scale;
 
   // From ScreenCoords to WorldCoords
-  Vec3 direction = Vec3(su,sv,-1);
-  direction.normalize();
-  return Ray(orig_, worldDir(direction)); // dir can be un-normalized
-  // compute viewMat iff !updated_
+  //Vec3 direction = Vec3(su,sv,-1).normalize();
+  //return Ray(orig_, intoWorldDir(direction));
+
+  Point3 p = Point3(su,sv,-1);
+  return Ray(
+      //intoWorld(Point3(0)),
+      //intoWorld(orig_),
+      orig_,
+      //((intoWorld(p) - orig_) - Point3(0)).normalize()
+      (intoWorld(p) - Point3(0)).normalize()
+       ); //  - orig_);
 }
 
-// TODO IMPORTANT 
-Vec3 Camera::worldDir(const Vec3& rayDir) {
-  //vec3 up(0,1,0);
-  //vec3 f = normalize(target - orig);
-  //vec3 s = normalize(cross(f, up));
-  //mat4 viewMat(
-  //    vec4(s,0.0),
-  //    vec4(cross(s,f),0.0),
-  //    vec4(-f,0.0),
-  //    vec4(vec3(0), 1)
-  //    );
-  //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
-  //return normalize(vec3(
-  //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
-  //      ); // extremely ugly
+bool Camera::update() {
+  if (isToUpdate()) {
+    // here update dir_, target_, viewMatrix_
+    updateViewMatrix();
 
-  // --------------------
+    updated_ = true;
+    return true;
+  }
+  return false;
+}
 
-  //vec3 up(0,1,0);
-  //mat4 viewMat = glm::lookAt(orig, orig + normalize(dir), up);
-  //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
-  //return normalize(vec3(
-  //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
-  //      ); // extremely ugly
+void Camera::updateViewMatrix() {
+  Point3 center =
+    //use_target ? (orig_ - target_) : dir_;
+    use_target ? target_ : orig_ + dir_;
+  if (!isToUpdate()) return;
 
-  // --------------------
-
-  Vec3 up(0,1,0);
-  return myLookAt(orig_, orig_ + dir_, up, rayDir);
+  Vec3 up(0,1,0); // what if we look vertically up/down?
+  viewMatrix_ = lookAt_(orig_, center, up);
 }
 
 
+
+//Vec3 Camera::lookAt(const Point3 target) {
+void Camera::lookAt(const Point3 target) {
+  target_ = target;
+  use_target = true;
+
+  toUpdate();
+  //update();
+  //return dir_;
+}
+
+//Vec3 Camera::lookAt(const Vec3 direction) {
+void Camera::lookAt(const Vec3 direction) {
+  use_target = false;
+
+  dir_ = direction;
+  dir_.normalize();
+
+  toUpdate();
+  //update();
+  //return dir_;
+}
+
+
+// Vec3 Camera::worldDir(const Vec3& rayDir) {
+//   //vec3 up(0,1,0);
+//   //vec3 f = normalize(target - orig);
+//   //vec3 s = normalize(cross(f, up));
+//   //mat4 viewMat(
+//   //    vec4(s,0.0),
+//   //    vec4(cross(s,f),0.0),
+//   //    vec4(-f,0.0),
+//   //    vec4(vec3(0), 1)
+//   //    );
+//   //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
+//   //return normalize(vec3(
+//   //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
+//   //      ); // extremely ugly
+// 
+//   // --------------------
+// 
+//   //vec3 up(0,1,0);
+//   //mat4 viewMat = glm::lookAt(orig, orig + normalize(dir), up);
+//   //vec4 worldRayDir = (viewMat * vec4(rayDir, 0));
+//   //return normalize(vec3(
+//   //      worldRayDir.x, worldRayDir.y, worldRayDir.z)
+//   //      ); // extremely ugly
+// 
+//   // --------------------
+// 
+//   Vec3 up(0,1,0);
+//   return myLookAt(orig_, orig_ + dir_, up, rayDir);
+// }
+
+Vec3 Camera::intoWorldDir(const Vec3& rayDir) {
+  if (isToUpdate()) update();
+
+  return (viewMatrix_ * Vec4(rayDir,0))
+    .drop(3) // drop the exceding dimension
+    .normalize();
+}
+
+
+Point3 Camera::intoWorld(const Point3& p) {
+  if (isToUpdate()) update();
+
+  return (viewMatrix_ * Vec4(p,0)).asPoint3(); // drop the exceding dimension
+}
 
 
 

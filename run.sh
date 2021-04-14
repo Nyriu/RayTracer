@@ -1,32 +1,32 @@
 #!/bin/sh
 
-#if [ "$1" == "-b" ]; then
-  #rm -rf build main imgs/*
+if [ "$1" == "-b" ]; then
+  rm -rf ./build ./main
+fi
+
+if [ -d "./build" ]; then
+  cd build
+  make
+  cd ..
+fi
+
+if [ ! -f "./main" ]; then
+  echo "Building..."
   rm -rf build main
-  rm -f ./imgs/img.ppm
   mkdir build
   cd build
   cmake ..
   make
   cd ..
-#fi
+fi
 
-#if [ ! -f "./main" ]; then
-#  echo "main not found!"
-#  echo "building..."
-#  rm -rf build
-#  mkdir build
-#  cd build
-#  cmake ..
-#  make
-#  cd ..
-#fi
-
-rm -fr wip_imgs/*
+DIR="wip_imgs/"
+if [ ! -d "$DIR" ]; then
+  mkdir "$DIR$IMG"
+fi
 
 ./main
 
-viewnior wip_imgs/seq_0.ppm
-#viewnior ./wip_imgs/img.ppm &
-
-rm -fr wip_imgs/*
+IMG=$(ls -t "$DIR" | head -1)
+echo "$DIR$IMG"
+viewnior "$DIR$IMG"

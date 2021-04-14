@@ -15,11 +15,11 @@ class Light {
   public:
     virtual ~Light() {}
 
-    Point3 getPosition() const { return position_; }
+    virtual Point3 getPosition() const { return position_; }
 
-    Color getColor() const { return color_; }
+    virtual Color getColor() const { return color_; }
 
-    float getIntensity() const { return intensity_; }
+    virtual float getIntensity() const { return intensity_; }
 };
 
 class PointLight : public Light {
@@ -29,8 +29,15 @@ class PointLight : public Light {
       color_ = color;
       intensity_ = intensity;
     }
+};
 
-
+class AmbientLight : public Light {
+  public:
+    AmbientLight(const Color& color, const float& intensity) {
+      position_ = Point3(0);
+      color_ = color;
+      intensity_ = intensity;
+    }
 };
 
 

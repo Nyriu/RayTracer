@@ -50,3 +50,18 @@ Then I'll improve it or move on to graphical APIs (thinking of Vulkan)
 Simple CSG
 
 ![](./imgs/img_03.png)
+
+CSG Shadow Debug Process
+
+![](./imgs/funny_shadow_debug_process.gif)
+
+
+### New Images
+
+![](./imgs/time_1617089573.png)
+![](./imgs/time_1617091499.png)
+![](./imgs/time_1617092196.png)
+![](./imgs/time_1617092777.png)
+![](./imgs/time_1617093299.png)
+![](./imgs/time_1617093337.png)
+

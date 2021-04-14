@@ -1,85 +1,27 @@
 #include "scenes.h"
 
-////std::vector<const ImplicitShape *> makeShapes() {
-//std::vector<std::shared_ptr<ImplicitShape>> makeShapes1() {
-//  //std::vector<const ImplicitShape *> shapes;
-//
-//  //shapes.push_back(new Sphere(vec3(0), 1));
-//  //shapes.push_back(new Sphere(vec3(0.5), 1));
-//  //shapes.push_back(new Sphere(vec3(0,0,-13), 3));
-//
-//  //shapes.push_back(new Sphere(vec3(0,.5,0), .5, color(1,0,1)));
-//  //shapes.push_back(new Sphere(vec3(1,1,0),  1 , color(1,0,0)));
-//  //shapes.push_back(new Sphere(vec3(2,2,0),  1 , color(0,1,0)));
-//  //shapes.push_back(new Sphere(vec3(3,3,0),  1 , color(0,0,1)));
-//
-//  //shapes.push_back(new Torus(point3(0,3,0),1,0.2));
-//  //shapes.push_back(new Torus(point3(0,1.5,0),1.5,0.4));
-//  //shapes.push_back(new Torus(2,0.65));
-//
-//
-//  std::vector<std::shared_ptr<ImplicitShape>> shapes;
-//  //shapes.push_back(std::make_shared<Sphere>(vec3(0), 1));
-//
-//  Point3 sph_c(0,1,0.3);
-//  Point3 tor_c(0.5,1,0);
-//
-//  shapes.push_back(
-//      std::make_shared<UnionShape>(
-//        std::make_shared<Sphere>(sph_c, 1),
-//        std::make_shared<Torus> (tor_c, 1, .2)
-//        ));
-//  float off_val = -4;
-//  Vec3 offset1(off_val,0,0);
-//  shapes.push_back(
-//      std::make_shared<IntersectShape>(
-//        std::make_shared<Sphere>(offset1 + sph_c, 1),
-//        std::make_shared<Torus> (offset1 + tor_c, 1, .2)
-//        ));
-//  Vec3 offset2(-off_val,0,0);
-//  shapes.push_back(
-//      std::make_shared<SubtractShape>(
-//        std::make_shared<Sphere>(offset2 + sph_c, 1),
-//        std::make_shared<Torus> (offset2 + tor_c, 1, .2)
-//        ));
-//
-//
-//  //shapes.push_back(new Cube(point3(.25)));
-//
-//  // terrain
-//  //shapes.push_back(new Sphere(vec3(0,-100,0), 100, color(.5)));
-//
-//  return shapes;
-//}
-//
-//Lights makeLights1() {
-//  Lights lights;
-//
-//  lights.push_back(std::make_shared<PointLight>(Point3(3,5,-2), Color(1), 400) );
-//  lights.push_back(std::make_shared<PointLight>(Point3(2,2,5), Color(1), 100) );
-//  //lights.push_back(new PointLight(point3(10,10,0), color(1), 4000) );
-//  //lights.push_back(new PointLight(point3(2,2,3), color(.8, .8, 0), 30) );
-//
-//  return lights;
-//}
-
 Scene makeScene_1() {
+  float intensity_scale = .02;
+
   Scene scene;
   // Lights
-  scene.addLight(new PointLight(Point3(4,3,3), Color(1), 200));
-  scene.addLight(new PointLight(Point3(0,-3,3), Color(.8,.2,.5), 50));
+  scene.addLight(new PointLight(Point3(4,3,3), Color(1), 200 * intensity_scale));
+  //scene.addLight(new PointLight(Point3(0,-3,3), Color(.8,.2,.5), 50));
+  //scene.addLight(new PointLight(Point3(0,0,-3), Color(.3,.8,.3), 20));
+  //scene.addLight(new PointLight(Point3(0,-3,3), Color(1), 50 * intensity_scale));
 
   // Shapes
-  scene.addShape(new Sphere(Point3(0),1.5));
+  //scene.addShape(new Sphere(Point3(0),1.5));
+  scene.addShape(new Sphere(Point3(0),1.5, Color(.9,.2,.2)));
 
   // Camera
-  Point3 camera_origin(-.5, 1.5, 6);
-  Vec3 camera_dir = Vec3(0, 0.5, -1);
-  camera_dir.normalize();
-  float fov = 45;
-  Camera cam(fov, camera_origin, camera_dir);
+  Point3 camera_origin(0,0,5);
 
-  //scene.addCamera(&cam);
+  Point3 view(0, -1, 0);
+
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
 
   return scene;
 }
@@ -87,8 +29,8 @@ Scene makeScene_1() {
 Scene makeScene_Spheres() {
   Scene scene;
   // Lights
-  scene.addLight(new PointLight(Point3(5,5,-2), Color(1), 400));
-  scene.addLight(new PointLight(Point3(2,2,5), Color(1), 100));
+  scene.addLight(new PointLight(Point3(5,5,-2), Color(1), 4));
+  scene.addLight(new PointLight(Point3(2,2,5), Color(1),  1));
 
   // Shapes
   scene.addShape(new Sphere(Point3(0,.5,0),.5));
@@ -109,12 +51,12 @@ Scene makeScene_Spheres() {
   return scene;
 }
 
-
 Scene makeScene_Toruses() {
   Scene scene;
   // Lights
-  //scene.addLight(new PointLight(Point3(0,3.5,0), Color(1), 40));
-  scene.addLight(new PointLight(Point3(3,7,-2), Color(1), 400));
+  //scene.addLight(new PointLight(Point3(0,0,0), Color(1), 250));
+  scene.addLight(new PointLight(Point3(3,7,-2), Color(1), 600));
+  scene.addAmbientLight(new AmbientLight(Color(1), .05));
 
   // Shapes
   scene.addShape(new Torus(Point3(0,3,0),1,0.2));
@@ -135,4 +77,146 @@ Scene makeScene_Toruses() {
   return scene;
 }
 
+
+Scene makeScene_CSG_1() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(3,3,2), Color(1), 600));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1));
+
+  scene.addShape(
+      new SubtractShape(
+        new UnionShape(
+          new Torus(Point3(0,1.5,0), .5,.2),
+          new UnionShape(
+            new Torus(1.5,0.4),
+            new Torus(Point3(0,-1.5,0), .5,.2))
+          ),
+        new Sphere(1.7)
+        ) 
+      );
+  // Camera
+  Point3 camera_origin(0,5,4.4);
+  Point3 view(0, 10, 0);
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+
+Scene makeScene_CSG_2() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,2), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1));
+
+  float x_offset = -2;
+  scene.addShape(
+      new SubtractShape(
+        new Sphere(Point3(x_offset, 0,0), 1.7),
+        new UnionShape(
+          new Torus(Point3(x_offset,1.5,0), .5,.2),
+          new UnionShape(
+            new Torus(Point3(x_offset,0,0), 1.5,0.4),
+            new Torus(Point3(x_offset,-1.5,0), .5,.2))
+          ) 
+        )
+      );
+
+  x_offset = -x_offset;
+  scene.addShape(
+      new IntersectShape(
+        new Sphere(Point3(x_offset, 0,0), 1.7),
+        new UnionShape(
+          new Torus(Point3(x_offset,1.5,0), .5,.2),
+          new UnionShape(
+            new Torus(Point3(x_offset,0,0), 1.5,0.4),
+            new Torus(Point3(x_offset,-1.5,0), .5,.2))
+          ) 
+        )
+      );
+
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  Point3 view(0, 6, 0);
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+
+Scene makeScene_CSG_3() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,2), Color(1,.3,.3), 400));
+  scene.addLight(new PointLight(Point3(-4,-3,2), Color(.3,1,.3), 400));
+  scene.addAmbientLight(new AmbientLight(Color(1), .07));
+
+  float bigger_r = 2;
+  float smaller_r= 0.5;
+
+  scene.addShape(
+      new Sphere(Point3(0,0,0), bigger_r, Color(.7,.2,.2))
+      );
+  scene.addShape(
+      new Sphere(Point3(0,0,bigger_r), smaller_r, Color(.2,.7,.2))
+      );
+  scene.addShape(
+      new Sphere(
+        Vec3(2,2,2).normalize().as_Point() * (bigger_r - 0.2), smaller_r, Color(.2,.2,.7))
+      );
+  scene.addShape(
+      new Sphere(
+        Vec3(-2,2,2).normalize().as_Point() * (bigger_r - 0.2), smaller_r, Color(.2,.2,.7))
+      );
+
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  Point3 view(0, 6, 0);
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+
+
+Scene makeScene_ShadowDebug() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,3.5), Color(1), 200));
+
+  //scene.addLight(new PointLight(Point3(4,0,3), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(-4,0,3), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(0, 4,0), Color(1), 200));
+  //scene.addLight(new PointLight(Point3(0,-4,0), Color(1), 200));
+
+  // Shapes
+  scene.addShape(
+      new UnionShape(
+        new SubtractShape(
+          new Sphere(Point3(0),2, Color(1,0,0)),
+          new Sphere(Point3(1,0,2),.5, Color(0,1,0))
+          ),
+        new Sphere(Point3(.5,1,1.7),.5, Color(0,1,1))
+        )
+      );
+
+  // Camera
+  Point3 camera_origin(0,0,5);
+  Point3 view(0, 0, 0);
+
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}
 

@@ -11,7 +11,13 @@ int main() {
   // Image
   const float aspect_ratio = 16.0/9.0;
   //const float aspect_ratio = 1;
-  const int width = 300;
+
+  const int width = 900;
+  //const int width = 300;
+  //const int width = 200;
+  //const int width = 100;
+  //const int width = 50;
+  //const int width = 26;
   //const int width = 400 * 2;
 
   // Window
@@ -20,8 +26,12 @@ int main() {
   // Scene
   auto scene =
     //makeScene_1();
-    makeScene_Spheres();
+    //makeScene_Spheres();
     //makeScene_Toruses();
+    //makeScene_CSG_1();
+    makeScene_CSG_2();
+    //makeScene_CSG_3();
+    //makeScene_ShadowDebug();
 
 
   Renderer renderer(&window);
@@ -29,6 +39,7 @@ int main() {
   //renderer.enableWindow();
 
   renderer.setScene(&scene);
+  //renderer.addCamera(Camera ... );
   renderer.render();
 
   return 0;

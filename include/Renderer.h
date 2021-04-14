@@ -8,8 +8,9 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <memory> // shared_ptr // todo use
+//#include <memory> // shared_ptr // todo use not
 // https://en.cppreference.com/w/cpp/memory/shared_ptr
+#include<ctime>
 
 #include "Color.h"
 #include "geometry.h"
@@ -21,12 +22,11 @@
 #include "ImplicitShape.h"
 #include "Light.h"
 #include "Scene.h"
+#include "Tracer.h"
 
 // SDL
 #include <stdlib.h>
 #include <SDL2/SDL.h>
-
-constexpr float kInfinity = std::numeric_limits<float>::max();
 
 
 class Renderer {
@@ -34,14 +34,16 @@ class Renderer {
     Window *win_ = nullptr;
     Camera *cam_ = nullptr;
 
+    bool no_window = false;
+
     //temporarly and img instead of a window
     Image img_;
 
-    bool no_window = false;
-
-  private:
     // Scene stuff
-    const Scene* scene_ = nullptr;
+    const Scene *scene_ = nullptr;
+
+    //Tracer *tracer_ = nullptr;
+    Tracer *tracer_ = new Tracer();
 
 
   public:
@@ -59,14 +61,9 @@ class Renderer {
     Renderer setScene(Scene* scene);
     Renderer setCamera(Camera* camera);
 
-    bool sphereTraceShadow( const Ray& r, const float& maxDistance, const Scene* scene);
-    Color shade( const Point3& p, const ImplicitShape *shape, const Scene* scene);
-    Color sphereTrace(const Ray& r, const Scene* scene);
-
     void render();
     void generateFrame();
     void mainLoop();
-
 
 
     void disableWindow(){

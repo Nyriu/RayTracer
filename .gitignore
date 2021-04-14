@@ -2,6 +2,7 @@ build
 main
 imgs/*.ppm
 wip_imgs
+wip_imgs_
 ref
 .cache
 
