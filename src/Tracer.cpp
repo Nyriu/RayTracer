@@ -63,45 +63,45 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
 }
 
 
-/// OLD
-Color BRDF_Specular_GGX_Environment( const Vec3& viewDir, const Vec3& normal, const Color& specularColor, const float& roughness) {
-  float dotNV = clamp(normal.dot(viewDir), 0.0, 1.0 );
-
-  const Vec4 c0 = Vec4( - 1, - 0.0275, - 0.572, 0.022 );
-  const Vec4 c1 = Vec4( 1, 0.0425, 1.04, - 0.04 );
-
-  Vec4 r = roughness * c0 + c1;
-
-  float a004 = std::min( r.x() * r.x(), std::exp2f( - 9.28 * dotNV ) ) * r.x() + r.y();
-
-  //Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + r.zw;
-  Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + Vec3(r.z(), r.w(), 0);
-
-  return specularColor * brdf.x() + brdf.y();
-}
-
-Color FSchlick(const float& vDoth, const Color& f0) {
-  return f0 + (Color(1.0) - f0)*pow(1.0 - vDoth,5.0);
-}
-
-float DGGX(float NoH, float alpha) {
-  float alpha2 = alpha * alpha;
-  float k = NoH*NoH * (alpha2 - 1.0) + 1.0;
-  return alpha2 / (M_PI * k * k );
-}
-
-float G1(float nDotv, float alpha) {
-  float alpha2 = alpha*alpha;
-  return 2.0 * (nDotv / (nDotv + std::sqrt(alpha2 + (1.0-alpha2)*nDotv*nDotv )));
-}
-
-float GSmith(float nDotv, float nDotl, float alpha) {
-  DEBUG_message(DEBUG_general, "GSmith :" + std::to_string(
-        G1(nDotl,alpha)*G1(nDotv,alpha)
-        ));
-  return G1(nDotl,alpha)*G1(nDotv,alpha);
-}
-/// END // OLD
+// /// OLD
+// Color BRDF_Specular_GGX_Environment( const Vec3& viewDir, const Vec3& normal, const Color& specularColor, const float& roughness) {
+//   float dotNV = clamp(normal.dot(viewDir), 0.0, 1.0 );
+// 
+//   const Vec4 c0 = Vec4( - 1, - 0.0275, - 0.572, 0.022 );
+//   const Vec4 c1 = Vec4( 1, 0.0425, 1.04, - 0.04 );
+// 
+//   Vec4 r = roughness * c0 + c1;
+// 
+//   float a004 = std::min( r.x() * r.x(), std::exp2f( - 9.28 * dotNV ) ) * r.x() + r.y();
+// 
+//   //Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + r.zw;
+//   Vec3 brdf = Vec3( -1.04, 1.04, 0 ) * a004 + Vec3(r.z(), r.w(), 0);
+// 
+//   return specularColor * brdf.x() + brdf.y();
+// }
+// 
+// Color FSchlick(const float& vDoth, const Color& f0) {
+//   return f0 + (Color(1.0) - f0)*pow(1.0 - vDoth,5.0);
+// }
+// 
+// float DGGX(float NoH, float alpha) {
+//   float alpha2 = alpha * alpha;
+//   float k = NoH*NoH * (alpha2 - 1.0) + 1.0;
+//   return alpha2 / (M_PI * k * k );
+// }
+// 
+// float G1(float nDotv, float alpha) {
+//   float alpha2 = alpha*alpha;
+//   return 2.0 * (nDotv / (nDotv + std::sqrt(alpha2 + (1.0-alpha2)*nDotv*nDotv )));
+// }
+// 
+// float GSmith(float nDotv, float nDotl, float alpha) {
+//   DEBUG_message(DEBUG_general, "GSmith :" + std::to_string(
+//         G1(nDotl,alpha)*G1(nDotv,alpha)
+//         ));
+//   return G1(nDotl,alpha)*G1(nDotv,alpha);
+// }
+// /// END // OLD
 
 Color fschlick(const float& angle, const Color& cspec) { // fresnel approximation
   float angle_pos = clamp_lower(angle, 0);

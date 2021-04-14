@@ -116,8 +116,9 @@ void Camera::lookAt(const Vec3 direction) {
 Vec3 Camera::intoWorldDir(const Vec3& rayDir) {
   if (isToUpdate()) update();
 
-  return (viewMatrix_ * Vec4(rayDir,0))
-    .drop(3) // drop the exceding dimension
+  return (viewMatrix_ * rayDir)
+  //return (viewMatrix_ * Vec4(rayDir,0))
+    //.drop(3) // drop the exceding dimension
     .normalize();
 }
 
@@ -125,7 +126,7 @@ Vec3 Camera::intoWorldDir(const Vec3& rayDir) {
 Point3 Camera::intoWorld(const Point3& p) {
   if (isToUpdate()) update();
 
-  return (viewMatrix_ * Vec4(p,0)).asPoint3(); // drop the exceding dimension
+  return (viewMatrix_ * p);
 }
 
 
