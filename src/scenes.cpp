@@ -121,7 +121,7 @@ Scene makeScene_CSG_2() {
           new UnionShape(
             new Torus(Point3(x_offset,0,0), 1.5,0.4),
             new Torus(Point3(x_offset,-1.5,0), .5,.2))
-          ) 
+          )
         )
       );
 
@@ -134,7 +134,7 @@ Scene makeScene_CSG_2() {
           new UnionShape(
             new Torus(Point3(x_offset,0,0), 1.5,0.4),
             new Torus(Point3(x_offset,-1.5,0), .5,.2))
-          ) 
+          )
         )
       );
 
@@ -220,3 +220,49 @@ Scene makeScene_ShadowDebug() {
   return scene;
 }
 
+
+Scene makeScene_TransformDebug() {
+  float intensity_scale = 100;
+
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(2,2,0), Color(1), 100 * intensity_scale));
+  scene.addAmbientLight(new AmbientLight(Color(1), .5));
+
+  // Shapes
+  //ImplicitShape *sp = new Sphere(Point3(1,1,0), 1, Color(1));
+  //ImplicitShape *sp = new Sphere(1, Color(1));
+  //sp->translate(Vec3(.5,.5,0));
+  //sp->translate(Vec3(.5,.5,0));
+  //scene.addShape(sp);
+
+
+  //ImplicitShape *to = new Torus(Point3(0.5,0.5,0), 1, 0.2);
+  //to->translate(Vec3(.75,.75,0));
+  //to->translate(Vec3(-.25,-.55,0));
+  //to->rotateX(degree_to_radians(20));
+  ////to->rotateY(degree_to_radians(90));
+  //to->rotateZ(degree_to_radians(50));
+  //scene.addShape(to);
+
+  ImplicitShape *to1 = new Torus(.5, 0.1);
+  to1->setColor(1,0,0);
+  to1->translate(.5,.5,.5);
+  to1->rotateX(45);
+  to1->rotateY(45);
+  to1->rotateZ(45);
+  scene.addShape(to1);
+
+
+  // Camera
+  Point3 camera_origin(0,0,3);
+
+  //Point3 view(0, 0, -1);
+  Vec3 view(0,0,-1);
+
+  float fov = 45;
+  Camera cam(fov, camera_origin, view);
+  scene.addCamera(cam);
+
+  return scene;
+}

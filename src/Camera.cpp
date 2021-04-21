@@ -27,13 +27,21 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   //Vec3 direction = Vec3(su,sv,-1).normalize();
   //return Ray(orig_, intoWorldDir(direction));
 
+
+  //std::cout << "orig_ = " << orig_ << std::endl;
+  //std::cout << "use_target = " << use_target << std::endl;
+  //std::cout << "target_ = " << target_ << std::endl;
+  //std::cout << "dir_ = " << dir_ << std::endl;
+
+
   Point3 p = Point3(su,sv,-1);
   return Ray(
       //intoWorld(Point3(0)),
       //intoWorld(orig_),
       orig_,
       //((intoWorld(p) - orig_) - Point3(0)).normalize()
-      (intoWorld(p) - Point3(0)).normalize()
+      //(intoWorld(p) - Point3(0)).normalize()
+      p.as_Vec3().normalize()
        ); //  - orig_);
 }
 

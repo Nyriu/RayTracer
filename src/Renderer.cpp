@@ -52,7 +52,11 @@ void Renderer::generateFrame() {
 
         Ray r = cam_->generate_ray(u,v);
 
+        //std::cout << "ray r.direction = " << r.direction() << std::endl;
+        //std::cout << "ray r.origin = " << r.origin() << std::endl;
+
         img_.setPixel(tracer_->sphereTrace(r), i,j);
+        //img_.setPixel(Color(r.direction()), i,j);
       }
     }
   }

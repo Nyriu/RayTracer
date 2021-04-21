@@ -6,8 +6,7 @@
 #include <fstream>
 #include <string>
 
-//#include <glm/vec3.hpp> // glm::vec3
-
+#include "geometry.h"
 #include "utilities.h"
 
 class Color {
@@ -27,6 +26,10 @@ class Color {
       r_(r),
       g_(g),
       b_(b) {}
+    Color(Vec3 v) :
+      r_(v.x()),
+      g_(v.y()),
+      b_(v.z()) {}
 
     float r() const { return r_; }
     float g() const { return g_; }

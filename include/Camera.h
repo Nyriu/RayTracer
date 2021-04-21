@@ -1,11 +1,12 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "SceneObject.h"
 #include "geometry.h"
 #include "Ray.h"
 //#include <glm/ext/matrix_transform.hpp>
 
-class Camera {
+class Camera : public SceneObject {
   friend std::ostream& operator<<(std::ostream& out, const Camera& c);
 
   private:

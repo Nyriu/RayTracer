@@ -5,7 +5,14 @@
 // Maybe in future use Templates
 
 #include <ostream>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/matrix.hpp>
+#include <iostream>
+#include <ostream>
 #include <cmath>
+
+//#include <glm/vec4.hpp> // TODO REMOVE
+//#include <glm/mat4x4.hpp> // TODO REMOVE
 
 class Point3;
 class Vec3;
@@ -128,6 +135,7 @@ class Vec3 {
 
     friend inline Vec3 operator+(const Vec3& u, const Vec3& v);
     friend inline Vec3 operator-(const Vec3& u, const Vec3& v);
+    friend inline Vec3 operator-(const Vec3& u);
     friend inline Vec3 operator*(const Vec3& u, const Vec3& v);
     friend inline Vec3 operator*(const Vec3& v, const float& f);
     friend inline Vec3 operator*(const float& f, const Vec3& v);
@@ -153,17 +161,32 @@ class Vec3 {
     Vec3(float x) : v_{x,x,x} {};
     Vec3(const Vec3& v) : v_{v.v_[0], v.v_[1], v.v_[2]} {};
 
+
+    void set_x(float x) { v_[0] = x; }
+    void set_y(float y) { v_[1] = y; }
+    void set_z(float z) { v_[2] = z; }
+
     float x() const { return v_[0]; }
     float y() const { return v_[1]; }
     float z() const { return v_[2]; }
 
     Vec3 normalize() {
       float len = length();
-      v_[0] = v_[0] / len;
-      v_[1] = v_[1] / len;
-      v_[2] = v_[2] / len;
+      if (len > 0) {
+        float f = 1 / std::sqrt(len);
+        v_[0] *= f;
+        v_[1] *= f;
+        v_[2] *= f;
+      }
       return *this;
     }
+
+    //Vec3 abs() {
+    //  v_[0] = std::abs(v_[0]);
+    //  v_[1] = std::abs(v_[1]);
+    //  v_[2] = std::abs(v_[2]);
+    //  return *this;
+    //}
 
     float length() const {
       return std::sqrt(length2());
@@ -214,6 +237,12 @@ inline Vec3 operator+(const Vec3& u, const Vec3& v) {
 inline Vec3 operator-(const Vec3& u, const Vec3& v) {
   return Vec3(u.v_ - v.v_);
 }
+inline Vec3 operator-(const Vec3& u) {
+  return Vec3(
+      - u.v_[0],
+      - u.v_[1],
+      - u.v_[2]);
+}
 
 inline Vec3 operator*(const Vec3& u, const Vec3& v) {
   return Vec3(
@@ -263,6 +292,8 @@ inline Point3 operator+(const Vec3& u, const Point3& v) {
 // ------------------------------
 // 4x4 MATRICES
 // ------------------------------
+inline std::ostream& operator<<(std::ostream& out, const Mat4& m);
+
 class Mat4 {
   public:
     friend inline Point3 operator*(const Mat4& m, const Point3& v);
@@ -272,57 +303,280 @@ class Mat4 {
 
 
   private:
-    float m_[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+    float m_[16] = {
+      1,0,0,0,
+      0,1,0,0,
+      0,0,1,0,
+      0,0,0,1
+    };
 
   public:
     Mat4() = default;
     Mat4(float a, float b, float c, float d, float e, float f, float g, float h,
          float i, float j, float k, float l, float m, float n, float o, float p) {
-        m_[0][0] = a;
-        m_[0][1] = b;
-        m_[0][2] = c;
-        m_[0][3] = d;
-        m_[1][0] = e;
-        m_[1][1] = f;
-        m_[1][2] = g;
-        m_[1][3] = h;
-        m_[2][0] = i;
-        m_[2][1] = j;
-        m_[2][2] = k;
-        m_[2][3] = l;
-        m_[3][0] = m;
-        m_[3][1] = n;
-        m_[3][2] = o;
-        m_[3][3] = p;
+      int index=0;
+        m_[index++] = a;
+        m_[index++] = b;
+        m_[index++] = c;
+        m_[index++] = d;
+        m_[index++] = e;
+        m_[index++] = f;
+        m_[index++] = g;
+        m_[index++] = h;
+        m_[index++] = i;
+        m_[index++] = j;
+        m_[index++] = k;
+        m_[index++] = l;
+        m_[index++] = m;
+        m_[index++] = n;
+        m_[index++] = o;
+        m_[index++] = p;
     }
 
     Mat4(const Mat4& m) {
-      for (int j=0; j<4; j++){
-        for (int i=0; i<4; i++){
-          m_[i][j] = m.m_[i][j];
-        }
+      for (int i=0; i<16; i++){
+        m_[i] = m.m_[i];
       }
     }
 
-    // Operators ?
+    Mat4 set_col_0(const Vec3& v) {
+      set(0,0, v.x()); set(1,0, v.y()); set(2,0, v.z());
+      return *this;
+    }
+    Mat4 set_col_1(const Vec3& v) {
+      set(0,1, v.x()); set(1,1, v.y()); set(2,1, v.z());
+      return *this;
+    }
+    Mat4 set_col_2(const Vec3& v) {
+      set(0,2, v.x()); set(1,2, v.y()); set(2,2, v.z());
+      return *this;
+    }
+    Mat4 set_col_3(const Vec3& v) {
+      set(0,3, v.x()); set(1,3, v.y()); set(2,3, v.z());
+      return *this;
+    }
+
+
+    //bool gluInvertMatrix(const double m[16], double invOut[16]) {
+    Mat4 inverse() const {
+      float m[16];
+      for (int i = 0; i < 16; i++)
+        m[i] = m_[i];
+      float inv[16], det;
+
+      inv[0] = m[5]  * m[10] * m[15] -
+        m[5]  * m[11] * m[14] -
+        m[9]  * m[6]  * m[15] +
+        m[9]  * m[7]  * m[14] +
+        m[13] * m[6]  * m[11] -
+        m[13] * m[7]  * m[10];
+
+      inv[4] = -m[4]  * m[10] * m[15] +
+        m[4]  * m[11] * m[14] +
+        m[8]  * m[6]  * m[15] -
+        m[8]  * m[7]  * m[14] -
+        m[12] * m[6]  * m[11] +
+        m[12] * m[7]  * m[10];
+
+      inv[8] = m[4]  * m[9] * m[15] -
+        m[4]  * m[11] * m[13] -
+        m[8]  * m[5] * m[15] +
+        m[8]  * m[7] * m[13] +
+        m[12] * m[5] * m[11] -
+        m[12] * m[7] * m[9];
+
+      inv[12] = -m[4]  * m[9] * m[14] +
+        m[4]  * m[10] * m[13] +
+        m[8]  * m[5] * m[14] -
+        m[8]  * m[6] * m[13] -
+        m[12] * m[5] * m[10] +
+        m[12] * m[6] * m[9];
+
+      inv[1] = -m[1]  * m[10] * m[15] +
+        m[1]  * m[11] * m[14] +
+        m[9]  * m[2] * m[15] -
+        m[9]  * m[3] * m[14] -
+        m[13] * m[2] * m[11] +
+        m[13] * m[3] * m[10];
+
+      inv[5] = m[0]  * m[10] * m[15] -
+        m[0]  * m[11] * m[14] -
+        m[8]  * m[2] * m[15] +
+        m[8]  * m[3] * m[14] +
+        m[12] * m[2] * m[11] -
+        m[12] * m[3] * m[10];
+
+      inv[9] = -m[0]  * m[9] * m[15] +
+        m[0]  * m[11] * m[13] +
+        m[8]  * m[1] * m[15] -
+        m[8]  * m[3] * m[13] -
+        m[12] * m[1] * m[11] +
+        m[12] * m[3] * m[9];
+
+      inv[13] = m[0]  * m[9] * m[14] -
+        m[0]  * m[10] * m[13] -
+        m[8]  * m[1] * m[14] +
+        m[8]  * m[2] * m[13] +
+        m[12] * m[1] * m[10] -
+        m[12] * m[2] * m[9];
+
+      inv[2] = m[1]  * m[6] * m[15] -
+        m[1]  * m[7] * m[14] -
+        m[5]  * m[2] * m[15] +
+        m[5]  * m[3] * m[14] +
+        m[13] * m[2] * m[7] -
+        m[13] * m[3] * m[6];
+
+      inv[6] = -m[0]  * m[6] * m[15] +
+        m[0]  * m[7] * m[14] +
+        m[4]  * m[2] * m[15] -
+        m[4]  * m[3] * m[14] -
+        m[12] * m[2] * m[7] +
+        m[12] * m[3] * m[6];
+
+      inv[10] = m[0]  * m[5] * m[15] -
+        m[0]  * m[7] * m[13] -
+        m[4]  * m[1] * m[15] +
+        m[4]  * m[3] * m[13] +
+        m[12] * m[1] * m[7] -
+        m[12] * m[3] * m[5];
+
+      inv[14] = -m[0]  * m[5] * m[14] +
+        m[0]  * m[6] * m[13] +
+        m[4]  * m[1] * m[14] -
+        m[4]  * m[2] * m[13] -
+        m[12] * m[1] * m[6] +
+        m[12] * m[2] * m[5];
+
+      inv[3] = -m[1] * m[6] * m[11] +
+        m[1] * m[7] * m[10] +
+        m[5] * m[2] * m[11] -
+        m[5] * m[3] * m[10] -
+        m[9] * m[2] * m[7] +
+        m[9] * m[3] * m[6];
+
+      inv[7] = m[0] * m[6] * m[11] -
+        m[0] * m[7] * m[10] -
+        m[4] * m[2] * m[11] +
+        m[4] * m[3] * m[10] +
+        m[8] * m[2] * m[7] -
+        m[8] * m[3] * m[6];
+
+      inv[11] = -m[0] * m[5] * m[11] +
+        m[0] * m[7] * m[9] +
+        m[4] * m[1] * m[11] -
+        m[4] * m[3] * m[9] -
+        m[8] * m[1] * m[7] +
+        m[8] * m[3] * m[5];
+
+      inv[15] = m[0] * m[5] * m[10] -
+        m[0] * m[6] * m[9] -
+        m[4] * m[1] * m[10] +
+        m[4] * m[2] * m[9] +
+        m[8] * m[1] * m[6] -
+        m[8] * m[2] * m[5];
+
+      det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+      // TODO throw error?
+      //if (det == 0)
+      //    return false;
+
+      det = 1.0 / det;
+
+      Mat4 outMat;
+      for (int i=0; i<16; i++) {
+        outMat.m_[i] = inv[i] * det;
+      }
+
+      /// // DEBUG PRINTS -----------------------------------
+      /// std::cout << "matrix" << std::endl;
+      /// std::cout << *this << std::endl;
+      /// std::cout << "inverse" << std::endl;
+      /// std::cout << outMat << std::endl;
+
+      /// glm::mat4x4 g;
+      /// for (int i=0; i<4; i++) {
+      ///   for (int j=0; j<4; j++) {
+      ///     g[i][j] = get(i,j);
+      ///   }
+      /// }
+      /// std::cout << "g matrix" << std::endl;
+      /// std::cout <<
+      ///   "[ " << g[0][0] << " " << g[0][1] << " " << g[0][2] << " " << g[0][3] << "\n" <<
+      ///   "  " << g[1][0] << " " << g[1][1] << " " << g[1][2] << " " << g[1][3] << "\n" <<
+      ///   "  " << g[2][0] << " " << g[2][1] << " " << g[2][2] << " " << g[2][3] << "\n" <<
+      ///   "  " << g[3][0] << " " << g[3][1] << " " << g[3][2] << " " << g[3][3] << "\n" <<
+      ///   "] " << std::endl;
+
+      /// std::cout << "g inverse" << std::endl;
+      /// glm::mat4x4 gi = glm::inverse(g);
+      /// std::cout <<
+      ///   "[ " << gi[0][0] << " " << gi[0][1] << " " << gi[0][2] << " " << gi[0][3] << "\n" <<
+      ///   "  " << gi[1][0] << " " << gi[1][1] << " " << gi[1][2] << " " << gi[1][3] << "\n" <<
+      ///   "  " << gi[2][0] << " " << gi[2][1] << " " << gi[2][2] << " " << gi[2][3] << "\n" <<
+      ///   "  " << gi[3][0] << " " << gi[3][1] << " " << gi[3][2] << " " << gi[3][3] << "\n" <<
+      ///   "] " << std::endl;
+
+      /// std::cout << "g * gi" << std::endl;
+      /// glm::mat4x4 pr = g * gi;
+      /// std::cout <<
+      ///   "[ " << pr[0][0] << " " << pr[0][1] << " " << pr[0][2] << " " << pr[0][3] << "\n" <<
+      ///   "  " << pr[1][0] << " " << pr[1][1] << " " << pr[1][2] << " " << pr[1][3] << "\n" <<
+      ///   "  " << pr[2][0] << " " << pr[2][1] << " " << pr[2][2] << " " << pr[2][3] << "\n" <<
+      ///   "  " << pr[3][0] << " " << pr[3][1] << " " << pr[3][2] << " " << pr[3][3] << "\n" <<
+      ///   "] " << std::endl;
+      /// // END // DEBUG PRINTS ----------------------------
+
+      return outMat;
+    }
+
+
+    float get(int row, int col) const {
+      // TODO throw error
+      //if (i > 3 || j > 3)
+      //  throw
+      return m_[row+col*4]; };
+
+    bool set(int row, int col, float val) {
+      if (row > 3 || col > 3)
+        return false;
+      m_[row+col*4] = val;
+      return true;
+    };
+
+
+    // Operators
+    // TODO
+    //const float* operator [] (uint8_t i) const { return m_[i]; }
+    //float* operator [] (uint8_t i) { return m_[i]; }
 };
 
 
 inline Point3 operator*(const Mat4& m, const Point3& v) {
   float a,b,c,w;
-  a = v.v_[0] * m.m_[0][0] + v.v_[1] * m.m_[1][0] + v.v_[2] * m.m_[2][0] + m.m_[3][0];
-  b = v.v_[0] * m.m_[0][1] + v.v_[1] * m.m_[1][1] + v.v_[2] * m.m_[2][1] + m.m_[3][1];
-  c = v.v_[0] * m.m_[0][2] + v.v_[1] * m.m_[1][2] + v.v_[2] * m.m_[2][2] + m.m_[3][2];
-  w = v.v_[0] * m.m_[0][3] + v.v_[1] * m.m_[1][3] + v.v_[2] * m.m_[2][3] + m.m_[3][3];
+  a = v.v_[0] * m.get(0,0) + v.v_[1] * m.get(0,1) + v.v_[2] * m.get(0,2) + m.get(0,3);
+  b = v.v_[0] * m.get(1,0) + v.v_[1] * m.get(1,1) + v.v_[2] * m.get(1,2) + m.get(1,3);
+  c = v.v_[0] * m.get(2,0) + v.v_[1] * m.get(2,1) + v.v_[2] * m.get(2,2) + m.get(2,3);
+  w = v.v_[0] * m.get(3,0) + v.v_[1] * m.get(3,1) + v.v_[2] * m.get(3,2) + m.get(3,3);
   return Point3(a/w,b/w,c/w);
 }
 
 inline Vec3 operator*(const Mat4& m, const Vec3& v) {
   float a,b,c;
-  a = v.v_[0] * m.m_[0][0] + v.v_[1] * m.m_[1][0] + v.v_[2] * m.m_[2][0];
-  b = v.v_[0] * m.m_[0][1] + v.v_[1] * m.m_[1][1] + v.v_[2] * m.m_[2][1];
-  c = v.v_[0] * m.m_[0][2] + v.v_[1] * m.m_[1][2] + v.v_[2] * m.m_[2][2];
+  a = v.v_[0] * m.get(0,0) + v.v_[1] * m.get(0,1) + v.v_[2] * m.get(0,2);
+  b = v.v_[0] * m.get(1,0) + v.v_[1] * m.get(1,1) + v.v_[2] * m.get(1,2);
+  c = v.v_[0] * m.get(2,0) + v.v_[1] * m.get(2,1) + v.v_[2] * m.get(2,2);
   return Vec3(a,b,c);
+}
+
+inline std::ostream& operator<<(std::ostream& out, const Mat4& m) {
+  return out <<
+    "[ " << m.get(0,0) << " " << m.get(0,1) << " " << m.get(0,2) << " " << m.get(0,3) << "\n" <<
+    "  " << m.get(1,0) << " " << m.get(1,1) << " " << m.get(1,2) << " " << m.get(1,3) << "\n" <<
+    "  " << m.get(2,0) << " " << m.get(2,1) << " " << m.get(2,2) << " " << m.get(2,3) << "\n" <<
+    "  " << m.get(3,0) << " " << m.get(3,1) << " " << m.get(3,2) << " " << m.get(3,3) << "\n" <<
+    "] ";
 }
 
 
@@ -339,22 +593,22 @@ inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up
   x.normalize();
   y.normalize();
 
-  mat.m_[0][0] = x.x();
-  mat.m_[1][0] = x.y();
-  mat.m_[2][0] = x.z();
-  mat.m_[3][0] = -x.dot( eye.as_Vec3() );
-  mat.m_[0][1] = y.x();
-  mat.m_[1][1] = y.y();
-  mat.m_[2][1] = y.z();
-  mat.m_[3][1] = -y.dot( eye.as_Vec3() );
-  mat.m_[0][2] = z.x();
-  mat.m_[1][2] = z.y();
-  mat.m_[2][2] = z.z();
-  mat.m_[3][2] = -z.dot( eye.as_Vec3() );
-  mat.m_[0][3] = 0;
-  mat.m_[1][3] = 0;
-  mat.m_[2][3] = 0;
-  mat.m_[3][3] = 1.0f;
+  mat.set(0,0,x.x());
+  mat.set(1,0,x.y());
+  mat.set(2,0,x.z());
+  mat.set(3,0,-x.dot( eye.as_Vec3() ));
+  mat.set(0,1,y.x());
+  mat.set(1,1,y.y());
+  mat.set(2,1,y.z());
+  mat.set(3,1,-y.dot( eye.as_Vec3() ));
+  mat.set(0,2,z.x());
+  mat.set(1,2,z.y());
+  mat.set(2,2,z.z());
+  mat.set(3,2,-z.dot( eye.as_Vec3() ));
+  mat.set(0,3,0);
+  mat.set(1,3,0);
+  mat.set(2,3,0);
+  mat.set(3,3,1.0f);
 
   return mat;
 }
@@ -364,18 +618,18 @@ inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up
 // {
 //   LMatrix4 Matrix;
 //   LVector3 X, Y, Z;
-// 
-// 
+//
+//
 //   Z = Eye - Center;
 //   Z.Normalize();
 //   Y = Up;
 //   X = Y.Cross( Z );
-// 
+//
 //   Y = Z.Cross( X );
-// 
+//
 //   X.Normalize();
 //   Y.Normalize();
-// 
+//
 //   Matrix[0][0] = X.x;
 //   Matrix[1][0] = X.y;
 //   Matrix[2][0] = X.z;
@@ -392,17 +646,88 @@ inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up
 //   Matrix[1][3] = 0;
 //   Matrix[2][3] = 0;
 //   Matrix[3][3] = 1.0f;
-// 
+//
 //   return Matrix;
 // }
 
 
 
 
+inline float degree_to_radians(const float deg) {
+  return deg * M_PI/180;
+}
+
+inline float deg_cos(const float deg) {
+  return std::cos(
+      degree_to_radians(deg)
+      );
+}
+inline float deg_sin(const float deg) {
+  return std::sin(
+      degree_to_radians(deg)
+      );
+}
+
+inline Mat4 gen_rotation_matrix_x(const float deg_x) {
+  float c = deg_cos(deg_x);
+  float s = deg_sin(deg_x);
+  Mat4 m;
+  m.set(1,1, c);
+  m.set(1,2, -s);
+  m.set(2,1, s);
+  m.set(2,2, c);
+  return m;
+}
+inline Mat4 gen_rotation_matrix_y(const float deg_y) {
+  float c = deg_cos(deg_y);
+  float s = deg_sin(deg_y);
+  Mat4 m;
+  m.set(0,0, c);
+  m.set(0,2, s);
+  m.set(2,0, -s);
+  m.set(2,2, c);
+  return m;
+}
+inline Mat4 gen_rotation_matrix_z(const float deg_z) {
+  float c = deg_cos(deg_z);
+  float s = deg_sin(deg_z);
+  Mat4 m;
+  m.set(0,0, c);
+  m.set(0,1, -s);
+  m.set(1,0, s);
+  m.set(1,1, c);
+  return m;
+}
+
+//inline Mat4 compose_rotations(const Mat4 rot_x, const Mat4 rot_y, const Mat4 rot_z) {
+//}
 
 
+inline Mat4 gen_rotation_matrix(const float deg_x, const float deg_y, const float deg_z) {
+  //Mat4 rot_x = gen_rotation_matrix_x(rad_x);
+  //Mat4 rot_y = gen_rotation_matrix_y(rad_y);
+  //Mat4 rot_z = gen_rotation_matrix_z(rad_z);
+  //return compose_rotations(rot_x, rot_y, rot_z);
 
+  // return the matrix rotZ * rotY * rotX
+  float cx = deg_cos(deg_x), sx = deg_sin(deg_x);
+  float cy = deg_cos(deg_y), sy = deg_sin(deg_y);
+  float cz = deg_cos(deg_z), sz = deg_sin(deg_z);
+  Mat4 m;
+  m.set(0,0, cz*cy);
+  m.set(0,1, cz*sy*sx - sz*cx);
+  m.set(0,2, cz*sy*cx + sz*sx);
 
+  m.set(1,0, sz*cy);
+  m.set(1,1, sz*sy*sx + cz*cx);
+  m.set(1,2, sz*sy*cx - cz*sx);
+
+  m.set(2,0, -sy);
+  m.set(2,1, cy*sx);
+  m.set(2,2, cy*cx);
+
+  return m;
+}
 
 
 

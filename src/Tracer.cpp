@@ -28,19 +28,22 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
     for (auto shape : scene_->getShapes()) {
       float d = shape->getDistance(from);
 
-      // First method // Problems where actualy should be in shadow
+      // Self-Hit Shadowing Error
+      //// First method // Problems where actualy should be in shadow
       //if (shape == shapeToShadow && d < anti_selfhit_shadow_threshold_)
       //  continue;
 
-      // Second method
+      // Second method // Best so far
       if (shape == shapeToShadow && d <= hit_threshold_ * t) {
         // move "from" a bit over the surface (along the normal direction)
         d = shape->getDistance(
             from + shape->getNormalAt(from) * 10e-7
             );
-      // Third method // Try to descend into the CSG and exclude only current shape
-
       }
+
+      // Third method
+      // Try to descend into the CSG and exclude only current shape
+
 
       if (d < min_distance) {
         min_distance = d;
@@ -208,6 +211,7 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
 
   cdiff = shape->getColor();
   if (scene_->hasAmbientLight()) {
+    //std::cout << "hasAmbientLight" << std::endl;
     //outRadiance += ambientLight*cdiff; // TODO ambient lights
     //outRadiance += Color(0.15) * cdiff; // TODO ambient lights
     Light* ambientLight = scene_->getAmbientLight();
@@ -220,7 +224,7 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
 
 Color Tracer::sphereTrace(const Ray& r) {
   float t=0;
-  int n_steps = 0;
+  //int n_steps = 0;
 
   const ImplicitShape *intersectedShape;
   while (t < max_distance_) {
@@ -229,16 +233,21 @@ Color Tracer::sphereTrace(const Ray& r) {
     for (auto shape : scene_->getShapes()) {
       float d = shape->getDistance(r.at(t));
       if (d < minDistance) {
-        //std::cout << "intersected shape" << std::endl;
         minDistance = d;
         intersectedShape = shape;
       }
     }
 
+    //std::cout << "minDistance = " << minDistance << std::endl;
     // did we intersect the shape?
     if (minDistance <= hit_threshold_ * t) {
+
       //std::cout << "Color a pixel" << std::endl;
-      return shade(r.at(t), r.direction(), intersectedShape);  // use lights
+      auto col = 
+      shade(r.at(t), r.direction(), intersectedShape);  // use lights
+      //std::cout << col << std::endl;
+      return col;
+
       //return intersectedShape->color_;        // use only surf color
       //return Color(float(n_steps)/tmax,0, 0); // color by pixel comput cost
       //return Color(1,0,0);                    // fixed color
