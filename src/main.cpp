@@ -36,7 +36,8 @@ int main() {
     //makeScene_CSG_2();
     //makeScene_CSG_3();
     //makeScene_ShadowDebug();
-    makeScene_TransformDebug();
+    //makeScene_TransformDebug();
+    makeScene_CameraTransformDebug();
 
 
   Renderer renderer(&window);

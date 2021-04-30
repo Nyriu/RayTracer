@@ -46,7 +46,7 @@ class Point3 {
     friend inline Point3 operator+(const Vec3& u, const Point3& v);
 
   private:
-    float v_[3];
+    float v_[3] = {0,0,0};
 
   public:
     Point3() = default;
@@ -154,7 +154,7 @@ class Vec3 {
         const Point3& eye, const Point3& center, const Vec3& up);
 
   private:
-    float v_[3];
+    float v_[3] = {0,0,0};
   public:
     Vec3() = default;
     Vec3(float x, float y, float z ) : v_{x,y,z} {};
@@ -173,7 +173,7 @@ class Vec3 {
     Vec3 normalize() {
       float len = length();
       if (len > 0) {
-        float f = 1 / std::sqrt(len);
+        float f = 1 / length();
         v_[0] *= f;
         v_[1] *= f;
         v_[2] *= f;
@@ -355,6 +355,23 @@ class Mat4 {
       set(0,3, v.x()); set(1,3, v.y()); set(2,3, v.z());
       return *this;
     }
+
+    Mat4 set_row_0(const Vec3& v) {
+      set(0,0, v.x()); set(0,1, v.y()); set(0,2, v.z());
+      return *this;
+    }
+    Mat4 set_row_1(const Vec3& v) {
+      set(1,0, v.x()); set(1,1, v.y()); set(1,2, v.z());
+      return *this;
+    }
+    Mat4 set_row_2(const Vec3& v) {
+      set(2,0, v.x()); set(2,1, v.y()); set(2,2, v.z());
+      return *this;
+    }
+    //Mat4 set_row_3(const Vec3& v) {
+    //  set(3,0, v.x()); set(3,1, v.y()); set(3,2, v.z());
+    //  return *this;
+    //}
 
 
     //bool gluInvertMatrix(const double m[16], double invOut[16]) {
@@ -545,6 +562,34 @@ class Mat4 {
       return true;
     };
 
+    float get_rotation_x() const {
+      return std::atan2(
+          -get(1,0),
+          get(0,0)
+          );
+    }
+    float get_rotation_y() const {
+      return std::asin(-get(2,0));
+    }
+    float get_rotation_z() const {
+      return std::atan2(
+          -get(2,1),
+          get(2,2)
+          );
+    }
+
+  //m.set(0,0, cz*cy);
+  //m.set(0,1, cz*sy*sx - sz*cx);
+  //m.set(0,2, cz*sy*cx + sz*sx);
+
+  //m.set(1,0, sz*cy);
+  //m.set(1,1, sz*sy*sx + cz*cx);
+  //m.set(1,2, sz*sy*cx - cz*sx);
+
+  //m.set(2,0, -sy);
+  //m.set(2,1, cy*sx);
+  //m.set(2,2, cy*cx);
+
 
     // Operators
     // TODO
@@ -580,38 +625,38 @@ inline std::ostream& operator<<(std::ostream& out, const Mat4& m) {
 }
 
 
-inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up) {
-  Mat4 mat;
-  Vec3 x,y,z;
-
-  z = eye - center;
-  z.normalize();
-  y = up;
-  x = y.cross(z);
-  y = z.cross(x);
-
-  x.normalize();
-  y.normalize();
-
-  mat.set(0,0,x.x());
-  mat.set(1,0,x.y());
-  mat.set(2,0,x.z());
-  mat.set(3,0,-x.dot( eye.as_Vec3() ));
-  mat.set(0,1,y.x());
-  mat.set(1,1,y.y());
-  mat.set(2,1,y.z());
-  mat.set(3,1,-y.dot( eye.as_Vec3() ));
-  mat.set(0,2,z.x());
-  mat.set(1,2,z.y());
-  mat.set(2,2,z.z());
-  mat.set(3,2,-z.dot( eye.as_Vec3() ));
-  mat.set(0,3,0);
-  mat.set(1,3,0);
-  mat.set(2,3,0);
-  mat.set(3,3,1.0f);
-
-  return mat;
-}
+//inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up) {
+//  Mat4 mat;
+//  Vec3 x,y,z;
+//
+//  z = eye - center;
+//  z.normalize();
+//  y = up;
+//  x = y.cross(z);
+//  y = z.cross(x);
+//
+//  x.normalize();
+//  y.normalize();
+//
+//  mat.set(0,0,x.x());
+//  mat.set(1,0,x.y());
+//  mat.set(2,0,x.z());
+//  mat.set(3,0,-x.dot( eye.as_Vec3() ));
+//  mat.set(0,1,y.x());
+//  mat.set(1,1,y.y());
+//  mat.set(2,1,y.z());
+//  mat.set(3,1,-y.dot( eye.as_Vec3() ));
+//  mat.set(0,2,z.x());
+//  mat.set(1,2,z.y());
+//  mat.set(2,2,z.z());
+//  mat.set(3,2,-z.dot( eye.as_Vec3() ));
+//  mat.set(0,3,0);
+//  mat.set(1,3,0);
+//  mat.set(2,3,0);
+//  mat.set(3,3,1.0f);
+//
+//  return mat;
+//}
 // // from
 // https://stackoverflow.com/a/21830596
 // LMatrix4 LookAt( const LVector3& Eye, const LVector3& Center, const LVector3& Up )
@@ -667,52 +712,58 @@ inline float deg_sin(const float deg) {
       degree_to_radians(deg)
       );
 }
+inline float rad_cos(const float rad) {
+  return std::cos(rad);
+}
+inline float rad_sin(const float rad) {
+  return std::sin(rad);
+}
 
-inline Mat4 gen_rotation_matrix_x(const float deg_x) {
-  float c = deg_cos(deg_x);
-  float s = deg_sin(deg_x);
-  Mat4 m;
-  m.set(1,1, c);
-  m.set(1,2, -s);
-  m.set(2,1, s);
-  m.set(2,2, c);
-  return m;
-}
-inline Mat4 gen_rotation_matrix_y(const float deg_y) {
-  float c = deg_cos(deg_y);
-  float s = deg_sin(deg_y);
-  Mat4 m;
-  m.set(0,0, c);
-  m.set(0,2, s);
-  m.set(2,0, -s);
-  m.set(2,2, c);
-  return m;
-}
-inline Mat4 gen_rotation_matrix_z(const float deg_z) {
-  float c = deg_cos(deg_z);
-  float s = deg_sin(deg_z);
-  Mat4 m;
-  m.set(0,0, c);
-  m.set(0,1, -s);
-  m.set(1,0, s);
-  m.set(1,1, c);
-  return m;
-}
+//inline Mat4 gen_rotation_matrix_x(const float deg_x) {
+//  float c = deg_cos(deg_x);
+//  float s = deg_sin(deg_x);
+//  Mat4 m;
+//  m.set(1,1, c);
+//  m.set(1,2, -s);
+//  m.set(2,1, s);
+//  m.set(2,2, c);
+//  return m;
+//}
+//inline Mat4 gen_rotation_matrix_y(const float deg_y) {
+//  float c = deg_cos(deg_y);
+//  float s = deg_sin(deg_y);
+//  Mat4 m;
+//  m.set(0,0, c);
+//  m.set(0,2, s);
+//  m.set(2,0, -s);
+//  m.set(2,2, c);
+//  return m;
+//}
+//inline Mat4 gen_rotation_matrix_z(const float deg_z) {
+//  float c = deg_cos(deg_z);
+//  float s = deg_sin(deg_z);
+//  Mat4 m;
+//  m.set(0,0, c);
+//  m.set(0,1, -s);
+//  m.set(1,0, s);
+//  m.set(1,1, c);
+//  return m;
+//}
 
 //inline Mat4 compose_rotations(const Mat4 rot_x, const Mat4 rot_y, const Mat4 rot_z) {
 //}
 
 
-inline Mat4 gen_rotation_matrix(const float deg_x, const float deg_y, const float deg_z) {
+inline Mat4 gen_rotation_matrix_rad(const float rad_x, const float rad_y, const float rad_z) {
   //Mat4 rot_x = gen_rotation_matrix_x(rad_x);
   //Mat4 rot_y = gen_rotation_matrix_y(rad_y);
   //Mat4 rot_z = gen_rotation_matrix_z(rad_z);
   //return compose_rotations(rot_x, rot_y, rot_z);
 
   // return the matrix rotZ * rotY * rotX
-  float cx = deg_cos(deg_x), sx = deg_sin(deg_x);
-  float cy = deg_cos(deg_y), sy = deg_sin(deg_y);
-  float cz = deg_cos(deg_z), sz = deg_sin(deg_z);
+  float cx = rad_cos(rad_x), sx = rad_sin(rad_x);
+  float cy = rad_cos(rad_y), sy = rad_sin(rad_y);
+  float cz = rad_cos(rad_z), sz = rad_sin(rad_z);
   Mat4 m;
   m.set(0,0, cz*cy);
   m.set(0,1, cz*sy*sx - sz*cx);
@@ -729,7 +780,13 @@ inline Mat4 gen_rotation_matrix(const float deg_x, const float deg_y, const floa
   return m;
 }
 
-
+inline Mat4 gen_rotation_matrix(const float deg_x, const float deg_y, const float deg_z) {
+  return gen_rotation_matrix_rad(
+      degree_to_radians(deg_x),
+      degree_to_radians(deg_y),
+      degree_to_radians(deg_z)
+      );
+}
 
 
 

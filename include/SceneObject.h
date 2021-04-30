@@ -17,7 +17,6 @@ class SceneObject {
     Vec3 rotations_; // rotation degrees around x,y,z axes
 
 
-
   public:
     virtual Point3 localToWorld(const Point3& target) { return matrix_ * target; }
     virtual Point3 worldToLocal(const Point3& target) { return matrix_.inverse() * target; }
