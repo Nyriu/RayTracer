@@ -39,7 +39,8 @@ int main() {
     //makeScene_ShadowDebug();
     //makeScene_TransformDebug();
     //makeScene_CameraTransformDebug();
-    makeScene_HierarchyTransformDebug();
+    //makeScene_HierarchyTransformDebug();
+    makeScene_HierarchyCSGTransformDebug();
 
 
   Renderer renderer(&window);

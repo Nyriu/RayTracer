@@ -145,9 +145,10 @@ class UnionShape : public CSGShape {
     UnionShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::min(
-          shape1_->getDistance(from),
-          shape2_->getDistance(from)
+          shape1_->getDistance(local),
+          shape2_->getDistance(local)
           );
     }
 };
@@ -158,9 +159,10 @@ class IntersectShape : public CSGShape {
     IntersectShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::max(
-          shape1_->getDistance(from),
-          shape2_->getDistance(from)
+          shape1_->getDistance(local),
+          shape2_->getDistance(local)
           );
     }
 };
@@ -171,9 +173,10 @@ class SubtractShape : public CSGShape {
     SubtractShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::max(
-          shape1_->getDistance(from),
-          -shape2_->getDistance(from)
+          shape1_ ->getDistance(local),
+          -shape2_->getDistance(local)
           );
     }
 };

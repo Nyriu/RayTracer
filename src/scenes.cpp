@@ -418,3 +418,47 @@ Scene makeScene_HierarchyTransformDebug() {
 }
 
 
+Scene makeScene_HierarchyCSGTransformDebug() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,2), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1));
+
+  float x_offset = 0;
+  ImplicitShape *csg1 =
+    new IntersectShape(
+        new Sphere(Point3(x_offset, 0,0), 1.7),
+        new UnionShape(
+          new Torus(Point3(x_offset,1.5,0), .5,.2),
+          new UnionShape(
+            new Torus(Point3(x_offset,0,0), 1.5,0.4),
+            new Torus(Point3(x_offset,-1.5,0), .5,.2))
+          )
+        );
+
+
+
+  float rot=45;
+  rot-=15;
+  rot-=15;
+  rot-=15;
+  csg1->rotateX(rot);
+  csg1->rotateY(rot);
+  scene.addShape(csg1);
+
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  Point3 view(0, 6, 0);
+  float fov = 45;
+  //Camera cam(fov, camera_origin, view);
+  Camera cam;
+  cam.translate(camera_origin - Point3(0));
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+
+

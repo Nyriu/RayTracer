@@ -13,5 +13,6 @@ Scene makeScene_ShadowDebug();
 Scene makeScene_TransformDebug();
 Scene makeScene_CameraTransformDebug();
 Scene makeScene_HierarchyTransformDebug();
+Scene makeScene_HierarchyCSGTransformDebug();
 
 #endif
