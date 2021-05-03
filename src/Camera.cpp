@@ -29,6 +29,7 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   Point3 p = Point3(-su,-sv,1); // perche' ho dovuto cambiare segni????
   //Point3 orig = (translations_).as_Point();
   Point3 orig = intoWorldDir(Point3(0));
+  //std::cout << "\norig of ray\n" << orig << std::endl;
   //return Ray(eye, intoWorldDir(direction));
   return Ray(orig, (orig - intoWorldDir(p)).normalize());
 }
@@ -102,6 +103,7 @@ void Camera::lookAt(const Point3 l) {
   //  "\nmatrix_\n" << matrix_ <<
   //  //"\nm\n" << m <<
   //  //"\nrotations_\n" << rotations_ <<
+  //  "\ntranslations_\n" << translations_ <<
   //  //"\n" <<
   //  std::endl;
 }

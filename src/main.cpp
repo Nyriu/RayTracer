@@ -14,6 +14,7 @@ int main() {
   const float aspect_ratio = 16.0/9.0;
   //const float aspect_ratio = 1;
 
+  //const int width = 1080;
   //const int width = 900;
   const int width = 300;
   //const int width = 200;
@@ -37,7 +38,8 @@ int main() {
     //makeScene_CSG_3();
     //makeScene_ShadowDebug();
     //makeScene_TransformDebug();
-    makeScene_CameraTransformDebug();
+    //makeScene_CameraTransformDebug();
+    makeScene_HierarchyTransformDebug();
 
 
   Renderer renderer(&window);

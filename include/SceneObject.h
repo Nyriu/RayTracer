@@ -8,6 +8,7 @@
 
 class SceneObject {
   protected:
+  //private:
     Mat4 matrix_; // The local transform matrix.
     Mat4 matrix_inverse_;
     //Mat4 matrixWorld; // The global transform of the object.
@@ -16,43 +17,74 @@ class SceneObject {
     Vec3 translations_;
     Vec3 rotations_; // rotation degrees around x,y,z axes
 
+    const SceneObject *parent_ = nullptr;
+    bool has_parent_ = false;
+
 
   public:
-    virtual Point3 localToWorld(const Point3& target) { return matrix_ * target; }
-    virtual Point3 worldToLocal(const Point3& target) { return matrix_.inverse() * target; }
-
-    virtual Vec3 localToWorld(const Vec3& target) { return matrix_ * target; }
-    virtual Vec3 worldToLocal(const Vec3& target) { return matrix_.inverse() * target; }
-
-    //SceneObject translate(const Vec3& t) {
-    void translate( const float x, const float y, const float z) {
-      translate(Vec3(x,y,z));
-      //return *this;
+    bool hasParent() const { return parent_ != nullptr && has_parent_; }
+    void setParent(const SceneObject *parent) {
+      // if already present override parent
+      // TODO handle cycle parent(A,B) AND parent(B,A) // check on children list?
+      has_parent_ = true;
+      parent_ = parent;
     }
-    //SceneObject translate(const Vec3& t) {
-    void translate(const Vec3& t) {
+
+
+    virtual Point3 localToWorld(const Point3& target) const {
+      return hasParent() ?
+        matrix_ * parent_->localToWorld(target) :
+        matrix_ * target;
+    }
+    virtual Point3 worldToLocal(const Point3& target) const {
+      return hasParent() ?
+        matrix_inverse_ * parent_->worldToLocal(target) :
+        matrix_inverse_ * target;
+    }
+
+    virtual Vec3 localToWorld(const Vec3& target) const {
+      return hasParent() ?
+        matrix_ * parent_->localToWorld(target) :
+        matrix_ * target;
+    }
+    virtual Vec3 worldToLocal(const Vec3& target) const {
+      return hasParent() ?
+        matrix_inverse_ * parent_->worldToLocal(target) :
+        matrix_inverse_ * target;
+    }
+
+    SceneObject translate( const float x, const float y, const float z) {
+    //void translate( const float x, const float y, const float z) {
+      translate(Vec3(x,y,z));
+      return *this;
+    }
+
+    SceneObject translate(const Vec3& t) {
+    //void translate(const Vec3& t) {
       translations_ = translations_ + t;
       update_matrix();
-      //return *this;
+      return *this;
     }
 
-    //SceneObject rotateX(const float rad) {
-    void rotateX(const float deg) {
+    SceneObject rotateX(const float deg) {
+    //void rotateX(const float deg) {
       rotations_.set_x(deg);
       update_matrix();
-      //return *this;
+      return *this;
     }
-    //SceneObject rotateY(const float deg) {
-    void rotateY(const float deg) {
+
+    SceneObject rotateY(const float deg) {
+    //void rotateY(const float deg) {
       rotations_.set_y(deg);
       update_matrix();
-      //return *this;
+      return *this;
     }
-    //SceneObject rotateZ(const float deg) {
-    void rotateZ(const float deg) {
+
+    SceneObject rotateZ(const float deg) {
+    //void rotateZ(const float deg) {
       rotations_.set_z(deg);
       update_matrix();
-      //return *this;
+      return *this;
     }
 
 

@@ -19,11 +19,20 @@ class ImplicitShape : public SceneObject {
     float gradient_delta_ = 10e-6; // delta used to compute gradient (normal)
 
   public:
-    virtual float getDistance(const Point3& from) const = 0;
+    //virtual float getDistance(const Point3& from) const = 0;
+    virtual float getDistance(const Point3& from) const { return 0; }
     virtual ~ImplicitShape() {}
 
-    virtual void setColor(const Color& color) { color_ = color; }
-    virtual void setColor(const float r, const float g, const float b) { color_ = Color(r,g,b); }
+    //virtual void setColor(const Color& color) { color_ = color; }
+    //virtual void setColor(const float r, const float g, const float b) { color_ = Color(r,g,b); }
+    virtual ImplicitShape setColor(const Color& color) {
+      color_ = color;
+      return *this;
+    }
+    virtual ImplicitShape setColor(const float r, const float g, const float b) {
+      color_ = Color(r,g,b);
+      return *this;
+    }
 
     virtual Color getColor() const { return color_; }
     virtual Color getColor(const Point3& p) const { return getColor(); }
@@ -60,7 +69,7 @@ class Sphere : public ImplicitShape {
     }
 
     float getDistance(const Point3& from) const {
-      return (matrix_inverse_ * from).length() - radius_;
+      return (worldToLocal(from)).length() - radius_;
     }
 };
 
@@ -77,7 +86,7 @@ class Torus : public ImplicitShape {
     }
 
     float getDistance(const Point3& from) const {
-      Point3 p = matrix_inverse_ * from;
+      Point3 p = worldToLocal(from);
       // to 2D plane
       float tmpx = std::sqrt(p.x() * p.x() + p.z() * p.z()) - r0_;
       float tmpy = p.y();

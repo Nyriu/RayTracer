@@ -34,6 +34,7 @@ class Scene {
     void addShape(ImplicitShape* shape) {
     //void addShape(ImplicitShape& shape) {
       //shapes_.push_back(std::make_shared<ImplicitShape>(shape));
+      // what if already added? O(n) to look for same val pointer?
       shapes_.push_back(shape);
     }
     //void addLight(Light& light) {
