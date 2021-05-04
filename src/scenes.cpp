@@ -436,16 +436,24 @@ Scene makeScene_HierarchyCSGTransformDebug() {
           )
         );
 
+  //float rot=45;
+  //rot-=15;
+  //rot-=15;
+  //rot-=15;
+  //csg1->rotateX(rot);
+  //csg1->rotateY(rot);
 
+  float rot=0;
+  //csg1->rotateX(rot);
+  //csg1->rotateY(rot);
+  csg1->rotate(20,15,rot);
+  csg1->set_spin(0,0,10);
 
-  float rot=45;
-  rot-=15;
-  rot-=15;
-  rot-=15;
-  csg1->rotateX(rot);
-  csg1->rotateY(rot);
   scene.addShape(csg1);
 
+  //scene.set_suggested_ticks(18);
+  scene.set_suggested_ticks(36);
+  //scene.set_suggested_ticks(2);
 
   // Camera
   Point3 camera_origin(0,3,5);

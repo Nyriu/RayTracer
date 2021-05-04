@@ -40,11 +40,13 @@ class Renderer {
     Image img_;
 
     // Scene stuff
-    const Scene *scene_ = nullptr;
+    Scene *scene_ = nullptr;
 
     //Tracer *tracer_ = nullptr;
     Tracer *tracer_ = new Tracer();
 
+    int current_tick_  = 0;
+    int max_num_ticks_ = 1; // maximum number of ticks before stopping update of scene
 
   public:
     Renderer() = default;
@@ -59,12 +61,16 @@ class Renderer {
 
     bool hasCamera() { return cam_ != nullptr; }
     Renderer setScene(Scene* scene);
+    Renderer setScene(Scene* scene, bool use_suggested_max_ticks);
     Renderer setCamera(Camera* camera);
+    Renderer setMaxNumTicks(const int max_num_ticks) {
+      max_num_ticks_ = max_num_ticks;
+      return *this;
+    }
 
     void render();
     void generateFrame();
     void mainLoop();
-
 
     void disableWindow(){
       this->no_window = true;

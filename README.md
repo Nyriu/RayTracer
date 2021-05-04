@@ -9,9 +9,7 @@ I'm taking inspiration from:
   * [scratchpixel](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields) tutorials
 
 ## Dependencies
-* SDL2
-* GLM (removable)
-
+* SDL2 (thinking of using glut instead)
 
 ## DONE
 
@@ -20,10 +18,9 @@ I'm taking inspiration from:
     and [here](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/constructive-solid-geometry-blends-deformers)
     for theory
 
+* obj transformations
 
 ## TODO
-
-* obj transformations
 
 * blending and anti-aliasing
   * AA with cone-tracing
@@ -55,8 +52,8 @@ CSG Shadow Debug Process
 ![](./imgs/time_1617091499.png)
 ![](./imgs/time_1617092196.png)
 ![](./imgs/time_1617092777.png)
-![](./imgs/time_1617093299.png)
 ![](./imgs/time_1617093337.png)
+![](./imgs/time_1617093299.png)
 
 ### Transformations
 ![](./imgs/rotation.gif)

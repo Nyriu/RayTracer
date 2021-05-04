@@ -6,9 +6,7 @@
 #include "Color.h"
 
 class Light {
-  //public:
   protected:
-  //private:
     Point3 position_;
     Color color_;
     float intensity_;

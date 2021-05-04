@@ -6,13 +6,7 @@
 #include <iterator>
 #include <string>
 
-//#include "Color.h"
-//
 namespace utilities {
-  //inline float clamp(const float val, const float minVal, const float maxVal);
-  //inline void DEBUG_message(const bool& isToShow, const char* message);
-  //inline void DEBUG_message(const bool& isToShow, const std::string& message);
-
 
 inline float clamp(const float val, const float minVal, const float maxVal) {
   return std::min(std::max(val, minVal), maxVal);
@@ -35,10 +29,6 @@ inline void DEBUG_message(const bool& isToShow, const std::string& message) {
     std::cout << message << std::endl;
 }
 
-//inline void DEBUG_message(const bool& isToShow, const Color& color) {
-//  if (isToShow)
-//    std::cout << "Color: [" << color << "]" << std::endl;
-//}
 
 }
 #endif

@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <memory> // shared_ptr // todo use
-// https://en.cppreference.com/w/cpp/memory/shared_ptr
 
 #include "Color.h"
 #include "geometry.h"
@@ -52,7 +50,6 @@ class Tracer {
 
     Color sphereTrace(const Ray& r); // better with pointer?
     Color shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape);
-    //bool sphereTraceShadow(const Ray& r);
     bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 
 };

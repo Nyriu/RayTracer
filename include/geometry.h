@@ -11,9 +11,6 @@
 #include <ostream>
 #include <cmath>
 
-//#include <glm/vec4.hpp> // TODO REMOVE
-//#include <glm/mat4x4.hpp> // TODO REMOVE
-
 class Point3;
 class Vec3;
 class Mat4;
@@ -34,10 +31,6 @@ class Point3 {
     friend inline Point3 operator*(const float& f, const Point3& v);
 
     friend inline Point3 operator*(const Mat4& m, const Point3& v);
-
-    //friend inline Vec3 myLookAt(
-    //    const Point3& eye, const Point3& target,
-    //    const Vec3& up, const Vec3& dirToMove);
 
     friend inline Mat4 geom_lookAt(
         const Point3& eye, const Point3& center, const Vec3& up);
@@ -141,10 +134,6 @@ class Vec3 {
     friend inline Vec3 operator*(const float& f, const Vec3& v);
 
     friend inline Vec3   operator*(const Mat4& m, const Vec3& v);
-
-    //friend inline Vec3 myLookAt(
-    //    const Point3& eye, const Point3& target,
-    //    const Vec3& up, const Vec3& dirToMove);
 
     friend inline Vec3 operator-(const Vec3& u, const Point3& v);
     friend inline Point3 operator+(const Point3& u, const Vec3& v);
@@ -578,23 +567,6 @@ class Mat4 {
           );
     }
 
-  //m.set(0,0, cz*cy);
-  //m.set(0,1, cz*sy*sx - sz*cx);
-  //m.set(0,2, cz*sy*cx + sz*sx);
-
-  //m.set(1,0, sz*cy);
-  //m.set(1,1, sz*sy*sx + cz*cx);
-  //m.set(1,2, sz*sy*cx - cz*sx);
-
-  //m.set(2,0, -sy);
-  //m.set(2,1, cy*sx);
-  //m.set(2,2, cy*cx);
-
-
-    // Operators
-    // TODO
-    //const float* operator [] (uint8_t i) const { return m_[i]; }
-    //float* operator [] (uint8_t i) { return m_[i]; }
 };
 
 
@@ -623,77 +595,6 @@ inline std::ostream& operator<<(std::ostream& out, const Mat4& m) {
     "  " << m.get(3,0) << " " << m.get(3,1) << " " << m.get(3,2) << " " << m.get(3,3) << "\n" <<
     "] ";
 }
-
-
-//inline Mat4 geom_lookAt( const Point3& eye, const Point3& center, const Vec3& up) {
-//  Mat4 mat;
-//  Vec3 x,y,z;
-//
-//  z = eye - center;
-//  z.normalize();
-//  y = up;
-//  x = y.cross(z);
-//  y = z.cross(x);
-//
-//  x.normalize();
-//  y.normalize();
-//
-//  mat.set(0,0,x.x());
-//  mat.set(1,0,x.y());
-//  mat.set(2,0,x.z());
-//  mat.set(3,0,-x.dot( eye.as_Vec3() ));
-//  mat.set(0,1,y.x());
-//  mat.set(1,1,y.y());
-//  mat.set(2,1,y.z());
-//  mat.set(3,1,-y.dot( eye.as_Vec3() ));
-//  mat.set(0,2,z.x());
-//  mat.set(1,2,z.y());
-//  mat.set(2,2,z.z());
-//  mat.set(3,2,-z.dot( eye.as_Vec3() ));
-//  mat.set(0,3,0);
-//  mat.set(1,3,0);
-//  mat.set(2,3,0);
-//  mat.set(3,3,1.0f);
-//
-//  return mat;
-//}
-// // from
-// https://stackoverflow.com/a/21830596
-// LMatrix4 LookAt( const LVector3& Eye, const LVector3& Center, const LVector3& Up )
-// {
-//   LMatrix4 Matrix;
-//   LVector3 X, Y, Z;
-//
-//
-//   Z = Eye - Center;
-//   Z.Normalize();
-//   Y = Up;
-//   X = Y.Cross( Z );
-//
-//   Y = Z.Cross( X );
-//
-//   X.Normalize();
-//   Y.Normalize();
-//
-//   Matrix[0][0] = X.x;
-//   Matrix[1][0] = X.y;
-//   Matrix[2][0] = X.z;
-//   Matrix[3][0] = -X.Dot( Eye );
-//   Matrix[0][1] = Y.x;
-//   Matrix[1][1] = Y.y;
-//   Matrix[2][1] = Y.z;
-//   Matrix[3][1] = -Y.Dot( Eye );
-//   Matrix[0][2] = Z.x;
-//   Matrix[1][2] = Z.y;
-//   Matrix[2][2] = Z.z;
-//   Matrix[3][2] = -Z.Dot( Eye );
-//   Matrix[0][3] = 0;
-//   Matrix[1][3] = 0;
-//   Matrix[2][3] = 0;
-//   Matrix[3][3] = 1.0f;
-//
-//   return Matrix;
-// }
 
 
 
@@ -755,11 +656,6 @@ inline float rad_sin(const float rad) {
 
 
 inline Mat4 gen_rotation_matrix_rad(const float rad_x, const float rad_y, const float rad_z) {
-  //Mat4 rot_x = gen_rotation_matrix_x(rad_x);
-  //Mat4 rot_y = gen_rotation_matrix_y(rad_y);
-  //Mat4 rot_z = gen_rotation_matrix_z(rad_z);
-  //return compose_rotations(rot_x, rot_y, rot_z);
-
   // return the matrix rotZ * rotY * rotX
   float cx = rad_cos(rad_x), sx = rad_sin(rad_x);
   float cy = rad_cos(rad_y), sy = rad_sin(rad_y);
