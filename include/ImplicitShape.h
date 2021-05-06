@@ -7,9 +7,11 @@
 //#include<vector>
 
 #include "geometry.h"
+#include "SceneObject.h"
 #include "Color.h"
+#include <iterator>
 
-class ImplicitShape {
+class ImplicitShape : public SceneObject {
   protected:
     Color color_ = Color(0.3);
 
@@ -17,8 +19,20 @@ class ImplicitShape {
     float gradient_delta_ = 10e-6; // delta used to compute gradient (normal)
 
   public:
-    virtual float getDistance(const Point3& from) const = 0;
+    //virtual float getDistance(const Point3& from) const = 0;
+    virtual float getDistance(const Point3& from) const { return 0; }
     virtual ~ImplicitShape() {}
+
+    //virtual void setColor(const Color& color) { color_ = color; }
+    //virtual void setColor(const float r, const float g, const float b) { color_ = Color(r,g,b); }
+    virtual ImplicitShape setColor(const Color& color) {
+      color_ = color;
+      return *this;
+    }
+    virtual ImplicitShape setColor(const float r, const float g, const float b) {
+      color_ = Color(r,g,b);
+      return *this;
+    }
 
     virtual Color getColor() const { return color_; }
     virtual Color getColor(const Point3& p) const { return getColor(); }
@@ -37,37 +51,42 @@ class ImplicitShape {
 
 class Sphere : public ImplicitShape {
   private:
-    Point3 center_;
     float radius_;
   public:
-    Sphere(const float& radius) : center_(Point3(0)), radius_(radius) {
+    Sphere(const float& radius) : radius_(radius) {
       color_ = 0.5;
     }
-    Sphere(const Point3& center, const float& radius) : center_(center), radius_(radius) {
+    Sphere(const Point3& center, const float& radius) : radius_(radius) {
+      translate(center.as_Vec3());
       color_ = 0.5;
     }
-    Sphere(const Point3& center, const float& radius, const Color& color) : center_(center), radius_(radius) {
+    Sphere(const Point3& center, const float& radius, const Color& color) : radius_(radius) {
+      translate(center.as_Vec3());
       color_ = color;
     }
+    Sphere(const float& radius, const Color& color) : radius_(radius) {
+      color_ = color;
+    }
+
     float getDistance(const Point3& from) const {
-      return (from - center_).length() - radius_;
+      return (worldToLocal(from)).length() - radius_;
     }
 };
 
 class Torus : public ImplicitShape {
   private:
-    Point3 center_;
     float r0_, r1_;
   public:
-    Torus(const float& r0, const float& r1) : center_(0), r0_(r0), r1_(r1) {
+    Torus(const float& r0, const float& r1) : r0_(r0), r1_(r1) {
       color_ = .5;
     }
-    Torus(const Point3& center, const float& r0, const float& r1) : center_(center), r0_(r0), r1_(r1) {
+    Torus(const Point3& center, const float& r0, const float& r1) : r0_(r0), r1_(r1) {
+      translate(center.as_Vec3());
       color_ = .5;
     }
 
     float getDistance(const Point3& from) const {
-      Vec3 p = from - center_;
+      Point3 p = worldToLocal(from);
       // to 2D plane
       float tmpx = std::sqrt(p.x() * p.x() + p.z() * p.z()) - r0_;
       float tmpy = p.y();
@@ -79,19 +98,20 @@ class Torus : public ImplicitShape {
 
 //class Cube : public ImplicitShape {
 //  private:
-//    point3 corner_;
+//    //point3 corner_;
 //  public:
-//    Cube(const point3& corner) : corner_(corner) {}
-//    float getDistance(const point3& from) const {
+//    //Cube(const point3& corner) : corner_(corner) {}
+//    float getDistance(const Point3& from) const {
 //      //vec3 d = from - corner_;
-//      vec3 d = from;
-//      point3 dmax = d;
-//      dmax.x = std::max(dmax.x, 0.f);
-//      dmax.y = std::max(dmax.y, 0.f);
-//      dmax.z = std::max(dmax.z, 0.f);
+//      Vec3 d = from - Point3(1);
+//      Point3 dmax(
+//          std::max(d.x(), 0.f),
+//          std::max(d.y(), 0.f),
+//          std::max(d.z(), 0.f)
+//          );
 //
 //      //float scale = 2;
-//      return (std::min(std::max(d.x, std::max(d.y,d.z)), 0.f) + length(dmax));
+//      return (std::min(std::max(d.x(), std::max(d.y(),d.z())), 0.f) + dmax.length());
 //    }
 //};
 
@@ -125,9 +145,10 @@ class UnionShape : public CSGShape {
     UnionShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::min(
-          shape1_->getDistance(from),
-          shape2_->getDistance(from)
+          shape1_->getDistance(local),
+          shape2_->getDistance(local)
           );
     }
 };
@@ -138,9 +159,10 @@ class IntersectShape : public CSGShape {
     IntersectShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::max(
-          shape1_->getDistance(from),
-          shape2_->getDistance(from)
+          shape1_->getDistance(local),
+          shape2_->getDistance(local)
           );
     }
 };
@@ -151,9 +173,10 @@ class SubtractShape : public CSGShape {
     SubtractShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
       return std::max(
-          shape1_->getDistance(from),
-          -shape2_->getDistance(from)
+          shape1_ ->getDistance(local),
+          -shape2_->getDistance(local)
           );
     }
 };

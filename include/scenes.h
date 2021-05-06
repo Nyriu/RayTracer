@@ -10,5 +10,9 @@ Scene makeScene_CSG_1();
 Scene makeScene_CSG_2();
 Scene makeScene_CSG_3();
 Scene makeScene_ShadowDebug();
+Scene makeScene_TransformDebug();
+Scene makeScene_CameraTransformDebug();
+Scene makeScene_HierarchyTransformDebug();
+Scene makeScene_HierarchyCSGTransformDebug();
 
 #endif
