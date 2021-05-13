@@ -472,5 +472,95 @@ Scene makeScene_HierarchyCSGTransformDebug() {
   return scene;
 }
 
+Scene makeScene_Smooth() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,2), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1));
+
+  float x_offset=1.5;
+
+  // Example 1
+  ImplicitShape* sp = new Sphere(Point3(0, 0,0), 1.2);
+  ImplicitShape* tol = new Torus (Point3(-x_offset,0,0), 1, 0.3);
+  ImplicitShape* tor = new Torus (Point3( x_offset,0,0), 1, 0.3);
+  ImplicitShape *csg1 =
+    new UnionShape(
+        new SmoothUnionShape(sp, tol, 0.5),
+        tor
+        );
+  tol->setColor(.5,.2,.3);
+  tor->setColor(.3,.2,.5);
+
+  tol->set_spin(0,0, 10);
+  tor->set_spin(0,0,-10);
+
+  ///// Example 2
+  //ImplicitShape* to1 = new Torus(Point3(0,0,0), 1, 0.3);
+  //ImplicitShape* to2 = new Torus(Point3(0,0,0), 1, 0.3);
+  //ImplicitShape *csg1 =
+  //  new SmoothUnionShape(
+  //      to1,
+  //      to2,
+  //      0.3f
+  //      );
+  //to1->rotate(20,10,0);
+  //to2->rotateZ(90);
+  //to2->set_spin(0,0,15);
 
 
+
+  scene.addShape(csg1);
+  float rot=20;
+  csg1->set_spin(0,20,0);
+
+  scene.set_suggested_ticks((int)(360/rot));
+
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  Point3 view(0, 6, 0);
+  float fov = 45;
+  //Camera cam(fov, camera_origin, view);
+  Camera cam;
+  cam.translate(camera_origin - Point3(0));
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+Scene makeScene_Mix() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(4,3,2), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1));
+
+
+  //ImplicitShape* cu1 = new Cube(Vec3(2,1.5,1.2));
+  ImplicitShape* cu1 = new Cube(Vec3(2));
+  ImplicitShape* sp1 = new Sphere(2);
+  ImplicitShape *csg1 =
+    new MixShape(
+        cu1,
+        sp1,
+        0.4f
+        );
+  scene.addShape(csg1);
+
+  float rot=10;
+  cu1->set_spin(rot,rot,0);
+  csg1->set_spin(0,rot,0);
+
+  scene.set_suggested_ticks((int)(360/rot));
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  float fov = 45;
+  Camera cam;
+  cam.translate(camera_origin.as_Vec3());
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}

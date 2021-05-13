@@ -31,13 +31,15 @@ int main() {
     //makeScene_ShadowDebug();
     //makeScene_TransformDebug();
     //makeScene_CameraTransformDebug();
-    makeScene_HierarchyTransformDebug();
+    //makeScene_HierarchyTransformDebug();
     //makeScene_HierarchyCSGTransformDebug();
+    //makeScene_Smooth();
+    makeScene_Mix();
 
 
   Renderer renderer(&window);
-  //renderer.disableWindow();
-  renderer.enableWindow();
+  renderer.disableWindow();
+  //renderer.enableWindow();
 
   renderer.setScene(&scene, true); // true to generate scene's right number of frames
   //renderer.addCamera(Camera ... );

@@ -73,7 +73,7 @@ class Camera : public SceneObject {
     void lookAt(const Point3 p);
 
   public:
-    bool update(); // actually updates the camera
+    void update(); // actually updates the camera
 
     Camera setAspectRatio(const float& aspect_ratio) {
       aspect_ = aspect_ratio;

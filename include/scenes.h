@@ -14,5 +14,8 @@ Scene makeScene_TransformDebug();
 Scene makeScene_CameraTransformDebug();
 Scene makeScene_HierarchyTransformDebug();
 Scene makeScene_HierarchyCSGTransformDebug();
+Scene makeScene_Smooth();
+Scene makeScene_Mix();
+
 
 #endif

@@ -116,7 +116,7 @@ class SceneObject {
     }
 
 
-    void update() {
+    virtual void update() {
       translate(speed_);
       rotate(spin_);
     }

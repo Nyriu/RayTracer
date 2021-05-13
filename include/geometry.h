@@ -52,6 +52,13 @@ class Point3 {
     float y() const { return v_[1]; }
     float z() const { return v_[2]; }
 
+    //Point3 abs() {
+    //  v_[0] = std::abs(v_[0]);
+    //  v_[1] = std::abs(v_[1]);
+    //  v_[2] = std::abs(v_[2]);
+    //  return *this;
+    //}
+
 
     float length() const {
       return std::sqrt(length2());
@@ -224,7 +231,10 @@ inline Vec3 operator+(const Vec3& u, const Vec3& v) {
       u.v_[2] + v.v_[2]);
 }
 inline Vec3 operator-(const Vec3& u, const Vec3& v) {
-  return Vec3(u.v_ - v.v_);
+  return Vec3(
+      u.v_[0] - v.v_[0],
+      u.v_[1] - v.v_[1],
+      u.v_[2] - v.v_[2]);
 }
 inline Vec3 operator-(const Vec3& u) {
   return Vec3(

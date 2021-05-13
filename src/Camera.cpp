@@ -108,7 +108,8 @@ void Camera::lookAt(const Point3 l) {
   //  std::endl;
 }
 
-bool Camera::update() {
+void Camera::update() {
+//bool Camera::update() {
 //  if (isToUpdate()) {
 //    // here update dir_, target_, viewMatrix_
 //    updateViewMatrix();
@@ -116,7 +117,7 @@ bool Camera::update() {
 //    updated_ = true;
 //    return true;
 //  }
-  return true;
+  //return true;
 }
 
 //void Camera::updateViewMatrix() {

@@ -60,3 +60,6 @@ CSG Shadow Debug Process
 ![](./imgs/rotation_2.gif)
 ![](./imgs/rotation_3.gif)
 
+### Smooth Union and Mixing
+![](./imgs/smooth_union.gif);
+![](./imgs/cube_sphere_mix.gif);

@@ -9,7 +9,9 @@
 #include "geometry.h"
 #include "SceneObject.h"
 #include "Color.h"
+#include <iostream>
 #include <iterator>
+#include <ostream>
 
 class ImplicitShape : public SceneObject {
   protected:
@@ -69,6 +71,13 @@ class Sphere : public ImplicitShape {
     }
 
     float getDistance(const Point3& from) const {
+      //std::cout <<
+      //  "\n ----- SPHERE -----" <<
+      //  "\nm:     \n" << matrix_ <<
+      //  "\nm_inv: \n" << matrix_inverse_ <<
+      //  "\nfrom:  " << from <<
+      //  "\np:     " << worldToLocal(from) <<
+      //  "\n END ----- SPHERE -----" << std::endl;
       return (worldToLocal(from)).length() - radius_;
     }
 };
@@ -96,24 +105,48 @@ class Torus : public ImplicitShape {
     //~Torus() {}
 };
 
-//class Cube : public ImplicitShape {
-//  private:
-//    //point3 corner_;
-//  public:
-//    //Cube(const point3& corner) : corner_(corner) {}
-//    float getDistance(const Point3& from) const {
-//      //vec3 d = from - corner_;
-//      Vec3 d = from - Point3(1);
-//      Point3 dmax(
-//          std::max(d.x(), 0.f),
-//          std::max(d.y(), 0.f),
-//          std::max(d.z(), 0.f)
-//          );
-//
-//      //float scale = 2;
-//      return (std::min(std::max(d.x(), std::max(d.y(),d.z())), 0.f) + dmax.length());
-//    }
-//};
+class Cube : public ImplicitShape {
+  private:
+    Vec3 half_dims_ = Vec3(.5,.5,.5);
+
+  public:
+    Cube() = default;
+    Cube(const Vec3& dims) : half_dims_(dims*.5) { color_ = .5; }
+    Cube(const Point3& center) {
+      translate(center.as_Vec3());
+      color_ = .5;
+    }
+    Cube(const Point3& center, const Vec3& dims) : half_dims_(dims*.5) {
+      translate(center.as_Vec3());
+      color_ = .5;
+    }
+
+    float getDistance(const Point3& from) const {
+      Point3 p = worldToLocal(from);
+      Point3 abs_p = Point3(std::abs(p.x()), std::abs(p.y()), std::abs(p.z()));
+
+      Vec3 v = abs_p - half_dims_.as_Point();
+      float d = Vec3(
+          std::max(v.x(),.0f),
+          std::max(v.y(),.0f),
+          std::max(v.z(),.0f)
+          ).length();
+
+      //std::cout <<
+      //  "\n ----- CUBE -----" <<
+      //  //"\nm:     \n" << matrix_ <<
+      //  //"\nm_inv: \n" << matrix_inverse_ <<
+      //  "\nfrom:  " << from <<
+      //  "\np:     " << p <<
+      //  "\nabs_p: " << abs_p <<
+      //  "\nh_dims:" << half_dims_ <<
+      //  "\nv:     " << v <<
+      //  "\nd:     " << d <<
+      //  "\n END ----- CUBE -----" << std::endl;
+
+      return d;
+    }
+};
 
 
 //class Plane : public ImplicitShape
@@ -121,15 +154,15 @@ class Torus : public ImplicitShape {
 
 class CSGShape : public ImplicitShape {
   protected:
-   const ImplicitShape* shape1_ = nullptr;
-   const ImplicitShape* shape2_ = nullptr;
+   ImplicitShape* shape1_ = nullptr;
+   ImplicitShape* shape2_ = nullptr;
 
-   void setShapes(const ImplicitShape* shape1, const ImplicitShape* shape2) {
+   void setShapes(ImplicitShape* shape1, ImplicitShape* shape2) {
      shape1_ = shape1;
      shape2_ = shape2;
      color_ = (0.5 * shape1_->getColor()) + (0.5 * shape2_->getColor());
    }
-   void setShapes(const ImplicitShape& shape1, const ImplicitShape& shape2) {
+   void setShapes(ImplicitShape& shape1, ImplicitShape& shape2) {
      setShapes(&shape1, &shape2);
    }
 
@@ -137,12 +170,18 @@ class CSGShape : public ImplicitShape {
      return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor() : shape2_->getColor();
    }
 
+   void update() {
+     ImplicitShape::update();
+     shape1_->update();
+     shape2_->update();
+   }
+
 };
 
 class UnionShape : public CSGShape {
   public:
-    UnionShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
-    UnionShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
+    UnionShape(ImplicitShape* shape1, ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    UnionShape(ImplicitShape& shape1, ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       Point3 local(worldToLocal(from));
@@ -155,8 +194,8 @@ class UnionShape : public CSGShape {
 
 class IntersectShape : public CSGShape {
   public:
-    IntersectShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
-    IntersectShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
+    IntersectShape(ImplicitShape* shape1, ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    IntersectShape(ImplicitShape& shape1, ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       Point3 local(worldToLocal(from));
@@ -169,8 +208,8 @@ class IntersectShape : public CSGShape {
 
 class SubtractShape : public CSGShape {
   public:
-    SubtractShape(const ImplicitShape* shape1, const ImplicitShape* shape2) { setShapes(shape1,shape2); }
-    SubtractShape(const ImplicitShape& shape1, const ImplicitShape& shape2) { setShapes(shape1,shape2); }
+    SubtractShape(ImplicitShape* shape1, ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    SubtractShape(ImplicitShape& shape1, ImplicitShape& shape2) { setShapes(shape1,shape2); }
 
     float getDistance(const Point3& from) const {
       Point3 local(worldToLocal(from));
@@ -181,8 +220,54 @@ class SubtractShape : public CSGShape {
     }
 };
 
-// TODO blend
-// TODO mix
+class SmoothUnionShape : public CSGShape {
+  private:
+    float smooth_factor_ = 0.1f;
+
+    static float smin( float a, float b, float k ) {
+      // from https://www.iquilezles.org/www/articles/smin/smin.htm
+      float h = std::max( k-std::abs(a-b), 0.0f )/k;
+      return std::min( a, b ) - h*h*k*(1.0f/4.0f);
+    }
+
+  public:
+    SmoothUnionShape(ImplicitShape* shape1, ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    SmoothUnionShape(ImplicitShape& shape1, ImplicitShape& shape2) { setShapes(shape1,shape2); }
+    SmoothUnionShape(ImplicitShape* shape1, ImplicitShape* shape2, float smooth_factor) : smooth_factor_(smooth_factor) { setShapes(shape1,shape2); }
+    SmoothUnionShape(ImplicitShape& shape1, ImplicitShape& shape2, float smooth_factor) : smooth_factor_(smooth_factor) { setShapes(shape1,shape2); }
+
+    float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
+      return smin(
+          shape1_->getDistance(local),
+          shape2_->getDistance(local),
+          smooth_factor_
+          );
+    }
+};
+
+
+class MixShape : public CSGShape {
+  private:
+    float mix_factor_ = 0.5f;
+
+    void set_mix_factor(float mix_factor){
+      mix_factor_ = mix_factor > 1.f ? 1.f : mix_factor < 0.f ? 0.f : mix_factor;
+    }
+  public:
+    MixShape(ImplicitShape* shape1, ImplicitShape* shape2) { setShapes(shape1,shape2); }
+    MixShape(ImplicitShape& shape1, ImplicitShape& shape2) { setShapes(shape1,shape2); }
+    MixShape(ImplicitShape* shape1, ImplicitShape* shape2, float mix_factor) { setShapes(shape1,shape2); set_mix_factor(mix_factor); }
+    MixShape(ImplicitShape& shape1, ImplicitShape& shape2, float mix_factor) { setShapes(shape1,shape2); set_mix_factor(mix_factor); }
+
+    float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
+      return
+        mix_factor_       * shape1_->getDistance(local) +
+        (1.f-mix_factor_) * shape2_->getDistance(local);
+    }
+};
+
 
 
 //class ExperimShape : public ImplicitShape {

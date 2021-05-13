@@ -43,7 +43,7 @@ void Renderer::render() {
 
 
 void Renderer::generateFrame() {
-  if (cam_->update()) {
+  //if (cam_->update()) {
     // in img coord (0,0) is top-left
     for (int j=0; j<img_.height; ++j) {
       for (int i=0; i<img_.width; ++i) {
@@ -56,7 +56,7 @@ void Renderer::generateFrame() {
         img_.setPixel(tracer_->sphereTrace(r), i,j);
       }
     }
-  }
+  //}
 }
 
 void Renderer::mainLoop() {
@@ -73,7 +73,7 @@ void Renderer::mainLoop() {
     //std::string prefix = "./wip_imgs/seq_";
     std::string suffix = ".ppm";
     while (current_tick_ < max_num_ticks_) {
-      //std::cout << "generating frame num " << current_tick_ << "\n" << std::endl;
+      std::cout << "generating frame num " << current_tick_ << "\n" << std::endl;
       scene_->update();
       generateFrame();
       img_.writePPM(prefix + std::to_string(std::time(0)) + suffix);

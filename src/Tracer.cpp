@@ -119,6 +119,7 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
 
       // Plastic example
       cdiff = shape->getColor();
+      //cdiff = shape->getColor(p); // problems with CSG
       cspec = Color(0.04);
       roughness = 0;
 
