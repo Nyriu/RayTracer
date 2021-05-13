@@ -9,7 +9,7 @@ I'm taking inspiration from:
   * [scratchpixel](https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields) tutorials
 
 ## Dependencies
-* SDL2 (thinking of using glut instead)
+* GLFW and OpenGL for window
 
 ## DONE
 

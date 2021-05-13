@@ -24,9 +24,8 @@
 #include "Scene.h"
 #include "Tracer.h"
 
-// SDL
-#include <stdlib.h>
-#include <SDL2/SDL.h>
+// OpenGL
+#include <GLFW/glfw3.h>
 
 
 class Renderer {
@@ -52,10 +51,10 @@ class Renderer {
     Renderer() = default;
 
     Renderer(Window* window) :
-      win_(window), img_(win_->width, win_->aspect_ratio) { }
+      win_(window), img_(win_->width, win_->height) { }
 
     Renderer(Window* window, Camera* camera) :
-      win_(window), cam_(camera), img_(win_->width, win_->aspect_ratio) {
+      win_(window), cam_(camera), img_(win_->width, win_->height) {
         cam_->setAspectRatio(win_->aspect_ratio);
       }
 

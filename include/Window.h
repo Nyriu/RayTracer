@@ -1,26 +1,34 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include <iostream>
 #include <cmath>
 
-#include <SDL2/SDL.h>
+#include <GLFW/glfw3.h>
+
 #include "Image.h"
+
+static void error_callback(int error, const char* description);
 
 class Window {
   public:
     const float aspect_ratio;
     const int width, height;
   private:
-    SDL_Event sdl_event;
-    SDL_Renderer *sdl_renderer;
-    SDL_Window *sdl_window;
+    GLFWwindow* window_ = nullptr;
 
     bool is_window_open = false;
 
   public:
-    Window(const int win_width, const float aspect_ratio) :
-      width(win_width), aspect_ratio(aspect_ratio), height((int)(width / aspect_ratio)) {
-        SDL_Init(SDL_INIT_VIDEO);
+    Window(const int win_width, const int win_height) :
+      width(win_width), height(win_height), aspect_ratio((float)win_width/(float)win_height) {
+        glfwSetErrorCallback(error_callback);
+        if (!glfwInit()) {
+          perror("Couldn't init GLFW\n");
+          exit(1);
+        }
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
       }
 
     void openWindow();
@@ -30,6 +38,10 @@ class Window {
     void drawImage(const Image& image);
     bool keepRendering();
 };
+
+static void error_callback(int error, const char* description) {
+  fprintf(stderr, "Error: %s\n", description);
+}
 
 
 #endif

@@ -367,7 +367,10 @@ Scene makeScene_HierarchyTransformDebug() {
   scene.addAmbientLight(new AmbientLight(Color(1), .6));
 
   // Shapes
-  ImplicitShape *sp = new Sphere(.5); // not added to scene // works as general 3D obj
+  ImplicitShape *sp = new Sphere(.25); // not added to scene // works as general 3D obj
+                                       // need to be added  to scene for spin to work
+  sp -> setColor(.7,.4,.7);
+  scene.addShape(sp);
   float r = .5; // radius
   float t = .1; // thickness
   ImplicitShape *to1 = (new Torus(r,t));
@@ -389,18 +392,19 @@ Scene makeScene_HierarchyTransformDebug() {
   scene.addShape(to2);
 
   float rot=45;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  rot+=15;
-  sp->rotateX(rot);
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //rot+=15;
+  //sp->rotateX(rot);
 
-
+  sp->set_spin(15,0,0);
+  scene.set_suggested_ticks(10);
 
   // Camera
   //Point3 camera_origin(0,0,0);

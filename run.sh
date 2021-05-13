@@ -27,6 +27,6 @@ fi
 
 ./main
 
-IMG=$(ls -t "$DIR" | head -1)
-echo "$DIR$IMG"
-viewnior "$DIR$IMG"
+#IMG=$(ls -t "$DIR" | head -1)
+#echo "$DIR$IMG"
+#viewnior "$DIR$IMG"

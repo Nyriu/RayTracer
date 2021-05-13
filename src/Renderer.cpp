@@ -8,8 +8,7 @@ Renderer Renderer::setScene(Scene* scene) {
     if (!scene->hasCamera()) {
       // throw error and ask for a camera!
       std::cerr << "Neither the Scene nor the Renderer has a Camera!" << std::endl;
-      std::cerr << "Noooooow! Segfault!" << std::endl;
-      return nullptr;
+      exit(1);
     }
     setCamera(scene->getCamera());
   }
@@ -54,27 +53,18 @@ void Renderer::generateFrame() {
 
         Ray r = cam_->generate_ray(u,v);
 
-        //std::cout << "ray r.direction = " << r.direction() << std::endl;
-        //std::cout << "ray r.origin = " << r.origin() << std::endl;
-
         img_.setPixel(tracer_->sphereTrace(r), i,j);
-        //img_.setPixel(Color(r.direction()), i,j);
       }
     }
   }
 }
 
 void Renderer::mainLoop() {
-  //std::cout << "\n --- main loop ---" << std::endl;
   if (!no_window) {
     while (win_->keepRendering()) {
-      //cam_->translate(Vec3(t_,0,0));
-      //std::cout << "main loop" << std::endl;
-      //cam_.isToUpdate();
       scene_->update();
       generateFrame();
       win_->drawImage(img_);
-      //img_.writePPM("./imgs/img.ppm");
       if (current_tick_ < max_num_ticks_)
         current_tick_++;
     }
@@ -83,12 +73,10 @@ void Renderer::mainLoop() {
     //std::string prefix = "./wip_imgs/seq_";
     std::string suffix = ".ppm";
     while (current_tick_ < max_num_ticks_) {
-      //std::cout << "generating frame num " << current_tick_ << "\n" <<
-        //std::endl;
+      //std::cout << "generating frame num " << current_tick_ << "\n" << std::endl;
       scene_->update();
       generateFrame();
       img_.writePPM(prefix + std::to_string(std::time(0)) + suffix);
-
       current_tick_++;
     }
   }

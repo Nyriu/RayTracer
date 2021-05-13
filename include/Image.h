@@ -19,21 +19,15 @@ class Image {
         img_ = new Color[width * height];
       }
       int at(int i1, int i2) const {
-        //return i1 * width + i2;
         return i1 * height + i2;
       }
 
   public:
       Image() = default;
-      Image(const int image_width, const float aspect_ratio) :
-        width(image_width), aspect_ratio(aspect_ratio), height((int)(width / aspect_ratio)) {
+
+      Image(const int image_width, const int image_height) : width(image_width), height(image_height), aspect_ratio((float)image_width/image_height) {
         init_img();
       }
-
-      //Image(const int image_width, const int image_height) : width_(image_width), height_(image_height) {
-      //  aspect_ratio_ = (float) width_/height_;
-      //  init_img();
-      //}
 
       void setPixel(const Color& c, const int x, const int y) {
         img_[at(x,y)] = c;
