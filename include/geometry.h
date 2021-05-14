@@ -139,6 +139,7 @@ class Vec3 {
     friend inline Vec3 operator*(const Vec3& u, const Vec3& v);
     friend inline Vec3 operator*(const Vec3& v, const float& f);
     friend inline Vec3 operator*(const float& f, const Vec3& v);
+    friend inline Vec3 operator/(const Vec3& u, const Vec3& v);
 
     friend inline Vec3   operator*(const Mat4& m, const Vec3& v);
 
@@ -257,6 +258,13 @@ inline Vec3 operator*(const Vec3& v, const float& f) {
 }
 inline Vec3 operator*(const float& f, const Vec3& v) {
   return v*f;
+}
+
+inline Vec3 operator/(const Vec3& u, const Vec3& v) {
+  return Vec3(
+      u.v_[0] / v.v_[0],
+      u.v_[1] / v.v_[1],
+      u.v_[2] / v.v_[2]);
 }
 
 

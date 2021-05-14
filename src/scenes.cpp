@@ -1,4 +1,5 @@
 #include "scenes.h"
+#include <cmath>
 
 Scene makeScene_1() {
   float intensity_scale = .02;
@@ -552,6 +553,56 @@ Scene makeScene_Mix() {
   cu1->set_spin(rot,rot,0);
   csg1->set_spin(0,rot,0);
 
+  scene.set_suggested_ticks((int)(360/rot));
+
+  // Camera
+  Point3 camera_origin(0,3,5);
+  float fov = 45;
+  Camera cam;
+  cam.translate(camera_origin.as_Vec3());
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+float f(Point3 p) {
+  //return sin(20*p.x())*sin(20*p.y())*sin(20*p.z());
+  float intensity=.2;
+  float freq=5;
+  return intensity *
+    std::sin(freq*p.x()) *
+    std::sin(freq*p.y()) *
+    std::sin(freq*p.z())
+    ;
+}
+Scene makeScene_Operations() {
+  Scene scene;
+  // Lights
+  //scene.addLight(new PointLight(Point3(0,5,0), Color(1), 200));
+  scene.addLight(new PointLight(Point3(5,4,2), Color(1), 300));
+  scene.addAmbientLight(new AmbientLight(Color(0,.3,0.3), 1.5));
+
+
+  ImplicitShape* sp1 = new Sphere(.2);
+  //ImplicitShape *csg1 =
+  //  new DisplacementOpShape(
+  //      sp1,
+  //      //to1,
+  //      &f
+  //      );
+  ImplicitShape *csg1 =
+    new RepeteOpShape(
+        sp1,
+        Vec3(.5,.5,.5),
+        Vec3(1,2,1)
+        );
+  scene.addShape(csg1);
+
+  float rot=10;
+  //csg1->set_spin(0,rot,0);
+
+  //scene.set_suggested_ticks(1);
   scene.set_suggested_ticks((int)(360/rot));
 
   // Camera

@@ -29,17 +29,19 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
       float d = shape->getDistance(from);
 
       // Self-Hit Shadowing Error
-      //// First method // Problems where actualy should be in shadow
-      //if (shape == shapeToShadow && d < anti_selfhit_shadow_threshold_)
-      //  continue;
 
-      // Second method // Best so far
-      if (shape == shapeToShadow && d <= hit_threshold_ * t) {
-        // move "from" a bit over the surface (along the normal direction)
-        d = shape->getDistance(
-            from + shape->getNormalAt(from) * 10e-7
-            );
-      }
+      // First method // Problems where actualy should be in shadow
+      if (shape == shapeToShadow && d < 10e-7)
+      //if (shape == shapeToShadow)
+        continue;
+
+      //// Second method // Best so far
+      //if (shape == shapeToShadow && d <= hit_threshold_ * t) {
+      //  // move "from" a bit over the surface (along the normal direction)
+      //  d = shape->getDistance(
+      //      from + shape->getNormalAt(from) * 10e-7
+      //      );
+      //}
 
       // Third method
       // Try to descend into the CSG and exclude only current shape

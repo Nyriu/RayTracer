@@ -7,6 +7,7 @@
 //#include<vector>
 
 #include "geometry.h"
+#include "utilities.h"
 #include "SceneObject.h"
 #include "Color.h"
 #include <iostream>
@@ -152,6 +153,9 @@ class Cube : public ImplicitShape {
 //class Plane : public ImplicitShape
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//// CSG ////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
 class CSGShape : public ImplicitShape {
   protected:
    ImplicitShape* shape1_ = nullptr;
@@ -166,8 +170,8 @@ class CSGShape : public ImplicitShape {
      setShapes(&shape1, &shape2);
    }
 
-   Color getColor(const Point3& p) const {
-     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor() : shape2_->getColor();
+   virtual Color getColor(const Point3& p) const {
+     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor(p) : shape2_->getColor(p);
    }
 
    void update() {
@@ -267,6 +271,74 @@ class MixShape : public CSGShape {
         (1.f-mix_factor_) * shape2_->getDistance(local);
     }
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//// OPERATIONS /////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+class OpShape : public ImplicitShape {
+  protected:
+   ImplicitShape* shape1_ = nullptr;
+
+   void setShapes(ImplicitShape* shape1) {
+     shape1_ = shape1;
+     color_ = shape1_->getColor();
+   }
+   void setShapes(ImplicitShape& shape1) { setShapes(&shape1); }
+   Color getColor(const Point3& p) const { return shape1_->getColor(p); }
+   void update() {
+     ImplicitShape::update();
+     shape1_->update();
+   }
+};
+
+class DisplacementOpShape : public OpShape {
+  private:
+   float (*displacement_)(Point3) = nullptr;
+  public:
+    DisplacementOpShape(ImplicitShape* shape1, float (*displacement)(Point3 p)) : displacement_(displacement) { setShapes(shape1); }
+
+    float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
+      return shape1_->getDistance(local) + displacement_(local);
+    }
+};
+
+
+
+
+class RepeteOpShape : public OpShape {
+  private:
+    Vec3 rep_period_= Vec3(1); // x,y,z rep periods
+    Vec3 num_instances_= Vec3(10); // x,y,z num of instances
+
+  public:
+    RepeteOpShape(ImplicitShape* shape1, Vec3 rep_period, Vec3 num_instances) : rep_period_(rep_period), num_instances_(num_instances) {
+      setShapes(shape1);
+    }
+
+    float getDistance(const Point3& from) const {
+      Point3 local(worldToLocal(from));
+
+
+      //std::cout <<
+      //  "\nlocal:         " << local.as_Vec3() <<
+      //  "\nrep_period_:   " <<  rep_period_ <<
+      //  "\nclamped:       " << utilities::clamp(utilities::round(local.as_Vec3()/rep_period_), -num_instances_, num_instances_) <<
+      //  "\nloc/rep:       " << local.as_Vec3()/rep_period_ <<
+      //  "\nloc/rep round: " << utilities::round(local.as_Vec3()/rep_period_) <<
+      //  std::endl;
+
+      Vec3 q = local.as_Vec3() - rep_period_ * utilities::clamp(
+          utilities::round(local.as_Vec3()/rep_period_),
+          -num_instances_,
+           num_instances_);
+      return shape1_->getDistance(q.as_Point());
+    }
+};
+
+
+
 
 
 
