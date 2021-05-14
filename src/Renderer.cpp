@@ -62,6 +62,7 @@ void Renderer::generateFrame() {
 void Renderer::mainLoop() {
   if (!no_window) {
     while (win_->keepRendering()) {
+      std::cout << "generating frame num " << current_tick_ << "\n" << std::endl;
       scene_->update();
       generateFrame();
       win_->drawImage(img_);

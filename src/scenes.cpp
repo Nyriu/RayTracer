@@ -2,7 +2,7 @@
 #include <cmath>
 
 Scene makeScene_1() {
-  float intensity_scale = .02;
+  float intensity_scale = 1;
 
   Scene scene;
   // Lights
@@ -10,10 +10,13 @@ Scene makeScene_1() {
   //scene.addLight(new PointLight(Point3(0,-3,3), Color(.8,.2,.5), 50));
   //scene.addLight(new PointLight(Point3(0,0,-3), Color(.3,.8,.3), 20));
   //scene.addLight(new PointLight(Point3(0,-3,3), Color(1), 50 * intensity_scale));
+  scene.addAmbientLight(new AmbientLight(Color(1), 0.15));
 
   // Shapes
   //scene.addShape(new Sphere(Point3(0),1.5));
-  scene.addShape(new Sphere(Point3(0),1.5, Color(.9,.2,.2)));
+  scene.addShape(new Sphere(Point3(0),1.5));
+
+  scene.set_suggested_ticks(1);
 
   // Camera
   Point3 camera_origin(0,0,5);
@@ -320,14 +323,14 @@ Scene makeScene_CameraTransformDebug() {
 
   scene.addShape( new Sphere(Point3(0), .2, Color(0,1,1)));
   ImplicitShape *to3 = new Torus(.7, 0.1);
-  to3->setColor(.3,.3,1);
+  to3->setAlbedo(Color(.3,.3,1));
   //to3->translate(0,0.2,0);
   to3->rotateX(45);
   to3->rotateY(30);
   scene.addShape(to3);
 
   ImplicitShape *to4 = new Torus(.4, 0.11);
-  to4->setColor(.7,.3,.3);
+  to4->setAlbedo(Color(.7,.3,.3));
   //to4->translate(0,0.2,0);
   to4->rotateX(10);
   to4->rotateY(10);
@@ -370,12 +373,12 @@ Scene makeScene_HierarchyTransformDebug() {
   // Shapes
   ImplicitShape *sp = new Sphere(.25); // not added to scene // works as general 3D obj
                                        // need to be added  to scene for spin to work
-  sp -> setColor(.7,.4,.7);
+  sp -> setAlbedo(Color(.7,.4,.7));
   scene.addShape(sp);
   float r = .5; // radius
   float t = .1; // thickness
   ImplicitShape *to1 = (new Torus(r,t));
-  to1 -> setColor(.9,.4,.4);
+  to1 -> setAlbedo(Color(.9,.4,.4));
   to1 -> translate(-1.f/2.f*r,0,0);
   //to1 -> rotateX(10);
   //to1 -> rotateY(10);
@@ -384,7 +387,7 @@ Scene makeScene_HierarchyTransformDebug() {
   scene.addShape(to1);
 
   ImplicitShape *to2 = (new Torus(r,t));
-  to2 -> setColor(.4,.4,.9);
+  to2 -> setAlbedo(Color(.4,.4,.9));
   to2 -> translate(1.f/2.f*r,0,0);
   to2 -> rotateX(90);
   //to2 -> rotateY(10);
@@ -490,8 +493,8 @@ Scene makeScene_Smooth() {
         new SmoothUnionShape(sp, tol, 0.5),
         tor
         );
-  tol->setColor(.5,.2,.3);
-  tor->setColor(.3,.2,.5);
+  tol->setAlbedo(Color(.5,.2,.3));
+  tor->setAlbedo(Color(.3,.2,.5));
 
   tol->set_spin(0,0, 10);
   tor->set_spin(0,0,-10);
@@ -548,6 +551,15 @@ Scene makeScene_Mix() {
         0.4f
         );
   scene.addShape(csg1);
+
+  cu1->setAlbedo(Color(.3));
+  cu1->setShininess(50);
+  cu1->setSpecular(Color(0.1));
+  sp1->setAlbedo(Color(.3));
+  sp1->setShininess(50);
+  sp1->setSpecular(Color(0.1));
+
+
 
   float rot=10;
   cu1->set_spin(rot,rot,0);

@@ -2,6 +2,7 @@
 
 // DEBUG STUFF
 #include "utilities.h" // for DEBUG_message
+#include <cmath>
 #include <string>
 bool DEBUG_sphereTraceShadow = false;
 bool DEBUG_general = true;
@@ -30,18 +31,18 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
 
       // Self-Hit Shadowing Error
 
-      // First method // Problems where actualy should be in shadow
-      if (shape == shapeToShadow && d < 10e-7)
-      //if (shape == shapeToShadow)
-        continue;
+      //// First method // Problems where actualy should be in shadow
+      //if (shape == shapeToShadow && d < 10e-7)
+      ////if (shape == shapeToShadow)
+      //  continue;
 
-      //// Second method // Best so far
-      //if (shape == shapeToShadow && d <= hit_threshold_ * t) {
-      //  // move "from" a bit over the surface (along the normal direction)
-      //  d = shape->getDistance(
-      //      from + shape->getNormalAt(from) * 10e-7
-      //      );
-      //}
+      // Second method // Best so far
+      if (shape == shapeToShadow && d <= hit_threshold_ * t) {
+        // move "from" a bit over the surface (along the normal direction)
+        d = shape->getDistance(
+            from + shape->getNormalAt(from) * 10e-7
+            );
+      }
 
       // Third method
       // Try to descend into the CSG and exclude only current shape
@@ -67,45 +68,23 @@ bool Tracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow)
   return false;
 }
 
-
-Color fschlick(const float& angle, const Color& cspec) { // fresnel approximation
-  float angle_pos = clamp_lower(angle, 0);
-  return cspec + (Color(1.0) - cspec)*pow(1.0 - angle_pos,5.0);
-}
-
-
-float gsmith(const float& nDotv, const float& nDotl, const float& alpha) { // Hammon approx
-  return 0.5 / (
-      lerp(
-        2 * abs(nDotl) * abs(nDotv),
-        abs(nDotl) + nDotv,
-        alpha
-        )
-      );
-}
-
-
-
 Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape) {
   Vec3 n = shape->getNormalAt(p);
 
   Color outRadiance = Color(0);
 
-  Vec3 lightDir(0);
-  float nDotl = 0;
-  float nDotv = 0;
-  float nDoth = 0;
-  Vec3 h = Vec3(0);
-  float vDoth = 0;
-  Color cspec(0);
-  Color cdiff(0);
-  Color brdf(0);
-  Color fresnel(0);
-  float roughness = 0;
-  float alpha = 0;
+  Vec3 lightDir, h;
+  float nDotl, nDotv, nDoth, vDoth;
+  Color brdf;
 
   bool shadow;
   float dist2 = 0;
+
+  // Plastic example
+  Color cdiff = shape->getAlbedo();
+  //cdiff = shape->getColor(p); // problems with CSG
+  float shininess_factor = shape->getShininess();
+  Color cspec = shape->getSpecular();
 
   for (const auto& light : scene_->getLights()) {
     lightDir = (light->getPosition() - p);
@@ -119,50 +98,24 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
       nDotv = viewDir.dot(h);
       nDoth = n.dot(h);
 
-      // Plastic example
-      cdiff = shape->getColor();
-      //cdiff = shape->getColor(p); // problems with CSG
-      cspec = Color(0.04);
-      roughness = 0;
+      Vec3 r = 2 * nDotl * n - lightDir;
+      float vDotr = viewDir.dot(r);
 
-      // // Metal example
-      // cdiff = Color(0);
-      // cspec = shape->getColor();
-      // roughness = 0;
-
-      alpha = roughness * roughness;
-
-      //fresnel = fschlick(vDoth, cspec);
       brdf =
-        cdiff / M_PI //+                       // diffuse
-        //(Color(1) - fresnel) * cdiff / M_PI //+                       // diffuse
-        //fresnel // / (4.0*abs(nDotv)*abs(nDotl));
-        //fresnel * gsmith(nDotv, nDotl, alpha) * DGGX(nDoth,alpha)
-      ; // specular
-
-      //outRadiance += brdf * light->getColor() * nDotl;
-      //outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl;
+        cdiff / M_PI +
+        cspec * powf(vDotr, shininess_factor);
 
       // With shadows below
-     shadow = sphereTraceShadow(Ray(p,lightDir), shape);
-     outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
-       / (float) (4 * dist2) // with square falloff
-       ;
-
-    //shadeColor += (1-shadow) * lightDir.dot(n) * light->getColor() * light->getIntensity()
+      shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+      outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+        / (float) (4 * dist2) // with square falloff
+        ;
     }
-
   }
-
-  cdiff = shape->getColor();
   if (scene_->hasAmbientLight()) {
-    //std::cout << "hasAmbientLight" << std::endl;
-    //outRadiance += ambientLight*cdiff; // TODO ambient lights
-    //outRadiance += Color(0.15) * cdiff; // TODO ambient lights
     Light* ambientLight = scene_->getAmbientLight();
-    outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff; // TODO ambient lights
+    outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff;
   }
-
   return outRadiance;
 }
 
@@ -184,7 +137,6 @@ Color Tracer::sphereTrace(const Ray& r) {
 
     // did we intersect the shape?
     if (minDistance <= hit_threshold_ * t) {
-
       return shade(r.at(t), r.direction(), intersectedShape);  // use lights
       //return intersectedShape->color_;        // use only surf color
       //return Color(float(n_steps)/tmax,0, 0); // color by pixel comput cost

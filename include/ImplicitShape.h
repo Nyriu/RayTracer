@@ -16,7 +16,9 @@
 
 class ImplicitShape : public SceneObject {
   protected:
-    Color color_ = Color(0.3);
+    Color cdiff_ = Color(0.5);
+    Color cspec_ = Color(0.04);
+    float shininess_factor_ = 2;
 
   private:
     float gradient_delta_ = 10e-6; // delta used to compute gradient (normal)
@@ -28,17 +30,23 @@ class ImplicitShape : public SceneObject {
 
     //virtual void setColor(const Color& color) { color_ = color; }
     //virtual void setColor(const float r, const float g, const float b) { color_ = Color(r,g,b); }
-    virtual ImplicitShape setColor(const Color& color) {
-      color_ = color;
+    virtual ImplicitShape setAlbedo(const Color& color) {
+      cdiff_ = color;
       return *this;
     }
-    virtual ImplicitShape setColor(const float r, const float g, const float b) {
-      color_ = Color(r,g,b);
+    virtual ImplicitShape setSpecular(const Color& color) {
+      cspec_ = color;
+      return *this;
+    }
+    virtual ImplicitShape setShininess(float shininess) {
+      shininess_factor_ = shininess;
       return *this;
     }
 
-    virtual Color getColor() const { return color_; }
-    virtual Color getColor(const Point3& p) const { return getColor(); }
+    virtual Color getAlbedo() const { return cdiff_; }
+    virtual Color getSpecular() const { return cspec_; }
+    virtual float getShininess() const { return shininess_factor_; }
+    //virtual Color getAlbedo(const Point3& p) const { return getColor(); }
 
     Vec3 getNormalAt(const Point3& p) const {
       return Vec3(
@@ -56,19 +64,11 @@ class Sphere : public ImplicitShape {
   private:
     float radius_;
   public:
-    Sphere(const float& radius) : radius_(radius) {
-      color_ = 0.5;
-    }
-    Sphere(const Point3& center, const float& radius) : radius_(radius) {
-      translate(center.as_Vec3());
-      color_ = 0.5;
-    }
+    Sphere(const float& radius) : radius_(radius) {}
+    Sphere(const Point3& center, const float& radius) : radius_(radius) { translate(center.as_Vec3()); }
     Sphere(const Point3& center, const float& radius, const Color& color) : radius_(radius) {
       translate(center.as_Vec3());
-      color_ = color;
-    }
-    Sphere(const float& radius, const Color& color) : radius_(radius) {
-      color_ = color;
+      setAlbedo(color);
     }
 
     float getDistance(const Point3& from) const {
@@ -87,12 +87,9 @@ class Torus : public ImplicitShape {
   private:
     float r0_, r1_;
   public:
-    Torus(const float& r0, const float& r1) : r0_(r0), r1_(r1) {
-      color_ = .5;
-    }
+    Torus(const float& r0, const float& r1) : r0_(r0), r1_(r1) {}
     Torus(const Point3& center, const float& r0, const float& r1) : r0_(r0), r1_(r1) {
       translate(center.as_Vec3());
-      color_ = .5;
     }
 
     float getDistance(const Point3& from) const {
@@ -112,14 +109,10 @@ class Cube : public ImplicitShape {
 
   public:
     Cube() = default;
-    Cube(const Vec3& dims) : half_dims_(dims*.5) { color_ = .5; }
-    Cube(const Point3& center) {
-      translate(center.as_Vec3());
-      color_ = .5;
-    }
+    Cube(const Vec3& dims) : half_dims_(dims*.5) {}
+    Cube(const Point3& center) { translate(center.as_Vec3()); }
     Cube(const Point3& center, const Vec3& dims) : half_dims_(dims*.5) {
       translate(center.as_Vec3());
-      color_ = .5;
     }
 
     float getDistance(const Point3& from) const {
@@ -164,15 +157,18 @@ class CSGShape : public ImplicitShape {
    void setShapes(ImplicitShape* shape1, ImplicitShape* shape2) {
      shape1_ = shape1;
      shape2_ = shape2;
-     color_ = (0.5 * shape1_->getColor()) + (0.5 * shape2_->getColor());
+     //cdiff_ = (0.5 * shape1_->getColor()) + (0.5 * shape2_->getColor());
    }
    void setShapes(ImplicitShape& shape1, ImplicitShape& shape2) {
      setShapes(&shape1, &shape2);
    }
 
-   virtual Color getColor(const Point3& p) const {
-     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor(p) : shape2_->getColor(p);
-   }
+   //virtual Color getColor(const Point3& p) const {
+   //  return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor(p) : shape2_->getColor(p);
+   //}
+   virtual Color getAlbedo()    const { return shape1_->getAlbedo(); }
+   virtual Color getSpecular()  const { return shape1_->getSpecular(); }
+   virtual float getShininess() const { return shape1_->getShininess(); }
 
    void update() {
      ImplicitShape::update();
@@ -282,10 +278,12 @@ class OpShape : public ImplicitShape {
 
    void setShapes(ImplicitShape* shape1) {
      shape1_ = shape1;
-     color_ = shape1_->getColor();
    }
    void setShapes(ImplicitShape& shape1) { setShapes(&shape1); }
-   Color getColor(const Point3& p) const { return shape1_->getColor(p); }
+   virtual Color getAlbedo()    const { return shape1_->getAlbedo(); }
+   virtual Color getSpecular()  const { return shape1_->getSpecular(); }
+   virtual float getShininess() const { return shape1_->getShininess(); }
+   //virtual Color getAlbedo(const Point3& p) const { return shape1_->getColor(p); }
    void update() {
      ImplicitShape::update();
      shape1_->update();
