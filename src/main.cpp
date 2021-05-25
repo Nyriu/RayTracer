@@ -5,15 +5,39 @@
 #include "Camera.h"
 #include "Window.h"
 #include "Renderer.h"
+#include "Octree.h"
 #include "scenes.h"
 
 #include "geometry.h"
+
+void default_rendering(Window& window, Scene& scene) {
+  Renderer renderer(&window);
+  //renderer.disableWindow();
+  renderer.enableWindow();
+
+  renderer.setScene(&scene, true); // true to generate scene's right number of frames
+  //renderer.addCamera(Camera ... );
+  renderer.render();
+}
+
+void octree_rendering(Window& window, Scene& scene) {
+  Octree oct;
+  oct.fromScene(&scene);
+
+  Renderer renderer(&window);
+  //renderer.disableWindow();
+  renderer.enableWindow();
+
+  //renderer.setScene(&Octree);
+  //renderer.setCamera(scene.getCamera());
+  //renderer.render();
+}
+
 
 int main() {
   // Image
   //const int height = 720;
   //const int width = height*16/9;
-
   const int height = 240;
   const int width = height*4/3;
 
@@ -34,17 +58,12 @@ int main() {
     //makeScene_HierarchyTransformDebug();
     //makeScene_HierarchyCSGTransformDebug();
     //makeScene_Smooth();
-    makeScene_Mix();
+    //makeScene_Mix();
     //makeScene_Operations();
+    makeScene_Octree();
 
-
-  Renderer renderer(&window);
-  renderer.disableWindow();
-  //renderer.enableWindow();
-
-  renderer.setScene(&scene, true); // true to generate scene's right number of frames
-  //renderer.addCamera(Camera ... );
-  renderer.render();
+  //default_rendering(window, scene);
+  octree_rendering(window, scene);
 
   return 0;
 }

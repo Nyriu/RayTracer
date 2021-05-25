@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-constexpr float infinity = std::numeric_limits<float>::max();
-
 class Tracer {
   private:
     // Scene stuff

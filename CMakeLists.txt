@@ -6,7 +6,8 @@ find_package(glfw3 REQUIRED)
 set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-g")
+#set(CMAKE_CXX_FLAGS "-g")
+add_compile_options(-g) # -Wall) # -Wextra -pedantic) # -Werror)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 

@@ -17,6 +17,7 @@ Scene makeScene_HierarchyCSGTransformDebug();
 Scene makeScene_Smooth();
 Scene makeScene_Mix();
 Scene makeScene_Operations();
+Scene makeScene_Octree();
 
 
 #endif

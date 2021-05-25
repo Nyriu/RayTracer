@@ -627,3 +627,60 @@ Scene makeScene_Operations() {
 
   return scene;
 }
+
+Scene makeScene_Octree() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(0,5,0), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(1), 1.5));
+
+
+  ///// Fully inside first lvl children of cube 4x4x4
+  //// 0
+  //ImplicitShape* sp1 = new Sphere(Point3(-1), 0.99);
+  //sp1->setAlbedo(Color(.3,0,0));
+  //sp1->setShininess(40);
+  //sp1->setSpecular(Color(0.1));
+  //scene.addShape(sp1);
+  //// 7
+  //ImplicitShape* sp2 = new Sphere(Point3(1), 0.99);
+  //sp2->setAlbedo(Color(0,.3,0));
+  //sp2->setShininess(40);
+  //sp2->setSpecular(Color(0.1));
+  //scene.addShape(sp2);
+  //// 1
+  //ImplicitShape* sp3 = new Sphere(Point3(-1,-1,1), 0.99);
+  //sp3->setAlbedo(Color(0,0,.3));
+  //sp3->setShininess(40);
+  //sp3->setSpecular(Color(0.1));
+  //scene.addShape(sp3);
+
+  ///// Centered touching 1 child of each lvl 1 root's children (octree height = 3)
+  //ImplicitShape* sp1 = new Sphere(Point3(0), 0.99);
+  //sp1->setAlbedo(Color(.3,0,0));
+  //sp1->setShininess(40);
+  //sp1->setSpecular(Color(0.1));
+  //scene.addShape(sp1);
+
+  /// Touching 2 child of each of 4 first-lvl voxels on the right (octree dim=2^2, height=3)
+  ImplicitShape* sp1 = new Sphere(Point3(1,0,0), 0.99);
+  sp1->setAlbedo(Color(.3,0,0));
+  sp1->setShininess(40);
+  sp1->setSpecular(Color(0.1));
+  scene.addShape(sp1);
+
+
+  scene.set_suggested_ticks(1);
+
+
+  // Camera
+  Point3 camera_origin(0,0,6);
+  float fov = 45;
+  Camera cam;
+  cam.translate(camera_origin.as_Vec3());
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+

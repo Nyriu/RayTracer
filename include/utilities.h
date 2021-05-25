@@ -9,6 +9,8 @@
 
 namespace utilities {
 
+constexpr float infinity = std::numeric_limits<float>::max();
+
 inline float clamp(const float val, const float minVal, const float maxVal) {
   return std::min(std::max(val, minVal), maxVal);
 }

@@ -91,6 +91,7 @@ void Camera::lookAt(const Point3 l) {
   //  "\nm\n" << m << std::endl;
 
   matrix_ = m;
+  matrix_.set(2,2, -matrix_.get(2,2));
   // TODO update inverse!!!
   //rotations_ = Vec3(
   //    m.get_rotation_x(),
