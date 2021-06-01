@@ -40,7 +40,7 @@ void Window::drawImage(const Image& image) {
   unsigned char* data = new unsigned char[img_width * img_height * 3];
   for (int y = 0; y < img_height; y++) {
     for (int x = 0; x < img_width; x++) {
-      Color pc = image.getPixel(x,height-y);
+      Color pc = image.getPixel(x,y);
       data[3*(y*img_width + x) + 0] = pc.r255();
       data[3*(y*img_width + x) + 1] = pc.g255();
       data[3*(y*img_width + x) + 2] = pc.b255();

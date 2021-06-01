@@ -299,7 +299,7 @@ Scene makeScene_CameraTransformDebug() {
   scene.addLight(new PointLight(Point3(-10,10,-3), Color(1), 20 * intensity_scale));
   //scene.addLight(new PointLight(Point3(0,0,0), Color(1), 2 * intensity_scale));
   //scene.addLight(new PointLight(Point3(4,-4,-3), Color(1), 100 * intensity_scale));
-  scene.addAmbientLight(new AmbientLight(Color(1), .6));
+  scene.addAmbientLight(new AmbientLight(Color(1), 1.6));
 
   // Shapes
   //scene.addShape(
@@ -321,21 +321,67 @@ Scene makeScene_CameraTransformDebug() {
   ////to2->rotateZ(45);
   //scene.addShape(to2);
 
-  scene.addShape( new Sphere(Point3(0), .2, Color(0,1,1)));
-  ImplicitShape *to3 = new Torus(.7, 0.1);
-  to3->setAlbedo(Color(.3,.3,1));
-  //to3->translate(0,0.2,0);
-  to3->rotateX(45);
-  to3->rotateY(30);
-  scene.addShape(to3);
+  ///scene.addShape( new Sphere(Point3(0), .2, Color(0,1,1)));
+  ///ImplicitShape *to3 = new Torus(.7, 0.1);
+  ///to3->setAlbedo(Color(.3,.3,1));
+  /////to3->translate(0,0.2,0);
+  ///to3->rotateX(45);
+  ///to3->rotateY(30);
+  ///scene.addShape(to3);
 
-  ImplicitShape *to4 = new Torus(.4, 0.11);
-  to4->setAlbedo(Color(.7,.3,.3));
-  //to4->translate(0,0.2,0);
-  to4->rotateX(10);
-  to4->rotateY(10);
-  scene.addShape(to4);
+  ///ImplicitShape *to4 = new Torus(.4, 0.11);
+  ///to4->setAlbedo(Color(.7,.3,.3));
+  /////to4->translate(0,0.2,0);
+  ///to4->rotateX(10);
+  ///to4->rotateY(10);
+  ///scene.addShape(to4);
 
+
+  ImplicitShape* sp1 = new Sphere(Point3(-1), 0.99); // 0
+  sp1->setAlbedo(Color(.3,0,0)); // rosso a destra dietro blu
+  sp1->setShininess(40);
+  sp1->setSpecular(Color(0.1));
+  //scene.addShape(sp1);
+  ImplicitShape* sp2 = new Sphere(Point3(1,-1,1), 0.99); // 4
+  sp2->setAlbedo(Color(0,.3,0)); // verde a sinistra da solo
+  sp2->setShininess(40);
+  sp2->setSpecular(Color(0.1));
+  //scene.addShape(sp2);
+  ImplicitShape* sp3 = new Sphere(Point3(-1,-1,1), 0.99);
+  sp3->setAlbedo(Color(0,0,.3)); // blu a destra davanti a rosso
+  sp3->setShininess(40);
+  sp3->setSpecular(Color(0.1));
+  //scene.addShape(sp3);
+  ImplicitShape* sp4 = new Sphere(Point3(0,2,0), 0.99);
+  sp4->setAlbedo(Color(0,.3,.3)); // azzurrino in alto
+  sp4->setShininess(40);
+  sp4->setSpecular(Color(0.1));
+  //scene.addShape(sp4);
+  ImplicitShape* sp5 = new Sphere(Point3(0,-2,0), 0.99);
+  sp5->setAlbedo(Color(.3,.3,0)); // giallo in basso
+  sp5->setShininess(40);
+  sp5->setSpecular(Color(0.1));
+  //scene.addShape(sp5);
+
+
+  ImplicitShape *csg =
+    new UnionShape(
+        sp1,
+        new UnionShape(
+          sp2,
+          new UnionShape(
+            sp3,
+            new UnionShape(
+              sp4,
+              sp5
+              )
+            )
+          )
+        );
+  scene.addShape(csg);
+
+
+  scene.set_suggested_ticks(1);
 
   // Camera
   //Point3 camera_origin(0,0,0);
@@ -344,8 +390,9 @@ Scene makeScene_CameraTransformDebug() {
   //float fov = 45;
 
   Camera cam;
-  int k=2;
-  Point3 cam_pos(k,k,0);
+  //int k=2;
+  //Point3 cam_pos(k,k,0);
+  Point3 cam_pos(0,0,6);
   cam.translate(cam_pos.as_Vec3());
   cam.lookAt(0,0,0);
   //cam.lookAt(0,0,-2);
