@@ -46,7 +46,10 @@ class ImplicitShape : public SceneObject {
     virtual Color getAlbedo() const { return cdiff_; }
     virtual Color getSpecular() const { return cspec_; }
     virtual float getShininess() const { return shininess_factor_; }
-    //virtual Color getAlbedo(const Point3& p) const { return getColor(); }
+
+    virtual Color getAlbedo(const Point3& p) const { return getAlbedo(); }
+    virtual Color getSpecular(const Point3& p) const { return getSpecular(); }
+    virtual float getShininess(const Point3& p) const { return getShininess(); }
 
     Vec3 getNormalAt(const Point3& p) const {
       return Vec3(
@@ -157,18 +160,30 @@ class CSGShape : public ImplicitShape {
    void setShapes(ImplicitShape* shape1, ImplicitShape* shape2) {
      shape1_ = shape1;
      shape2_ = shape2;
-     //cdiff_ = (0.5 * shape1_->getColor()) + (0.5 * shape2_->getColor());
    }
    void setShapes(ImplicitShape& shape1, ImplicitShape& shape2) {
      setShapes(&shape1, &shape2);
    }
 
-   //virtual Color getColor(const Point3& p) const {
-   //  return (shape1_->getDistance(p) < shape2_->getDistance(p)) ? shape1_->getColor(p) : shape2_->getColor(p);
-   //}
    virtual Color getAlbedo()    const { return shape1_->getAlbedo(); }
    virtual Color getSpecular()  const { return shape1_->getSpecular(); }
    virtual float getShininess() const { return shape1_->getShininess(); }
+
+   virtual Color getAlbedo(const Point3& p) const {
+     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ?
+       shape1_->getAlbedo(p) :
+       shape2_->getAlbedo(p);
+   }
+   virtual Color getSpecular(const Point3& p) const {
+     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ?
+       shape1_->getSpecular(p) :
+       shape2_->getSpecular(p);
+   }
+   virtual float getShininess(const Point3& p) const {
+     return (shape1_->getDistance(p) < shape2_->getDistance(p)) ?
+       shape1_->getShininess(p) :
+       shape2_->getShininess(p);
+   }
 
    void update() {
      ImplicitShape::update();
@@ -283,7 +298,7 @@ class OpShape : public ImplicitShape {
    virtual Color getAlbedo()    const { return shape1_->getAlbedo(); }
    virtual Color getSpecular()  const { return shape1_->getSpecular(); }
    virtual float getShininess() const { return shape1_->getShininess(); }
-   //virtual Color getAlbedo(const Point3& p) const { return shape1_->getColor(p); }
+
    void update() {
      ImplicitShape::update();
      shape1_->update();

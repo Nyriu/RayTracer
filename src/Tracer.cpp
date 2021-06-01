@@ -9,7 +9,6 @@ bool DEBUG_general = true;
 
 using namespace utilities;
 
-
 // END // DEBUG STUFF
 
 
@@ -80,11 +79,9 @@ Color Tracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *s
   bool shadow;
   float dist2 = 0;
 
-  // Plastic example
-  Color cdiff = shape->getAlbedo();
-  //cdiff = shape->getColor(p); // problems with CSG
-  float shininess_factor = shape->getShininess();
-  Color cspec = shape->getSpecular();
+  Color cdiff = shape->getAlbedo(p);
+  float shininess_factor = shape->getShininess(p);
+  Color cspec = shape->getSpecular(p);
 
   for (const auto& light : scene_->getLights()) {
     lightDir = (light->getPosition() - p);

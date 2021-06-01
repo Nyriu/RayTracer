@@ -29,16 +29,11 @@ class Scene {
     Scene() = default;
     Scene(Shapes shapes, Lights lights) : shapes_(shapes), lights_(lights) {}
 
-    void addShape(ImplicitShape* shape) {
-      // what if already added? O(n) to look for same val pointer?
-      shapes_.push_back(shape);
-    }
-    void addLight(Light* light) {
-      lights_.push_back(light);
-    }
-    void addAmbientLight(AmbientLight* light) {
-      ambientLight_ = light;
-    }
+    void addShape(ImplicitShape* shape);
+    void addLight(Light* light);
+    void addAmbientLight(AmbientLight* light);
+
+    void optimizeScene();
 
     bool hasAmbientLight() const { return ambientLight_ != nullptr; }
     bool hasCamera() const { return has_camera_; }
@@ -54,23 +49,11 @@ class Scene {
     //Camera* getCamera() const { return camera_; }
     Camera* getCamera() { return &camera_; }
 
-    void set_suggested_ticks(const int ticks) {
-      if (ticks > 0) {
-        suggested_ticks_ = ticks;
-      }
-    }
+    void set_suggested_ticks(const int ticks);
     int get_suggested_ticks() { return suggested_ticks_; }
 
 
-    void update() {
-      for (auto s : shapes_) {
-        s->update();
-      }
-      // below for moving lights
-      //for (auto l : lights) {
-      //  l->update();
-      //}
-    }
+    void update();
 };
 
 
