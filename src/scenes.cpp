@@ -1,5 +1,6 @@
 #include "scenes.h"
 #include <cmath>
+#include <iostream>
 
 Scene makeScene_1() {
   float intensity_scale = 1;
@@ -678,8 +679,9 @@ Scene makeScene_Operations() {
 Scene makeScene_Octree() {
   Scene scene;
   // Lights
-  scene.addLight(new PointLight(Point3(0,5,0), Color(1), 400));
-  scene.addAmbientLight(new AmbientLight(Color(1), 1.5));
+  scene.addLight(new PointLight(Point3(5, 4,0), Color(1), 400));
+  //scene.addLight(new PointLight(Point3(0,-5,0), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(1), 1.0));
 
 
   ///// Fully inside first lvl children of cube 4x4x4
@@ -709,19 +711,204 @@ Scene makeScene_Octree() {
   //sp1->setSpecular(Color(0.1));
   //scene.addShape(sp1);
 
-  /// Touching 2 child of each of 4 first-lvl voxels on the right (octree dim=2^2, height=3)
-  ImplicitShape* sp1 = new Sphere(Point3(1,0,0), 0.99);
-  sp1->setAlbedo(Color(.3,0,0));
-  sp1->setShininess(40);
-  sp1->setSpecular(Color(0.1));
-  scene.addShape(sp1);
+  ///// Touching 2 child of each of 4 first-lvl voxels on the right (octree dim=2^2, height=3)
+  //ImplicitShape* sp1 = new Sphere(Point3(1,0,0), 0.99);
+  //sp1->setAlbedo(Color(.3,0,0));
+  //sp1->setShininess(40);
+  //sp1->setSpecular(Color(0.1));
+  //scene.addShape(sp1);
+
+
+  /// Colors associated with children names
+  float root_cube_dim = 4.f;
+  float d = root_cube_dim/2.f - root_cube_dim/4.f; // sphere child-centered centered 
+  float sp_rad = root_cube_dim/4.f - root_cube_dim/50.f; // half of half of child dim (minus a bit to not touch child edges)
+  float c = 0.8f;  // color
+  float n = 0.09f; // no color
+
+  std::cout <<
+    "\nroot_cube_dim = " << root_cube_dim <<
+    "\nd = " << d <<
+    "\nsp_rad = " << sp_rad <<
+    std::endl;
+
+  // (-d,-d,-d) ~ 000 ~ 0
+  ImplicitShape* c_000 = new Sphere(Point3(-d,-d,-d), sp_rad);
+  c_000->setAlbedo(Color(n,n,n));
+  scene.addShape(c_000);
+
+  // (-d,-d, d) ~ 001 ~ 1
+  ImplicitShape* c_001 = new Sphere(Point3(-d,-d, d), sp_rad);
+  c_001->setAlbedo(Color(n,n,c));
+  scene.addShape(c_001);
+
+  // ( d,-d, d) ~ 010 ~ 2
+  ImplicitShape* c_010 = new Sphere(Point3(-d, d,-d), sp_rad);
+  c_010->setAlbedo(Color(n,c,n));
+  scene.addShape(c_010);
+
+  // (-d, d, d) ~ 011 ~ 3
+  ImplicitShape* c_011 = new Sphere(Point3(-d, d, d), sp_rad);
+  c_011->setAlbedo(Color(n,c,c));
+  scene.addShape(c_011);
+
+  // (d,-d,-d) ~ 100 ~ 4
+  ImplicitShape* c_100 = new Sphere(Point3( d,-d,-d), sp_rad);
+  c_100->setAlbedo(Color(c,n,n));
+  scene.addShape(c_100);
+
+  // ( d,-d, d) ~ 101 ~ 5
+  ImplicitShape* c_101 = new Sphere(Point3( d,-d, d), sp_rad);
+  c_101->setAlbedo(Color(c,n,c));
+  scene.addShape(c_101);
+
+  // (d, d,-d) ~ 110 ~ 6
+  ImplicitShape* c_110 = new Sphere(Point3( d, d,-d), sp_rad);
+  c_110->setAlbedo(Color(c,c,n));
+  scene.addShape(c_110);
+
+  // ( d, d, d) ~ 111 ~ 7
+  ImplicitShape* c_111 = new Sphere(Point3( d, d, d), sp_rad);
+  c_111->setAlbedo(Color(c,c,c));
+  scene.addShape(c_111);
 
 
   scene.set_suggested_ticks(1);
 
 
   // Camera
-  Point3 camera_origin(0,0,6);
+  //Point3 camera_origin(5* Vec3(-1.5,2,1).normalize().as_Point());
+  //Point3 camera_origin(5* Vec3(0,0,1).normalize().as_Point());
+  //Point3 camera_origin(Vec3(0,0,5).as_Point());
+  Point3 camera_origin(0,0,5);
+  float fov = 45;
+  Camera cam;
+  cam.translate(camera_origin.as_Vec3());
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+Scene makeScene_Octree_1() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(5, 4,0), Color(1), 400));
+  //scene.addLight(new PointLight(Point3(0,-5,0), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(1), 1.0));
+
+
+  /// Colors associated with children names
+  float root_cube_dim = 8.f;
+  float d = root_cube_dim/2.f - root_cube_dim/4.f; // sphere child-centered centered 
+  float sp_rad = root_cube_dim/4.f - root_cube_dim/50.f; // half of half of child dim (minus a bit to not touch child edges)
+  float c = 0.90f;  // color
+  float n = 0.30f; // no color
+
+  std::cout <<
+    "\nroot_cube_dim = " << root_cube_dim <<
+    "\nd = " << d <<
+    "\nsp_rad = " << sp_rad <<
+    std::endl;
+
+  //// (-d,-d,-d) ~ 000 ~ 0
+  //ImplicitShape* c_000 = new Sphere(Point3(-d,-d,-d), sp_rad);
+  //c_000->setAlbedo(Color(n,n,n));
+  //scene.addShape(c_000);
+  { // 000 has all children
+    Point3 p_pos(-d,-d,-d); // parent position offset
+    Color  p_col(n,n,n);    // parent color offset
+    float o_sp_rad = sp_rad;
+    float d = root_cube_dim/4 - root_cube_dim/8;
+    float sp_rad = o_sp_rad/4;
+    // (-d,-d,-d) ~ 000 ~ 0
+    ImplicitShape* c_000 = new Sphere(p_pos + Point3(-d,-d,-d), sp_rad);
+    c_000->setAlbedo(p_col * Color(n,n,n));
+    scene.addShape(c_000);
+    // (-d,-d, d) ~ 001 ~ 1
+    ImplicitShape* c_001 = new Sphere(p_pos + Point3(-d,-d, d), sp_rad);
+    c_001->setAlbedo(p_col * Color(n,n,c));
+    scene.addShape(c_001);
+    // ( d,-d, d) ~ 010 ~ 2
+    ImplicitShape* c_010 = new Sphere(p_pos + Point3(-d, d,-d), sp_rad);
+    c_010->setAlbedo(p_col * Color(n,c,n));
+    scene.addShape(c_010);
+    // (-d, d, d) ~ 011 ~ 3
+    ImplicitShape* c_011 = new Sphere(p_pos + Point3(-d, d, d), sp_rad);
+    c_011->setAlbedo(p_col * Color(n,c,c));
+    scene.addShape(c_011);
+    // (d,-d,-d) ~ 100 ~ 4
+    ImplicitShape* c_100 = new Sphere(p_pos + Point3( d,-d,-d), sp_rad);
+    c_100->setAlbedo(p_col * Color(c,n,n));
+    scene.addShape(c_100);
+    // ( d,-d, d) ~ 101 ~ 5
+    ImplicitShape* c_101 = new Sphere(p_pos + Point3( d,-d, d), sp_rad);
+    c_101->setAlbedo(p_col * Color(c,n,c));
+    scene.addShape(c_101);
+    // (d, d,-d) ~ 110 ~ 6
+    ImplicitShape* c_110 = new Sphere(p_pos + Point3( d, d,-d), sp_rad);
+    c_110->setAlbedo(p_col * Color(c,c,n));
+    scene.addShape(c_110);
+    // ( d, d, d) ~ 111 ~ 7
+    ImplicitShape* c_111 = new Sphere(p_pos + Point3( d, d, d), sp_rad);
+    c_111->setAlbedo(p_col * Color(c,c,c));
+    scene.addShape(c_111);
+  } // END 000 children
+
+  //// (-d, d, d) ~ 011 ~ 3
+  //ImplicitShape* c_011 = new Sphere(Point3(-d, d, d), sp_rad);
+  //c_011->setAlbedo(Color(n,c,c));
+  //scene.addShape(c_011);
+  { // 011 has children num 0,3,5
+    Point3 p_pos(-d, d, d); // parent position offset
+    Color  p_col(n,c,c);    // parent color offset
+    float o_sp_rad = sp_rad;
+    float d = root_cube_dim/4 - root_cube_dim/8;
+    float sp_rad = o_sp_rad/4;
+    // (-d,-d,-d) ~ 000 ~ 0
+    ImplicitShape* c_000 = new Sphere(p_pos + Point3(-d,-d,-d), sp_rad);
+    c_000->setAlbedo(p_col * Color(n,n,n));
+    scene.addShape(c_000);
+    // (-d, d, d) ~ 011 ~ 3
+    ImplicitShape* c_011 = new Sphere(p_pos + Point3(-d, d, d), sp_rad);
+    c_011->setAlbedo(p_col * Color(n,c,c));
+    scene.addShape(c_011);
+    // ( d,-d, d) ~ 101 ~ 5
+    ImplicitShape* c_101 = new Sphere(p_pos + Point3( d,-d, d), sp_rad);
+    c_101->setAlbedo(p_col * Color(c,n,c));
+    scene.addShape(c_101);
+  } // END 011 children
+
+  //// ( d,-d, d) ~ 101 ~ 5
+  //ImplicitShape* c_101 = new Sphere(Point3( d,-d, d), sp_rad);
+  //c_101->setAlbedo(Color(c,n,c));
+  //scene.addShape(c_101);
+  { // 101 has all children
+    Point3 p_pos( d,-d, d); // parent position offset
+    Color  p_col(c,n,c);    // parent color offset
+    float o_sp_rad = sp_rad;
+    float d = root_cube_dim/4 - root_cube_dim/8;
+    float sp_rad = o_sp_rad/4;
+    // (-d,-d, d) ~ 001 ~ 1
+    ImplicitShape* c_001 = new Sphere(p_pos + Point3(-d,-d, d), sp_rad);
+    c_001->setAlbedo(p_col * Color(n,n,c));
+    scene.addShape(c_001);
+    // ( d,-d, d) ~ 010 ~ 2
+    ImplicitShape* c_010 = new Sphere(p_pos + Point3(-d, d,-d), sp_rad);
+    c_010->setAlbedo(p_col * Color(n,c,n));
+    scene.addShape(c_010);
+    // (d, d,-d) ~ 110 ~ 6
+    ImplicitShape* c_110 = new Sphere(p_pos + Point3( d, d,-d), sp_rad);
+    c_110->setAlbedo(p_col * Color(c,c,n));
+    scene.addShape(c_110);
+  } // END 101 children
+
+  scene.set_suggested_ticks(1);
+
+  // Camera
+  float cam_distance = root_cube_dim + 1;
+  Point3 camera_origin(cam_distance* Vec3(0.7,0.7,0.5).normalize().as_Point());
+  //Point3 camera_origin(cam_distance* Vec3(0,0,1).normalize().as_Point());
   float fov = 45;
   Camera cam;
   cam.translate(camera_origin.as_Vec3());

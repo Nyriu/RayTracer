@@ -26,7 +26,7 @@ Ray Camera::generate_ray(float u, float v) { // input NDC Coords
   //sv *= scale;
 
   // From ScreenCoords to WorldCoords
-  Point3 p = Point3(su,sv,1);
+  Point3 p = Point3(-su,sv,1);
   Point3 orig = intoWorldDir(Point3(0));
   return Ray(orig, (orig - intoWorldDir(p)).normalize());
 }

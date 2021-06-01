@@ -13,7 +13,7 @@
 
 class Octree {
   private:
-    int root_dim_ = 1<<2;
+    int root_dim_ = 1<<3;
     int height_ = 3;
 
     class Node {

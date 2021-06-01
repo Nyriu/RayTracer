@@ -60,13 +60,14 @@ int main() {
     //makeScene_CSG_3();
     //makeScene_ShadowDebug();
     //makeScene_TransformDebug();
-    makeScene_CameraTransformDebug();
+    //makeScene_CameraTransformDebug();
     //makeScene_HierarchyTransformDebug();
     //makeScene_HierarchyCSGTransformDebug();
     //makeScene_Smooth();
     //makeScene_Mix();
     //makeScene_Operations();
     //makeScene_Octree();
+    makeScene_Octree_1();
 
   default_rendering(window, scene);
   octree_rendering(window, scene);

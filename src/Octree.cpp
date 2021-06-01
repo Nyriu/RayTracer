@@ -19,14 +19,25 @@ void Octree::fromScene(Scene *scene) {
   // root centered in the origin so
   x0_stack.push_back(Point3(-current_dim/2.f)); // lower-left-front corner
 
-  for (int h=0; h<height_; h++) {
+  // Get scene's shape(s)
+  auto shapes = scene->getShapes();
+  if (shapes.size() > 1) {
+    std::cout << "ERROR! Scene is not a singole shape" << std::endl;
+    exit(1);
+  }
+  if (shapes.size() < 1) {
+    std::cout << "ERROR! Scene is empty" << std::endl;
+    exit(1);
+  }
+  ImplicitShape *shape = shapes.back();
 
+  for (int h=0; h<height_; h++) {
     int future_n_to_pop = 0;
     for (int k=0; k<n_to_pop; k++) {
       if (node_stack.empty() || x0_stack.empty()) {
         break;
       }
-      // poping node and corner from the stack head
+      // popping node and corner from the stack head
       Node *node = node_stack[0];
       node_stack.erase(node_stack.begin());
       Point3 x0 = x0_stack[0];
@@ -46,26 +57,23 @@ void Octree::fromScene(Scene *scene) {
           p = p + Point3(current_dim/2.f,0,0);
         }
 
-        for (auto shape : scene->getShapes()) {
-          auto d = shape->getDistance(p);
-          if (d<=0 || d<=current_dim/4.f)  // internal sphere
+        auto d = shape->getDistance(p);
+        if (d<=0 || d<=current_dim/4.f)  // internal sphere
           //if (d<=0 || d<current_dim/(2.f*1.414213f)) // external sphere
-          {
-            // child must contain something
-            node->child_mask_ = node->child_mask_ | 1<<(7-i); // bitmask is left-to-right eg. 001 haas only child num 2
-            Node *child = new Node;
-            if (node->first_child_ == nullptr) {
-              node->first_child_ = child;
-            } else {
-              node_stack.back()->next_sibling_ = child;
-            }
-            child->depth_ = h+1;
-            child->shape_ = shape;
-            node_stack.push_back(child);
-            x0_stack.push_back((p-offset).as_Point());
-            future_n_to_pop++;
-            break;
+        {
+          // child must contain something
+          node->child_mask_ = node->child_mask_ | 1<<(7-i); // bitmask is left-to-right eg. 001 haas only child num 2
+          Node *child = new Node;
+          if (node->first_child_ == nullptr) {
+            node->first_child_ = child;
+          } else {
+            node_stack.back()->next_sibling_ = child;
           }
+          child->depth_ = h+1;
+          child->shape_ = shape;
+          node_stack.push_back(child);
+          x0_stack.push_back((p-offset).as_Point());
+          future_n_to_pop++;
         }
       }
     }
