@@ -22,7 +22,7 @@ void Octree::fromScene(Scene *scene) {
   // Get scene's shape(s)
   auto shapes = scene->getShapes();
   if (shapes.size() > 1) {
-    std::cout << "ERROR! Scene is not a singole shape" << std::endl;
+    std::cout << "ERROR! Scene is not a singol shape" << std::endl;
     exit(1);
   }
   if (shapes.size() < 1) {

@@ -21,16 +21,19 @@ void default_rendering(Window& window, Scene& scene) {
 }
 
 void octree_rendering(Window& window, Scene& scene) {
-  Octree oct;
-  oct.fromScene(&scene);
+  //Octree oct;
+  //oct.fromScene(&scene);
 
   Renderer renderer(&window);
-  //renderer.disableWindow();
-  renderer.enableWindow();
+  renderer
+    //.disableWindow()
+    .enableWindow();
 
-  //renderer.setScene(&Octree);
-  //renderer.setCamera(scene.getCamera());
-  //renderer.render();
+  renderer
+    .setScene(&scene)
+    .useOctree()
+    .setCamera(scene.getCamera())
+    .render();
 }
 
 
@@ -44,6 +47,9 @@ int main() {
 
   const int height = 240;
   const int width = height*4/3;
+
+  //const int height = 8;
+  //const int width  = 8;
 
   std::cout << "Image " << width << "x" << height << std::endl;
 
@@ -66,10 +72,10 @@ int main() {
     //makeScene_Smooth();
     //makeScene_Mix();
     //makeScene_Operations();
-    //makeScene_Octree();
-    makeScene_Octree_1();
+    makeScene_Octree();
+    //makeScene_Octree_1();
 
-  default_rendering(window, scene);
+  //default_rendering(window, scene);
   octree_rendering(window, scene);
 
   return 0;

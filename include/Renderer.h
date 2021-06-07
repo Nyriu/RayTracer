@@ -33,16 +33,19 @@ class Renderer {
     Window *win_ = nullptr;
     Camera *cam_ = nullptr;
 
-    bool no_window = false;
+    bool no_window_ = false;
 
     //temporarly and img instead of a window
     Image img_;
 
     // Scene stuff
     Scene *scene_ = nullptr;
+    bool scene_optimized_ = false;
 
     //Tracer *tracer_ = nullptr;
-    Tracer *tracer_ = new Tracer();
+    //Tracer *tracer_ = new Tracer();
+    Tracer *tracer_ = new SphereTracer(); // default one
+    bool use_octree_ = false;
 
     int current_tick_  = 0;
     int max_num_ticks_ = 1; // maximum number of ticks before stopping update of scene
@@ -59,11 +62,23 @@ class Renderer {
       }
 
     bool hasCamera() { return cam_ != nullptr; }
+    bool hasScene()  { return scene_ != nullptr; }
+
     Renderer setScene(Scene* scene);
     Renderer setScene(Scene* scene, bool use_suggested_max_ticks);
     Renderer setCamera(Camera* camera);
     Renderer setMaxNumTicks(const int max_num_ticks) {
       max_num_ticks_ = max_num_ticks;
+      return *this;
+    }
+    Renderer useOctree() {
+      // octree doesn't support scene update for now
+      tracer_ = new OctreeTracer();
+      if (hasScene()) {
+        optimizeScene();
+        tracer_->setScene(scene_);
+      }
+      use_octree_ = true;
       return *this;
     }
 
@@ -72,11 +87,14 @@ class Renderer {
     void mainLoop();
 
     void disableWindow(){
-      this->no_window = true;
+      this->no_window_ = true;
     }
     void enableWindow(){
-      this->no_window = false;
+      this->no_window_ = false;
     }
+
+  private:
+    void optimizeScene();
 
 };
 

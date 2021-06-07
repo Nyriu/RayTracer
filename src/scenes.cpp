@@ -780,7 +780,11 @@ Scene makeScene_Octree() {
   //Point3 camera_origin(5* Vec3(-1.5,2,1).normalize().as_Point());
   //Point3 camera_origin(5* Vec3(0,0,1).normalize().as_Point());
   //Point3 camera_origin(Vec3(0,0,5).as_Point());
-  Point3 camera_origin(0,0,5);
+  //Point3 camera_origin(0,0,5);
+  //Point3 camera_origin(0.00000001,0.00000001,5);
+  Point3 camera_origin(0.00001,0.00001,7); // For now only this is stable and useful
+  //Point3 camera_origin(-0.00001,-0.00001,7); // TODO use this to test camera-octree positioning
+  //Point3 camera_origin(1,1,7);
   float fov = 45;
   Camera cam;
   cam.translate(camera_origin.as_Vec3());

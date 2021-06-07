@@ -17,9 +17,9 @@ void Image::writePPM(const std::string& filepath) {
   std::ofstream ofs;
   ofs.open(filepath);
   ofs << "P3\n" << width << " " << height << "\n255\n";
-  for (int j=0; j<height; ++j) {
-    for (int i=0; i<width; ++i) {
-      write_color(ofs, img_[at(i,j)]);
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      write_color(ofs, this->getPixel(x,height-y));
     }
   }
   ofs.close();

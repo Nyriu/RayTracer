@@ -44,14 +44,23 @@ Renderer Renderer::setCamera(Camera* camera) {
 
 void Renderer::render() {
   // check if scene exists
-  if (!no_window) {
+  if (!no_window_) {
     if (!win_->isOpen()) {
       std::cout << "open win" << std::endl;
       win_->openWindow();
     }
   }
-  scene_->optimizeScene();
+  optimizeScene(); // verify to not create uselessly the octree twice
   mainLoop();
+}
+
+void Renderer::optimizeScene() {
+  if (scene_optimized_ && !use_octree_) return;
+  if (!scene_optimized_)
+    scene_->optimizeScene();
+  if (use_octree_)
+    tracer_->setScene(scene_);
+  scene_optimized_ = true;
 }
 
 
@@ -65,13 +74,13 @@ void Renderer::generateFrame() {
 
       Ray r = cam_->generate_ray(u,v);
 
-      img_.setPixel(tracer_->sphereTrace(r), i,j);
+      img_.setPixel(tracer_->trace(r), i,j);
     }
   }
 }
 
 void Renderer::mainLoop() {
-  if (!no_window) {
+  if (!no_window_) {
     while (win_->keepRendering()) {
       if (current_tick_ < max_num_ticks_) {
         //qui contare tempo per frame
@@ -89,8 +98,8 @@ void Renderer::mainLoop() {
 
 #ifdef DEBUG_FRAME_INFO
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
-        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+        std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+        std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
         //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 #endif
 
