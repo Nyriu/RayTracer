@@ -123,7 +123,8 @@ class OctreeTracer : public Tracer {
 
     struct NodeInfo {
       private:
-        Node *node_ptr = nullptr;
+        const Node *node_ptr = nullptr;
+        const RayInfo *rayinfo_ptr = nullptr;
       public:
         float size  = 0.f;
         float depth = 0.f;
@@ -131,10 +132,58 @@ class OctreeTracer : public Tracer {
         float x0=0.f, y0=0.f, z0=0.f;
         float x1=0.f, y1=0.f, z1=0.f;
 
-        NodeInfo(Point3 p0, Point3 p1, float node_size, float node_depth, Node *node) :
-          size(node_size), depth(node_depth), node_ptr(node) {
-          x0 = p0.x(); y0 = p0.y(); z0 = p0.z();
-          x1 = p1.x(); y1 = p1.y(); z1 = p1.z();
+        float tx0=0.f, ty0=0.f, tz0=0.f;
+        float tx1=0.f, ty1=0.f, tz1=0.f;
+
+        NodeInfo(Point3 default_p0, Point3 default_p1, const RayInfo *ri, float node_size, float node_depth, Node *node) :
+          size(node_size), depth(node_depth), node_ptr(node), rayinfo_ptr(ri) {
+          x0 = default_p0.x(); y0 = default_p0.y(); z0 = default_p0.z();
+          x1 = default_p1.x(); y1 = default_p1.y(); z1 = default_p1.z();
+
+          tx0 = x0*ri->tx_coef + ri->tx_bias;
+          ty0 = y0*ri->ty_coef + ri->ty_bias;
+          tz0 = z0*ri->tz_coef + ri->tz_bias;
+
+          tx1 = x1*ri->tx_coef + ri->tx_bias;
+          ty1 = y1*ri->ty_coef + ri->ty_bias;
+          tz1 = z1*ri->tz_coef + ri->tz_bias;
+
+          if (tx0 > tx1) {
+            float tmp_x = x0; float tmp_t = tx0;
+            x0 = x1; tx0 = tx1;
+            x1 = tmp_x; tx1 = tmp_t;
+          }
+          if (ty0 > ty1) {
+            float tmp_y = y0; float tmp_t = ty0;
+            y0 = y1; ty0 = ty1;
+            y1 = tmp_y; ty1 = tmp_t;
+          }
+          if (tz0 > tz1) {
+            float tmp_z = z0; float tmp_t = tz0;
+            z0 = z1; tz0 = tz1;
+            z1 = tmp_z; tz1 = tmp_t;
+          }
+
+          if (!(tx0 <= tx1 && ty0 <= ty1 && tz0 <= tz1)) {
+            std::cout << "ERROR on NodeInfo" <<
+              "\nx0 = " << x0 <<
+              "\ny0 = " << y0 <<
+              "\nz0 = " << z0 <<
+              "\nx1 = " << x1 <<
+              "\ny1 = " << y1 <<
+              "\nz1 = " << z1 <<
+
+              "\ntx0 = " << tx0 <<
+              "\nty0 = " << ty0 <<
+              "\ntz0 = " << tz0 <<
+              "\ntx1 = " << tx1 <<
+              "\nty1 = " << ty1 <<
+              "\ntz1 = " << tz1 <<
+              std::endl;;
+            exit(2);
+          }
+
+
         }
 
         unsigned char getChildMask() const { return node_ptr->getChildMask(); }
@@ -142,6 +191,8 @@ class OctreeTracer : public Tracer {
         Node *getNextSibling()  const { return node_ptr->getNextSibling(); }
         
         bool doesNodeExist() const { return node_ptr != nullptr; }
+
+        const RayInfo* getRayInfo() const { return rayinfo_ptr; }
 
         friend std::ostream& operator<<(std::ostream& out, const NodeInfo& ni) {
           return out << "{" <<
@@ -157,6 +208,16 @@ class OctreeTracer : public Tracer {
             ni.x1 << ", " <<
             ni.y1 << ", " <<
             ni.z1 << "]" <<
+
+            "\n\tt_p0 = [" <<
+            ni.tx0 << ", " <<
+            ni.ty0 << ", " <<
+            ni.tz0 << "]" <<
+
+            "\n\tt_p1 = [" <<
+            ni.tx1 << ", " <<
+            ni.ty1 << ", " <<
+            ni.tz1 << "]" <<
 
             "\n}";
         }
