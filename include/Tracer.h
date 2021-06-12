@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <ostream>
+#include <string.h>
 #include "Color.h"
 #include "Ray.h"
 #include "Scene.h"
@@ -182,8 +183,6 @@ class OctreeTracer : public Tracer {
               std::endl;;
             exit(2);
           }
-
-
         }
 
         unsigned char getChildMask() const { return node_ptr->getChildMask(); }
@@ -220,6 +219,109 @@ class OctreeTracer : public Tracer {
             ni.tz1 << "]" <<
 
             "\n}";
+        }
+    };
+
+    struct Pos {
+      private:
+        int* A_ = nullptr;
+        int max_depth_ = -1;
+        int depth_ = -1;
+      public:
+        Pos(int max_depth) : max_depth_(max_depth) {
+          size_t size = max_depth_*4* sizeof(int);
+          A_ = (int *)malloc(size);
+          memset((void *)A_, 0, size);
+          depth_ = -1;
+        }
+
+        Pos(const Pos& pos) : max_depth_(pos.max_depth_), depth_(pos.depth_) {
+          size_t size = max_depth_*4* sizeof(int);
+          A_ = (int *)malloc(size);
+          memset((void *)A_, 0, size);
+          for (int i=0; i<= depth_; i++) {
+            A_[0*max_depth_ + i] = pos.A_[0*max_depth_ + i];
+            A_[1*max_depth_ + i] = pos.A_[1*max_depth_ + i];
+            A_[2*max_depth_ + i] = pos.A_[2*max_depth_ + i];
+            A_[3*max_depth_ + i] = pos.A_[3*max_depth_ + i];
+          }
+        }
+
+        void add(int positive_mask, int sign) {
+          // sign must be 1 or -1 for positve and negative
+          int x=0, y=0, z=0;
+          for (int i=0; i<= depth_; i++) {
+            x ^= A_[1*max_depth_+ i]<<(depth_-i);
+            y ^= A_[2*max_depth_+ i]<<(depth_-i);
+            z ^= A_[3*max_depth_+ i]<<(depth_-i);
+          }
+          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          x += (positive_mask & 4)? sign : 0;
+          y += (positive_mask & 2)? sign : 0;
+          z += (positive_mask & 1)? sign : 0;
+          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          int idx = 0;
+          for (int i=0; i<= depth_; i++) {
+            idx=0;
+            idx += ((x & (1<<(depth_-i)))? 1:0)<<2;
+            idx += ((y & (1<<(depth_-i)))? 1:0)<<1;
+            idx += ((z & (1<<(depth_-i)))? 1:0)<<0;
+            A_[i] = idx;
+            A_[1*max_depth_ + i] = (idx & 4)? 1 : 0; // x
+            A_[2*max_depth_ + i] = (idx & 2)? 1 : 0; // y
+            A_[3*max_depth_ + i] = (idx & 1)? 1 : 0; // z
+          }
+        }
+
+        void step_in(int idx) {
+          if (depth_+1 == max_depth_) {
+            std::cout << "ERROR: step_in : already at max depth!" << std::endl;
+            exit(1);
+          }
+          depth_++;
+          A_[0*max_depth_ + depth_] = idx;              // idx
+          A_[1*max_depth_ + depth_] = (idx & 4)? 1 : 0; // x
+          A_[2*max_depth_ + depth_] = (idx & 2)? 1 : 0; // y
+          A_[3*max_depth_ + depth_] = (idx & 1)? 1 : 0; // z
+        }
+
+        int highest_differing_bit(Pos *pos_ptr) {
+          // here check if same depth and other controls?
+          int i=0;
+          while (
+              i<=depth_ &&
+              A_[0*max_depth_ + i] == pos_ptr->A_[0*max_depth_ + i]
+              ) {
+            i++;
+          }
+          return i;
+        }
+
+        int round_position(int depth) {
+          if (depth < 0 || depth >= max_depth_) {
+            std::cout << "ERROR: round_position : invalid depth=" << depth << std::endl;
+            exit(1);
+          }
+          for (int i=depth; i<=depth_; i++) {
+            A_[0*max_depth_ + i] = 0;
+            A_[1*max_depth_ + i] = 0;
+            A_[2*max_depth_ + i] = 0;
+            A_[3*max_depth_ + i] = 0;
+          }
+          depth_ = depth;
+          return A_[0*max_depth_ + depth];
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const Pos& pos) {
+          std::string line_init[4] = {"idx", " x ", " y ", " z "};
+          for (int j=0; j<4; j++) {
+            out << line_init[j];
+            for (int i=0; i<pos.max_depth_; i++) {
+              out << " " << pos.A_[j*pos.max_depth_ + i];
+            }
+            out << "\n";
+          }
+          return out;
         }
     };
 

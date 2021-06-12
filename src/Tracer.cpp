@@ -158,6 +158,49 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 
 /// OctreeTracer ---------------------------------------------------------- ///
 Color OctreeTracer::trace(const Ray& r) {
+  /// // DEBUG Pos class
+  /// std::cout << "here testing Pos" << std::endl;
+  /// Pos pos(oct_scene_->getHeight());
+  /// pos.step_in(5);
+  /// pos.step_in(7);
+  /// pos.step_in(1);
+  /// //pos.step_in(2);
+  /// std::cout << pos << std::endl;
+  /// Pos old_pos(pos);
+  /// 
+  /// int negative_mask = 5;
+  /// int positive_mask = 2;
+  /// std::cout << "\nneg_mask = " << negative_mask << "\npos_mask = " << positive_mask  << "\n" << std::endl;
+
+  /// pos.add(negative_mask, -1);
+  /// pos.add(positive_mask,  1);
+  /// std::cout << "after" << std::endl;
+  /// std::cout << pos << std::endl;
+
+  /// //pos.add(negative_mask, -1);
+  /// //pos.add(positive_mask,  1);
+  /// //std::cout << "after" << std::endl;
+  /// //std::cout << pos << std::endl;
+
+  /// std::cout << "old pos" << std::endl;
+  /// std::cout << old_pos << std::endl;
+
+  /// int ancestor_depth = pos.highest_differing_bit(&old_pos);
+  /// std::cout <<
+  ///   "highest_differing_bit = " <<
+  ///   ancestor_depth <<
+  ///   "\nancestor_depth = " <<
+  ///   ancestor_depth <<
+  ///   std::endl;
+  /// pos.round_position(ancestor_depth);
+  /// std::cout << "rounded pos" << std::endl;
+  /// std::cout << pos << std::endl;
+
+  /// exit(1);
+  /// // END // DEBUG Pos class
+
+  // TODO octTrace should return the t_min at which ray hits the deepest non empty voxel
+  // then sphere trace on specific voxel starting from t_min and following ray dir
   return octTrace(r);
 }
 
@@ -188,6 +231,7 @@ Color OctreeTracer::octTrace(const Ray& r) {
   //  //"\n}\n";
   //  "\n";
 
+  Pos pos(oct_scene_->getHeight());
   NodeInfo *root_info = new NodeInfo(
       Point3(
         -oct_scene_->getRootDimension()/2.f,
@@ -224,35 +268,10 @@ Color OctreeTracer::octTrace(const Ray& r) {
   std::cout << "child_info = " << *child_info << "\n"; // << std::cout;
   //std::cout << "child span = " << project_cube(child_info, ray_info) << "\n"; // << std::cout;
 
-  ///// DEBUG STUFF
-  ///child_idx = 0;
-  ///std::cout <<
-  ///  "\nchild_idx = " << child_idx <<
-  ///  "\nchild_info = " << *get_child_info(parent_info, child_idx);
+  pos.step_in(child_idx);
+  std::cout << "pos = \n" << pos << "\n";
 
-  ///child_idx = 2;
-  ///std::cout <<
-  ///  "\nchild_idx = " << child_idx <<
-  ///  "\nchild_info = " << *get_child_info(parent_info, child_idx);
-  ///child_idx = 5;
-  ///std::cout <<
-  ///  "\nchild_idx = " << child_idx <<
-  ///  "\nchild_info = " << *get_child_info(parent_info, child_idx);
-
-  ///child_idx = 6;
-  ///std::cout <<
-  ///  "\nchild_idx = " << child_idx <<
-  ///  "\nchild_info = " << *get_child_info(parent_info, child_idx);
-
-  ///child_idx = 7;
-  ///std::cout <<
-  ///  "\nchild_idx = " << child_idx <<
-  ///  "\nchild_info = " << *get_child_info(parent_info, child_idx);
-
-  ///exit(1);
-  ///// END // DEBUG STUFF
-
-  std::vector<std::pair<NodeInfo*,float>> stack; 
+  std::pair<NodeInfo*,float> stack[oct_scene_->getHeight()]; 
   //std::cout << "root t span = " << t << std::endl;
   int debug_counter = 0;
   //while (child_info->depth <= oct_scene_->getHeight()) 
@@ -284,7 +303,7 @@ Color OctreeTracer::octTrace(const Ray& r) {
     ////     std::cout << "PUSH" << std::endl;
     ////     if (tc.max < h) { // se uscita dal voxel e' diversa da quella del padre
     ////       //stack[scale] = (parent,tmax)
-    ////       stack.push_back(std::make_pair(parent_info, t.max));
+    ////       stack[child_info->depth] = std::make_pair(parent_info, t.max));
     ////     }
     ////     // child must become parent
     ////     h = tc.max;
@@ -299,26 +318,13 @@ Color OctreeTracer::octTrace(const Ray& r) {
 
     std::cout << "ADVANCE" << std::endl;
     // ADVANCE // we assume always possible
-    //oldpos = pos;
-    //(pos, idx) = step_along_ray(pos,scale,ray); // need to output node info
-                                                  // TODO add idx to node_info?
-
-    //int step_mask = gen_step_mask(child_info, ray_info, tc.max);
-    //  std::cout <<
-    //    "\nstep_mask = " << step_mask <<
-    //    "\nchild_idx (before) = " << child_idx;
-    //child_idx ^= step_mask;
-    //  std::cout <<
-    //    "\nchild_idx ( after) = " << child_idx <<
-    //    "\nneed pop " << ((child_idx & step_mask) != 0) <<
-    //  std::endl;
-
     int step_mask=0;
     if (child_info->tx1 == tc.max) step_mask^=4;
     if (child_info->ty1 == tc.max) step_mask^=2;
     if (child_info->tz1 == tc.max) step_mask^=1;
 
-    //TODO work here
+    Pos old_pos(pos);
+
     std::cout <<
       "\nstep_mask = " << step_mask <<
       "\nchild_idx (before) = " << child_idx;
@@ -326,7 +332,8 @@ Color OctreeTracer::octTrace(const Ray& r) {
     std::cout <<
       "\nchild_idx ( after) = " << child_idx;
 
-    //update disagree?
+
+    //check if update disagree? // do we need a POP?
     int positive_mask = 0;
     if (ray_info->direction.x() > 0) positive_mask^=4;
     if (ray_info->direction.y() > 0) positive_mask^=2;
@@ -338,255 +345,46 @@ Color OctreeTracer::octTrace(const Ray& r) {
     std::cout <<
       "\npositive_mask = " << positive_mask <<
       "\nnegative_mask = " << negative_mask;
-
     bool pop_needed =
       !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask);
     std::cout << "\nneed pop " << pop_needed << std::endl;
 
-    /// {
-    ///   // DISAGREE DEBUG STUFF
-    ///   std::cout << "\n----- DEBUG -----" << std::endl;
+    //can pop_needed be calc using highest_differing_bit?
+    pos.add(negative_mask, -1);
+    pos.add(positive_mask,  1);
 
-    ///   std::cout <<
-    ///   "\n1->5 \t no pop";
-    ///   child_idx = 1;
-    ///   step_mask = 4;
-    ///   negative_mask = 0;
-    ///   positive_mask = 4;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n5->1 \t pop";
-    ///   child_idx = 5;
-    ///   step_mask = 4;
-    ///   negative_mask = 0;
-    ///   positive_mask = 4;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n5<-1 \t pop";
-    ///   child_idx = 1;
-    ///   step_mask = 4;
-    ///   negative_mask = 4;
-    ///   positive_mask = 0;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n1<-5 \t no pop";
-    ///   child_idx = 5;
-    ///   step_mask = 4;
-    ///   negative_mask = 4;
-    ///   positive_mask = 0;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n3,\n  >5 \t no pop";
-    ///   child_idx = 3;
-    ///   step_mask = 6;
-    ///   negative_mask = 2;
-    ///   positive_mask = 4;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n5,\n  >3 \t pop";
-    ///   child_idx = 5;
-    ///   step_mask = 6;
-    ///   negative_mask = 2;
-    ///   positive_mask = 4;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n3<\n  \\5 \t no pop";
-    ///   child_idx = 5;
-    ///   step_mask = 6;
-    ///   negative_mask = 4;
-    ///   positive_mask = 2;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout <<
-    ///   "\n5<\n  \\3 \t pop";
-    ///   child_idx = 3;
-    ///   step_mask = 6;
-    ///   negative_mask = 4;
-    ///   positive_mask = 2;
-    ///   std::cout <<
-    ///     "\nstep_mask = " << step_mask <<
-    ///     "\nchild_idx (before) = " << child_idx;
-    ///   child_idx ^= step_mask;
-    ///   std::cout <<
-    ///     "\nchild_idx ( after) = " << child_idx;
-    ///   //update disagree?
-    ///   std::cout <<
-    ///     "\npositive_mask = " << positive_mask <<
-    ///     "\nnegative_mask = " << negative_mask;
-    ///   std::cout <<
-    ///     "\nneed pop " <<
-    ///     !( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask)
-    ///     << std::endl;
-
-    ///   std::cout << "\n--- END DEBUG ---" << std::endl;
-    /// }
-
-
-
-
-    //exit(1);
+    std::cout << "old_pos = \n" << old_pos << "\n";
+    std::cout << "pos = \n" << pos << "\n";
+    int ancestor_depth = pos.highest_differing_bit(&old_pos);
+    std::cout <<
+      "highest_differing_bit = " <<
+      ancestor_depth <<
+      std::endl;
 
     t.min = tc.max; // actual time advancement
 
     // POP // if advance was wrong means we needed a pop
-    //if (update_disagree(idx,ray) {
-    // scale = highest differing bit(pos, oldpos)
-    // if (scale >= max_scale) then return miss // here use depth vs height
-    // (parent,t.max) = stack[scale]
-    // pos = round_position(pos,scale)
-    // idx = extract_child_slot_index(pos,scale)
-    // h = 0
-    //}
+    if (pop_needed) {
+      std::cout << "POP" << std::endl;
+      // TODO here check correctness
+      if (ancestor_depth >= oct_scene_->getHeight()) return Color(0); // miss
+      std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth-1];
+      parent_info = tmp_pair.first;
+      t.max = tmp_pair.second;
+      child_idx = pos.round_position(ancestor_depth);
+      // TODO here collect child_info?
+      h = 0;
 
+      std::cout <<
+        "ancestor info = \n" << parent_info <<
+        "restored t.max= " << t.max <<
+        "child_idx = " << child_idx <<
+        // TODO ? "child_info = \n" << child_idx <<
+        "rounded pos =\n " << pos <<
+        "h = " << h <<
+        std::endl;
+    }
 
-    //{
-    //  // ADVANCE DEBUG STUFF
-    //  std::cout << "\n----- DEBUG -----" << std::endl;
-    //  
-    //  step_mask = 1;
-    //  child_idx = 3;
-    //  std::cout <<
-    //    "\nstep_mask = " << step_mask <<
-    //    "\nchild_idx (before) = " << child_idx;
-    //  child_idx ^= step_mask;
-    //  std::cout <<
-    //    "\nchild_idx ( after) = " << child_idx <<
-    //    "\nneed pop " << ((child_idx & step_mask) != 0) <<
-    //  std::endl;
-    //  
-    //  step_mask = 4;
-    //  child_idx = 3;
-    //  std::cout <<
-    //    "\nstep_mask = " << step_mask <<
-    //    "\nchild_idx (before) = " << child_idx;
-    //  child_idx ^= step_mask;
-    //  std::cout <<
-    //    "\nchild_idx ( after) = " << child_idx <<
-    //    "\nneed pop " << ((child_idx & step_mask) != 0) <<
-    //  std::endl;
-    //  
-    //  step_mask = 4;
-    //  child_idx = 7;
-    //  std::cout <<
-    //    "\nstep_mask = " << step_mask <<
-    //    "\nchild_idx (before) = " << child_idx;
-    //  child_idx ^= step_mask;
-    //  std::cout <<
-    //    "\nchild_idx ( after) = " << child_idx <<
-    //    "\nneed pop " << ((child_idx & step_mask) != 0) <<
-    //  std::endl;
-    //  
-    //  step_mask = 5;
-    //  child_idx = 2;
-    //  std::cout <<
-    //    "\nstep_mask = " << step_mask <<
-    //    "\nchild_idx (before) = " << child_idx;
-    //  child_idx ^= step_mask;
-    //  std::cout <<
-    //    "\nchild_idx ( after) = " << child_idx <<
-    //    "\nneed pop " << ((child_idx & step_mask) != 0) <<
-    //  std::endl;
-    //  
-    //  std::cout << "\n--- END DEBUG ---" << std::endl;
-    //  // END // ADVANCE DEBUG STUFF
-    //}
     debug_counter++;
   }
 
