@@ -10,6 +10,7 @@ test
 src_old
 include_old
 *_old*
+*.log*
 
 notes.txt
 TODO.txt

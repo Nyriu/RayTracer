@@ -108,13 +108,13 @@ class OctreeTracer : public Tracer {
 
         friend std::ostream& operator<<(std::ostream& out, const RayInfo& ri) {
           return out << "{" <<
-            "\norigin = " << ri.origin <<
-            "\ndirection = " << ri.direction <<
-            "\ntx_coef = [" <<
+            "\n\torigin = " << ri.origin <<
+            "\n\tdirection = " << ri.direction <<
+            "\n\ttx_coef = [" <<
             ri.tx_coef << ", " <<
             ri.ty_coef << ", " <<
             ri.tz_coef << "]" <<
-            "\ntx_bias = [" <<
+            "\n\ttx_bias = [" <<
             ri.tx_bias << ", " <<
             ri.ty_bias << ", " <<
             ri.tz_bias << "]" <<
@@ -128,7 +128,7 @@ class OctreeTracer : public Tracer {
         const RayInfo *rayinfo_ptr = nullptr;
       public:
         float size  = 0.f;
-        float depth = 0.f;
+        int depth = 0;
 
         float x0=0.f, y0=0.f, z0=0.f;
         float x1=0.f, y1=0.f, z1=0.f;
@@ -136,7 +136,7 @@ class OctreeTracer : public Tracer {
         float tx0=0.f, ty0=0.f, tz0=0.f;
         float tx1=0.f, ty1=0.f, tz1=0.f;
 
-        NodeInfo(Point3 default_p0, Point3 default_p1, const RayInfo *ri, float node_size, float node_depth, Node *node) :
+        NodeInfo(Point3 default_p0, Point3 default_p1, const RayInfo *ri, float node_size, int node_depth, Node *node) :
           size(node_size), depth(node_depth), node_ptr(node), rayinfo_ptr(ri) {
           x0 = default_p0.x(); y0 = default_p0.y(); z0 = default_p0.z();
           x1 = default_p1.x(); y1 = default_p1.y(); z1 = default_p1.z();
@@ -188,7 +188,9 @@ class OctreeTracer : public Tracer {
         unsigned char getChildMask() const { return node_ptr->getChildMask(); }
         Node *getFirstChild()   const { return node_ptr->getFirstChild(); }
         Node *getNextSibling()  const { return node_ptr->getNextSibling(); }
-        
+        ImplicitShape *getShape() const { return node_ptr->getShape(); }
+        bool isEmpty() const { return node_ptr->isEmpty(); }
+
         bool doesNodeExist() const { return node_ptr != nullptr; }
 
         const RayInfo* getRayInfo() const { return rayinfo_ptr; }
@@ -226,20 +228,20 @@ class OctreeTracer : public Tracer {
       private:
         int* A_ = nullptr;
         int max_depth_ = -1;
-        int depth_ = -1;
+        int depth_ = 0;
       public:
         Pos(int max_depth) : max_depth_(max_depth) {
           size_t size = max_depth_*4* sizeof(int);
           A_ = (int *)malloc(size);
           memset((void *)A_, 0, size);
-          depth_ = -1;
+          depth_ = 0; // root is 0, leaf is octree.height
         }
 
         Pos(const Pos& pos) : max_depth_(pos.max_depth_), depth_(pos.depth_) {
           size_t size = max_depth_*4* sizeof(int);
           A_ = (int *)malloc(size);
           memset((void *)A_, 0, size);
-          for (int i=0; i<= depth_; i++) {
+          for (int i=0; i< depth_; i++) {
             A_[0*max_depth_ + i] = pos.A_[0*max_depth_ + i];
             A_[1*max_depth_ + i] = pos.A_[1*max_depth_ + i];
             A_[2*max_depth_ + i] = pos.A_[2*max_depth_ + i];
@@ -247,13 +249,15 @@ class OctreeTracer : public Tracer {
           }
         }
 
+        bool reached_max_depth() const { return depth_ >= max_depth_; }
+
         void add(int positive_mask, int sign) {
           // sign must be 1 or -1 for positve and negative
           int x=0, y=0, z=0;
-          for (int i=0; i<= depth_; i++) {
-            x ^= A_[1*max_depth_+ i]<<(depth_-i);
-            y ^= A_[2*max_depth_+ i]<<(depth_-i);
-            z ^= A_[3*max_depth_+ i]<<(depth_-i);
+          for (int i=0; i<depth_; i++) {
+            x ^= A_[1*max_depth_+ i]<<(depth_-i-1);
+            y ^= A_[2*max_depth_+ i]<<(depth_-i-1);
+            z ^= A_[3*max_depth_+ i]<<(depth_-i-1);
           }
           //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
           x += (positive_mask & 4)? sign : 0;
@@ -261,11 +265,11 @@ class OctreeTracer : public Tracer {
           z += (positive_mask & 1)? sign : 0;
           //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
           int idx = 0;
-          for (int i=0; i<= depth_; i++) {
+          for (int i=0; i<depth_; i++) {
             idx=0;
-            idx += ((x & (1<<(depth_-i)))? 1:0)<<2;
-            idx += ((y & (1<<(depth_-i)))? 1:0)<<1;
-            idx += ((z & (1<<(depth_-i)))? 1:0)<<0;
+            idx += ((x & (1<<(depth_-i-1)))? 1:0)<<2;
+            idx += ((y & (1<<(depth_-i-1)))? 1:0)<<1;
+            idx += ((z & (1<<(depth_-i-1)))? 1:0)<<0;
             A_[i] = idx;
             A_[1*max_depth_ + i] = (idx & 4)? 1 : 0; // x
             A_[2*max_depth_ + i] = (idx & 2)? 1 : 0; // y
@@ -274,41 +278,56 @@ class OctreeTracer : public Tracer {
         }
 
         void step_in(int idx) {
-          if (depth_+1 == max_depth_) {
-            std::cout << "ERROR: step_in : already at max depth!" << std::endl;
+          if (depth_+1 > max_depth_) {
+            std::cout << "ERROR: step_in : already at max depth : " << depth_ << std::endl;
             exit(1);
           }
           depth_++;
-          A_[0*max_depth_ + depth_] = idx;              // idx
-          A_[1*max_depth_ + depth_] = (idx & 4)? 1 : 0; // x
-          A_[2*max_depth_ + depth_] = (idx & 2)? 1 : 0; // y
-          A_[3*max_depth_ + depth_] = (idx & 1)? 1 : 0; // z
+          A_[0*max_depth_ + depth_-1] = idx;              // idx
+          A_[1*max_depth_ + depth_-1] = (idx & 4)? 1 : 0; // x
+          A_[2*max_depth_ + depth_-1] = (idx & 2)? 1 : 0; // y
+          A_[3*max_depth_ + depth_-1] = (idx & 1)? 1 : 0; // z
         }
 
-        int highest_differing_bit(Pos *pos_ptr) {
-          // here check if same depth and other controls?
+        //int highest_differing_bit(Pos *pos_ptr) {
+        int highest_ancestor_depth(Pos *pos_ptr) {
           int i=0;
           while (
-              i<=depth_ &&
+              i<depth_ &&
               A_[0*max_depth_ + i] == pos_ptr->A_[0*max_depth_ + i]
               ) {
             i++;
           }
-          return i;
+          return i==0 ? 0 : i-1;
         }
 
         int round_position(int depth) {
-          if (depth < 0 || depth >= max_depth_) {
+          depth--;
+          //if (depth < 0 || depth >= max_depth_) {
+          if (depth < -1 || depth >= max_depth_) {
             std::cout << "ERROR: round_position : invalid depth=" << depth << std::endl;
             exit(1);
           }
-          for (int i=depth; i<=depth_; i++) {
+          if (depth == -1) {
+            depth = 0;
+          }
+          for (int i=depth; i<depth_; i++) {
             A_[0*max_depth_ + i] = 0;
             A_[1*max_depth_ + i] = 0;
             A_[2*max_depth_ + i] = 0;
             A_[3*max_depth_ + i] = 0;
           }
           depth_ = depth;
+          return A_[0*max_depth_ + depth];
+        }
+
+        int get_idx_at(int depth) {
+          depth--;
+          if (depth < -1 || depth >= max_depth_) {
+            std::cout << "ERROR: get_idx_at : invalid depth=" << depth << std::endl;
+            exit(1);
+          }
+          if (depth == -1) return 0; // asking for root
           return A_[0*max_depth_ + depth];
         }
 
@@ -336,6 +355,9 @@ class OctreeTracer : public Tracer {
 
   private:
     Color octTrace(const Ray& r); // better with pointer?
+    float octTrace(const Ray *r);
+    float sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv);
+
     Color shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape);
     //bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 

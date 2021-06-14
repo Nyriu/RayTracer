@@ -5,8 +5,15 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <system_error>
 bool DEBUG_sphereTraceShadow = false;
 bool DEBUG_general = true;
+
+// OctreeTracer
+bool DEBUG_octTrace          = !true;
+bool DEBUG_octTrace_return   = !true;
+bool DEBUG_octTrace_ancestor = !true;
+bool DEBUG_oct_sphereTrace   = false;
 
 using namespace utilities;
 // END // DEBUG STUFF
@@ -158,50 +165,69 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 
 /// OctreeTracer ---------------------------------------------------------- ///
 Color OctreeTracer::trace(const Ray& r) {
-  /// // DEBUG Pos class
-  /// std::cout << "here testing Pos" << std::endl;
+
+  /// // END // DEBUG STUFF
   /// Pos pos(oct_scene_->getHeight());
-  /// pos.step_in(5);
+  /// pos.step_in(3);
   /// pos.step_in(7);
-  /// pos.step_in(1);
-  /// //pos.step_in(2);
-  /// std::cout << pos << std::endl;
-  /// Pos old_pos(pos);
-  /// 
-  /// int negative_mask = 5;
-  /// int positive_mask = 2;
-  /// std::cout << "\nneg_mask = " << negative_mask << "\npos_mask = " << positive_mask  << "\n" << std::endl;
+  /// pos.step_in(3);
 
-  /// pos.add(negative_mask, -1);
-  /// pos.add(positive_mask,  1);
-  /// std::cout << "after" << std::endl;
-  /// std::cout << pos << std::endl;
-
-  /// //pos.add(negative_mask, -1);
-  /// //pos.add(positive_mask,  1);
-  /// //std::cout << "after" << std::endl;
-  /// //std::cout << pos << std::endl;
-
-  /// std::cout << "old pos" << std::endl;
-  /// std::cout << old_pos << std::endl;
-
-  /// int ancestor_depth = pos.highest_differing_bit(&old_pos);
   /// std::cout <<
-  ///   "highest_differing_bit = " <<
-  ///   ancestor_depth <<
+  ///   pos <<
+  ///   "reached_max_depth = " <<
+  ///   pos.reached_max_depth() <<
+  ///   std::endl;
+
+  /// Pos old_pos(pos);
+  /// pos.add(4,  1);
+  /// pos.add(2, -1);
+
+  /// int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
+  /// int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
+
+  /// std::cout <<
+  ///   "old_pos\n" <<
+  ///   old_pos <<
+  ///   "pos\n" <<
+  ///   pos <<
   ///   "\nancestor_depth = " <<
   ///   ancestor_depth <<
+  ///   "\nancestor_idx = " <<
+  ///   ancestor_idx <<
   ///   std::endl;
+
   /// pos.round_position(ancestor_depth);
-  /// std::cout << "rounded pos" << std::endl;
-  /// std::cout << pos << std::endl;
+  /// std::cout <<
+  ///   "round pos at ancestor_depth\n" <<
+  ///   pos <<
+  ///   std::endl;
 
   /// exit(1);
-  /// // END // DEBUG Pos class
+  /// // END // DEBUG STUFF
 
-  // TODO octTrace should return the t_min at which ray hits the deepest non empty voxel
-  // then sphere trace on specific voxel starting from t_min and following ray dir
-  return octTrace(r);
+
+  Vec3 dir = r.direction();
+  //if (dir.x() < 0 && dir.y() > 0) {
+  //  DEBUG_octTrace          = true;
+  //  DEBUG_octTrace_return   = true;
+  //  DEBUG_octTrace_ancestor = true;
+  //  DEBUG_oct_sphereTrace   = false;
+  //}
+  float t_min = octTrace(&r);
+  //if (dir.x() < 0 && dir.y() > 0) {
+  //exit(1);
+  //}
+    
+
+  //if (t_min == -1) exit(1);
+
+  //std::cout << t_min << std::endl;
+  //exit(1);
+  if (t_min < 0) // miss
+    return Color(0);
+  Color c(t_min, 0, 0);
+  //std::cout << c << std::endl;
+  return c;
 }
 
 Color child_color(int idx) {
@@ -217,6 +243,366 @@ Color child_color(int idx) {
   return c;
   //return Color(idx/8.f);
 }
+
+float OctreeTracer::octTrace(const Ray *r) {
+  RayInfo *ray_info = new RayInfo(r);
+  NodeInfo *parent_info = new NodeInfo( // root_info
+      Point3(
+        -oct_scene_->getRootDimension()/2.f,
+        -oct_scene_->getRootDimension()/2.f,
+        oct_scene_->getRootDimension()/2.f
+        ), // p0 // (-d/2,-d/2, d/2) bottom corner
+      Point3(
+        oct_scene_->getRootDimension()/2.f,
+        oct_scene_->getRootDimension()/2.f,
+        -oct_scene_->getRootDimension()/2.f
+        ), // p1 // ( d/2, d/2,-d/2) top corner
+      ray_info,
+      oct_scene_->getRootDimension(),  // node size
+      0,                              // depth
+      oct_scene_->getRoot()
+      );
+  Pos pos(oct_scene_->getHeight());
+  Span t = project_cube(parent_info, ray_info);
+  float h=t.max;
+  int child_idx = select_child(parent_info, ray_info, t.min);
+  NodeInfo *child_info = get_child_info(parent_info, child_idx); // really necessary?
+  pos.step_in(child_idx);
+  //int depth = 1; // already in pos
+
+  if (DEBUG_octTrace)
+    std::cout <<
+      "\n--- Initialization ---" <<
+      "\nray_info = " << *ray_info <<
+      "\nparent_info = " << *parent_info <<
+      "\nt = " << t <<
+      "\nh = " << h <<
+      "\nchild_idx = " << child_idx <<
+      "\nchild_info = " << *child_info <<
+      "\npos =\n" << pos <<
+      std::endl;
+
+  const float exit_root_t = t.max;
+
+  std::pair<NodeInfo*,float> stack[oct_scene_->getHeight()+1];
+  stack[0] = std::make_pair(parent_info, exit_root_t); // root info at the first position
+  if (DEBUG_octTrace)
+    std::cout <<
+      "\noct_scene_->getHeight() = " << oct_scene_->getHeight() <<
+      "\nstack[0] =" << 
+      "(" << stack[0].first << ", " << stack[0].second << ")" << 
+      "\nstack[1] =" << 
+      "(" << stack[1].first << ", " << stack[1].second << ")" << 
+      //"\nstack[2] =" << 
+      //"(" << stack[2].first << ", " << stack[2].second << ")" << 
+      std::endl;
+
+
+  while (!pos.reached_max_depth() && t.min <= t.max) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
+  {
+    //TODO check OCTREE EXIT after miss or during POP
+
+    if (DEBUG_octTrace) std::cout << "\n--- New While Cycle ---";
+
+    Span tc = project_cube(child_info, ray_info);
+
+    if (DEBUG_octTrace)
+      std::cout <<
+        "\nchild_info = " << child_info <<
+        "\ntc = " << tc <<
+        std::endl;
+
+    if (child_info->doesNodeExist() && t.min <= t.max) { // use child bit mask of parent
+      //if voxel small enough return t.min // TODO define "small enough"
+      // INTERSECT
+      if (DEBUG_octTrace) std::cout << "\n--- INTERSECT ---" << std::endl;
+
+      Span tv(fmaxf(tc.min, t.min), fminf(tc.max,t.max)); // intersect(tc,t); // current voxel span
+      if (DEBUG_octTrace) std::cout << "\ntv = " << tv << std::endl;
+
+
+      if (tv.min <= tv.max) { // non empty intersection
+
+        if (DEBUG_octTrace)
+          std::cout <<
+            "\nNon empty intersection" <<
+            "\nIs leaf? " << (child_info->depth == oct_scene_->getHeight()) <<
+            "\nchild_info->depth = " << child_info->depth <<
+            "\noct_scene_->getHeight() = " << oct_scene_->getHeight() << std::endl;
+
+
+        if (child_info->depth == oct_scene_->getHeight()-1) { // is a leaf // TODO better way? // parent leaf bit mask
+
+          // launch sphere trace iff inside non empty LEAF!!!!!!
+          if (!child_info->isEmpty()) { //if (voxel has a contour)
+            //t' = project contour; //tv = intersect(tc,t');
+            //if (DEBUG_octTrace) std::cout << "\nNot Empty so Launch sphereTrace" << std::endl;
+
+            //float t_min = sphereTrace(r, child_info->getShape(), tv);
+            //tv = Span(fmaxf(tv.min, t_min), tv.max);
+            //if (DEBUG_octTrace)
+            //  std::cout << "\nsphereTrace result" <<
+            //    "\nt_min = " << t_min <<
+            //    "\ntv.min = " << tv.min <<
+            //    "\ntv.max = " << tv.min <<
+            //    "\ntv = " << tv <<
+            //    std::endl;
+
+
+
+            float t_min = sphereTrace(r, child_info->getShape(), tv);
+            tv = Span(fmaxf(tv.min, t_min), tv.max);
+          }
+          if (DEBUG_octTrace)
+            std::cout <<
+              "\nFound intersection  at " << tv.min << std::endl;
+          if (DEBUG_octTrace_return)
+            std::cout <<
+              "\nExiting by found intersection " << tv.min << std::endl;
+          return tv.min; // found desired intersection
+        }
+        // PUSH
+        if (DEBUG_octTrace) std::cout << "\n--- PUSH ---" << std::endl;
+
+        if (tc.max < h) {// exit from voxel different from parent one
+
+          if (DEBUG_octTrace)
+            std::cout <<
+              "\nAdding to stack" <<
+              "\npair = (" << parent_info << ", " << t.max << ")" <<
+              "\nat = " << parent_info->depth <<
+              "\nstack size = " << oct_scene_->getHeight() << std::endl;
+          stack[parent_info->depth] = std::make_pair(parent_info, t.max);
+        }
+        if (DEBUG_octTrace && !(tc.max < h))
+          std::cout <<
+            "Not adding to stack" <<
+            std::endl;
+
+        h = tc.max;
+        parent_info = child_info;
+        child_idx = select_child(parent_info, ray_info, t.min);
+        child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
+        pos.step_in(child_idx);
+        t = tv;
+
+        if (DEBUG_octTrace)
+          std::cout <<
+            "\nAfter Push" <<
+            "\nt = " << t <<
+            "\nh = " << h <<
+            "\nparent_info = " << *parent_info <<
+            "\nchild_idx = " << child_idx <<
+            "\nchild_info = " << *child_info <<
+            "\npos =\n" << pos <<
+            std::endl;
+        continue; // restart loop to process current voxel
+      } else {
+        if (DEBUG_octTrace)
+          std::cout <<
+            "\nNOT tv.min <= tv.max" <<
+            "\ntv = " << tv <<
+            std::endl;
+        if (DEBUG_octTrace_return)
+        std::cout <<
+          "Exiting by NOT tv.min <= tv.max" <<
+          std::endl;
+      //return exit_root_t; // TODO here miss
+      return -1; // TODO here miss
+      }
+    }
+    // ADVANCE
+    if (DEBUG_octTrace) std::cout << "\n--- ADVANCE ---" << std::endl;
+    Pos old_pos(pos);
+    // step along ray // assumed always possible
+    //int step_mask=0;
+    //if (child_info->tx1 == tc.max) step_mask^=4;
+    //if (child_info->ty1 == tc.max) step_mask^=2;
+    //if (child_info->tz1 == tc.max) step_mask^=1;
+    int positive_mask = 0;
+    if (ray_info->direction.x() > 0) positive_mask^=4;
+    if (ray_info->direction.y() > 0) positive_mask^=2;
+    if (ray_info->direction.z() > 0) positive_mask^=1;
+    int negative_mask = 0;
+    if (ray_info->direction.x() < 0) negative_mask^=4;
+    if (ray_info->direction.y() < 0) negative_mask^=2;
+    if (ray_info->direction.z() < 0) negative_mask^=1;
+
+    pos.add(negative_mask, -1); // here can get child_idx from pos instead
+    pos.add(positive_mask,  1);
+    int     parent_idx = pos.get_idx_at(parent_info->depth);
+    int old_parent_idx = old_pos.get_idx_at(parent_info->depth);
+
+    //child_idx ^= step_mask;     // TODO better to do all without step_mask
+    child_idx = pos.get_idx_at(child_info->depth);
+
+    t.min = tc.max; // actual time advancement
+
+    bool pop_needed =
+      //!( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask);
+      parent_idx != old_parent_idx;
+    // if at least the parent changes, we need a pop
+
+    if (DEBUG_octTrace)
+      std::cout <<
+        "\nAfter Advance" <<
+        "\nold_pos =\n" << old_pos <<
+        //"\nstep_mask = " << step_mask <<
+        "\npositive_mask = " << positive_mask <<
+        "\nnegative_mask = " << negative_mask <<
+        "\nchild_idx = " << child_idx <<
+        "\npos =\n" << pos <<
+        "\ntc.max = " << tc.max <<
+        "\nt = " << t <<
+        "\nexit_root_t = " << exit_root_t <<
+        "\npop_needed = " << pop_needed <<
+        "\nparent_idx = " << parent_idx <<
+        "\nold_parent_idx = " << old_parent_idx <<
+        std::endl;
+    //exit(1);
+
+    if (t.min == exit_root_t) {
+      if (DEBUG_octTrace)
+        std::cout <<
+          "Exiting from root" <<
+          "\nt = " << t <<
+          "\nexit_root_t = " << exit_root_t <<
+          std::endl;
+      if (DEBUG_octTrace_return)
+        std::cout <<
+          "Exiting from root by t.min" <<
+          std::endl;
+      //return exit_root_t; // TODO here miss
+      return -1; // TODO here miss
+    }
+
+    if (pop_needed) { // need pop and sure not to exit from root
+      // POP 
+      if (DEBUG_octTrace) {
+        std::cout << "\n--- POP ---" <<
+          "\noct_scene_->getHeight() = " << oct_scene_->getHeight() <<
+          "\nstack before";
+        for (int i=0; i<=oct_scene_->getHeight(); i++) {
+          std::cout <<
+            "\nstack[" << i << "] =" << 
+            "(" << stack[i].first << ", " << stack[i].second << ")";
+        }
+        std::cout << std::endl;
+      }
+
+
+      // if advance was wrong means we needed a pop
+      int ancestor_depth = pos.highest_ancestor_depth(&old_pos);
+      if (DEBUG_octTrace)
+        std::cout <<
+          "\nancestor_depth = " << ancestor_depth <<
+          std::endl;
+
+      // questa e' una cagata
+      //if (ancestor_depth == 0) {
+      //  if (DEBUG_octTrace_ancestor)
+      //    std::cout <<
+      //      "\npos =\n" << pos <<
+      //      "\nold_pos =\n" << old_pos <<
+      //      "\nancestor_depth = " << ancestor_depth <<
+      //      std::endl;
+      //  if (DEBUG_octTrace_return)
+      //    std::cout <<
+      //      "Exiting from root by ancestor depth" <<
+      //      std::endl;
+      //  //return exit_root_t; // TODO here miss
+      //  return -1; // TODO here miss
+      //}
+
+      if (ancestor_depth > oct_scene_->getHeight()) {
+        if (DEBUG_octTrace_return)
+          std::cout <<
+            "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
+            std::endl;
+        return -1; // miss // TODO decide the value
+      }
+
+      std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth]; // [anch_depth-1] // TODO check index correctness
+        if (DEBUG_octTrace)
+          std::cout <<
+            "tmp_pair = [" << tmp_pair.first << ", " << tmp_pair.second << "]" <<
+            std::endl;
+      parent_info = tmp_pair.first;
+        if (DEBUG_octTrace)
+          std::cout <<
+            "parent_info = " << parent_info <<
+            std::endl;
+      t.max = tmp_pair.second;
+        if (DEBUG_octTrace)
+          std::cout <<
+            "t.max = " << t.max <<
+            std::endl;
+      child_idx = pos.round_position(ancestor_depth);
+        if (DEBUG_octTrace)
+          std::cout <<
+            "rounded pos at " << ancestor_depth << "\n" <<
+            pos <<
+            std::endl;
+
+      child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
+        if (DEBUG_octTrace)
+          std::cout <<
+            "child_info = " <<
+            child_info <<
+            std::endl;
+
+      h = 0;
+    }
+        //exit(1);
+  }
+  if (DEBUG_octTrace_return)
+    std::cout <<
+      "Exiting last return" <<
+      std::endl;
+  return t.min; // TODO here miss?
+  //return -1; // TODO here miss?
+}
+
+float OctreeTracer::sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv) {
+  if (DEBUG_oct_sphereTrace) std::cout << "\n--- sphereTrace ---";
+
+  float t = tv.min;
+
+  while (t < tv.max) {
+    float minDistance = infinity;
+
+    float d = shape->getDistance(r->at(t));
+
+    if (DEBUG_oct_sphereTrace) std::cout << "\nd = " << d;
+
+    if (d < minDistance) {
+      minDistance = d;
+    }
+    // did we intersect the shape?
+    if (minDistance <= hit_threshold_ * t) {
+
+      if (DEBUG_oct_sphereTrace)
+        std::cout <<
+          "\nminDistance = " << minDistance <<
+          "\nt = " << t <<
+          "\nhit_threshold_ * t = " << hit_threshold_ * t <<
+          "\n--- sphereTrace END ---";
+      return t;
+    }
+    t += minDistance;
+  }
+  if (DEBUG_oct_sphereTrace)
+    std::cout <<
+      "\nt = " << t <<
+      "\nHit max distance " << tv.max <<
+      "\n--- sphereTrace END ---";
+  return tv.max;
+  //return t;
+  //return -1; // TODO encode miss
+  //return (tv.min + tv.max)/2.f;
+}
+
+
 
 Color OctreeTracer::octTrace(const Ray& r) {
   // initial cube is supposed to start at t=0 and end at t=1 // not true for now
@@ -355,7 +741,7 @@ Color OctreeTracer::octTrace(const Ray& r) {
 
     std::cout << "old_pos = \n" << old_pos << "\n";
     std::cout << "pos = \n" << pos << "\n";
-    int ancestor_depth = pos.highest_differing_bit(&old_pos);
+    int ancestor_depth = pos.highest_ancestor_depth(&old_pos);
     std::cout <<
       "highest_differing_bit = " <<
       ancestor_depth <<

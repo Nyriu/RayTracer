@@ -46,10 +46,14 @@ class Node {
     Node *next_sibling_ = nullptr; // TODO really needed?
     ImplicitShape *shape_ = nullptr;
   public:
+    Node() {};
     int getDepth() const { return depth_; }
     unsigned char getChildMask() const { return child_mask_; }
     Node *getFirstChild() const { return first_child_; }
-    Node *getNextSibling()  const { return next_sibling_; }
+    Node *getNextSibling() const { return next_sibling_; }
+    ImplicitShape *getShape() const { return shape_; }
+
+    bool isEmpty() const { return shape_ == nullptr; }
 
 };
 
