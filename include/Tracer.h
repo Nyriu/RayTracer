@@ -192,6 +192,9 @@ class OctreeTracer : public Tracer {
         bool isEmpty() const { return node_ptr->isEmpty(); }
 
         bool doesNodeExist() const { return node_ptr != nullptr; }
+        bool doesChildExist(int child_idx) const {
+          return getChildMask() & 1<<(7-child_idx);
+        }
 
         const RayInfo* getRayInfo() const { return rayinfo_ptr; }
 
@@ -229,29 +232,45 @@ class OctreeTracer : public Tracer {
         int* A_ = nullptr;
         int max_depth_ = -1;
         int depth_ = 0;
+        int null_value_ = 9;
       public:
         Pos(int max_depth) : max_depth_(max_depth) {
           size_t size = max_depth_*4* sizeof(int);
           A_ = (int *)malloc(size);
-          memset((void *)A_, 0, size);
+
+          for (int i=0; i<max_depth_; i++) {
+            A_[0*max_depth_ + i] = null_value_;
+            A_[1*max_depth_ + i] = null_value_;
+            A_[2*max_depth_ + i] = null_value_;
+            A_[3*max_depth_ + i] = null_value_;
+          }
+
           depth_ = 0; // root is 0, leaf is octree.height
         }
 
         Pos(const Pos& pos) : max_depth_(pos.max_depth_), depth_(pos.depth_) {
           size_t size = max_depth_*4* sizeof(int);
           A_ = (int *)malloc(size);
-          memset((void *)A_, 0, size);
-          for (int i=0; i< depth_; i++) {
+          for (int i=0; i<depth_; i++) {
             A_[0*max_depth_ + i] = pos.A_[0*max_depth_ + i];
             A_[1*max_depth_ + i] = pos.A_[1*max_depth_ + i];
             A_[2*max_depth_ + i] = pos.A_[2*max_depth_ + i];
             A_[3*max_depth_ + i] = pos.A_[3*max_depth_ + i];
           }
+          for (int i=depth_+1; i<max_depth_; i++) {
+            A_[0*max_depth_ + i] = null_value_;
+            A_[1*max_depth_ + i] = null_value_;
+            A_[2*max_depth_ + i] = null_value_;
+            A_[3*max_depth_ + i] = null_value_;
+          }
         }
 
         bool reached_max_depth() const { return depth_ >= max_depth_; }
 
-        void add(int positive_mask, int sign) {
+        bool add(int positive_mask, int sign) {
+          // returns true if it's all ok
+          // TODO check correctness when depth_ < max_depth_
+          // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
           // sign must be 1 or -1 for positve and negative
           int x=0, y=0, z=0;
           for (int i=0; i<depth_; i++) {
@@ -275,6 +294,17 @@ class OctreeTracer : public Tracer {
             A_[2*max_depth_ + i] = (idx & 2)? 1 : 0; // y
             A_[3*max_depth_ + i] = (idx & 1)? 1 : 0; // z
           }
+
+          // check on root
+          idx=0;
+          idx += ((x & (1<<(depth_)))? 1:0)<<2;
+          idx += ((y & (1<<(depth_)))? 1:0)<<1;
+          idx += ((z & (1<<(depth_)))? 1:0)<<0;
+          if (idx != 0) {
+            std::cout << "WARING : changing root idx : " << idx << std::endl;
+            //exit(1);
+          }
+          return idx == 0;
         }
 
         void step_in(int idx) {
@@ -289,7 +319,7 @@ class OctreeTracer : public Tracer {
           A_[3*max_depth_ + depth_-1] = (idx & 1)? 1 : 0; // z
         }
 
-        //int highest_differing_bit(Pos *pos_ptr) {
+        //int highest_differing_bit(Pos *pos_ptr)
         int highest_ancestor_depth(Pos *pos_ptr) {
           int i=0;
           while (
@@ -303,7 +333,7 @@ class OctreeTracer : public Tracer {
 
         int round_position(int depth) {
           depth--;
-          //if (depth < 0 || depth >= max_depth_) {
+          //if (depth < 0 || depth >= max_depth_) 
           if (depth < -1 || depth >= max_depth_) {
             std::cout << "ERROR: round_position : invalid depth=" << depth << std::endl;
             exit(1);
@@ -312,12 +342,13 @@ class OctreeTracer : public Tracer {
             depth = 0;
           }
           for (int i=depth; i<depth_; i++) {
-            A_[0*max_depth_ + i] = 0;
-            A_[1*max_depth_ + i] = 0;
-            A_[2*max_depth_ + i] = 0;
-            A_[3*max_depth_ + i] = 0;
+            A_[0*max_depth_ + i] = null_value_;
+            A_[1*max_depth_ + i] = null_value_;
+            A_[2*max_depth_ + i] = null_value_;
+            A_[3*max_depth_ + i] = null_value_;
           }
           depth_ = depth;
+          if (depth_ == 0) return 0;
           return A_[0*max_depth_ + depth];
         }
 
@@ -336,7 +367,12 @@ class OctreeTracer : public Tracer {
           for (int j=0; j<4; j++) {
             out << line_init[j];
             for (int i=0; i<pos.max_depth_; i++) {
-              out << " " << pos.A_[j*pos.max_depth_ + i];
+              int tmp_val = pos.A_[j*pos.max_depth_ + i];
+              if (tmp_val == pos.null_value_) {
+                out << " N";
+                continue;
+              }
+              out << " " << tmp_val;
             }
             out << "\n";
           }
@@ -361,7 +397,9 @@ class OctreeTracer : public Tracer {
     Color shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape);
     //bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 
-    inline Span project_cube(const Point3& p0, const Point3& p1, const Ray *r);
+    //inline Span project_cube(const Point3& p0, const Point3& p1, const Ray *r);
+    Span project_cube(const Point3& p0, const Point3& p1, const Ray *r);
+    Span project_cube(const NodeInfo *p_info, const int child_idx, const RayInfo *ri);
 
     //inline ?
     Span project_cube(const NodeInfo *n_info, const RayInfo *ri);

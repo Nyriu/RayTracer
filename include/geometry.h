@@ -118,7 +118,7 @@ inline Point3 operator*(const float& f, const Point3& v) {
 
 
 inline std::ostream& operator<<(std::ostream& out, const Point3& v) {
-  return out << "[" << v.x()  << " " << v.y() << " " << v.z() << "]";
+  return out << "[" << v.x()  << ", " << v.y() << ", " << v.z() << "]";
 }
 
 
@@ -269,7 +269,7 @@ inline Vec3 operator/(const Vec3& u, const Vec3& v) {
 
 
 inline std::ostream& operator<<(std::ostream& out, const Vec3& v) {
-  return out << "[" << v.x()  << " " << v.y() << " " << v.z() << "]";
+  return out << "[" << v.x()  << ", " << v.y() << ", " << v.z() << "]";
 }
 
 // ------------------------------
