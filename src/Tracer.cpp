@@ -212,39 +212,45 @@ Color OctreeTracer::trace(const Ray& r) {
   /// exit(1);
   /// // END // DEBUG STUFF
 
-  std::cout << "\n================= " << r.direction() << " =================" << std::endl;
+  if (
+  DEBUG_octTrace          ||
+  DEBUG_octTrace_return   ||
+  DEBUG_octTrace_ancestor ||
+  DEBUG_oct_sphereTrace   )
+    std::cout << "\n================= " << r.direction() << " =================" << std::endl;
 
-  Vec3 dir = r.direction();
-  Vec3 target_dir(0, 0, 0);
+  //Vec3 dir = r.direction();
+  //Vec3 target_dir(0, 0, 0);
   //Vec3 target_dir(-0.543911, -0.407504, -0.733554);
   //Vec3 target_dir(-0.241322, -0.471267, -0.848335);
   //Vec3 target_dir(-0.375367, -0.375759, -0.847293);
   //Vec3 target_dir(-0.445308, -0.434812, -0.782712);
+  //Vec3 target_dir(-0.00217804, 0.324882, -0.945752);
 
-  if (
-      target_dir.x() - 0.001 <= dir.x() && dir.x() <= target_dir.x() + 0.001
-      &&
-      target_dir.y() - 0.001 <= dir.y() && dir.y() <= target_dir.y() + 0.001
-      &&
-      target_dir.z() - 0.001 <= dir.z() && dir.z() <= target_dir.z() + 0.001
-     ) {
-    std::cout << "Activate" << std::endl;
-    DEBUG_octTrace          = true;
-    DEBUG_octTrace_return   = true;
-    DEBUG_octTrace_ancestor = true;
-    DEBUG_oct_sphereTrace   = false;
-  }
+  //if (
+  //    target_dir.x() - 0.0001 <= dir.x() && dir.x() <= target_dir.x() + 0.0001
+  //    &&
+  //    target_dir.y() - 0.0001 <= dir.y() && dir.y() <= target_dir.y() + 0.0001
+  //    &&
+  //    target_dir.z() - 0.0001 <= dir.z() && dir.z() <= target_dir.z() + 0.0001
+  //   ) {
+  //  std::cout << "Activate" << std::endl;
+  //  DEBUG_octTrace          = true;
+  //  DEBUG_octTrace_return   = true;
+  //  DEBUG_octTrace_ancestor = true;
+  //  DEBUG_oct_sphereTrace   = false;
+  //}
   float t_min = octTrace(&r);
-  if (
-      target_dir.x() - 0.00001 <= dir.x() && dir.x() <= target_dir.x() + 0.00001
-      &&
-      target_dir.y() - 0.00001 <= dir.y() && dir.y() <= target_dir.y() + 0.00001
-      &&
-      target_dir.z() - 0.00001 <= dir.z() && dir.z() <= target_dir.z() + 0.00001
-     ) {
-    std::cout << "Quit" << std::endl;
-    exit(1);
-  }
+  //if (
+  //    target_dir.x() - 0.0001 <= dir.x() && dir.x() <= target_dir.x() + 0.0001
+  //    &&
+  //    target_dir.y() - 0.0001 <= dir.y() && dir.y() <= target_dir.y() + 0.0001
+  //    &&
+  //    target_dir.z() - 0.0001 <= dir.z() && dir.z() <= target_dir.z() + 0.0001
+  //   ) {
+  //  std::cout << "Quit" << std::endl;
+  //  exit(1);
+  //}
   //exit(1);
 
   //if (t_min == -1) exit(1);
@@ -254,7 +260,7 @@ Color OctreeTracer::trace(const Ray& r) {
   //if (t_min < 0) // miss
   //  return Color(0);
   //Color c(t_min, 0, 0);
-  Color c(t_min/20,0,0);
+  Color c(1 - t_min/23,0,0);
   //std::cout << c << std::endl;
   return c;
 }
@@ -614,13 +620,6 @@ float OctreeTracer::octTrace(const Ray *r) {
           "rounded pos at " << ancestor_depth << "\n" <<
           pos <<
           std::endl;
-
-      //child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
-      //  if (DEBUG_octTrace)
-      //    std::cout <<
-      //      "child_info = " <<
-      //      child_info <<
-      //      std::endl;
 
       child_idx = select_child(parent_info, ray_info, t.min);
       if (DEBUG_octTrace)

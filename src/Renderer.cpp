@@ -72,13 +72,23 @@ void Renderer::generateFrame() {
       float u = double(i + .5) / (img_.width -1); // NDC Coord
       float v = double(j + .5) / (img_.height-1); // NDC Coord
       Ray r = cam_->generate_ray(u,v);
+
+
+      // DEBUG STUFF
+      int target_i = 190;
+      int target_j = 229;
+      // END // DEBUG STUFF
+
       Color c = tracer_->trace(r);
 
-      std::cout <<
-        "\npixel coords = [" << i << ", " << j << "]" <<
-        "\npixel NDC = [" << u << ", " << v << "]" <<
-        "\ncolor = " << c <<
-        std::endl;
+      // DEBUG STUFF
+        std::cout <<
+          "\npixel coords = [" << i << ", " << j << "]" <<
+          "\npixel NDC = [" << u << ", " << v << "]" <<
+          "\ncolor = " << c <<
+          std::endl;
+      if (i == target_i && j == target_j) exit(1);
+      // END // DEBUG STUFF
 
       img_.setPixel(c, i,j);
     }

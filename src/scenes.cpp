@@ -944,10 +944,17 @@ Scene makeScene_Octree_2() {
     "\nsp_rad = " << sp_rad <<
     std::endl;
 
-  // (-d,-d, d) ~ 001 ~ 1
-  ImplicitShape* c_001 = new Sphere(Point3(-d,-d, d), sp_rad);
-  c_001->setAlbedo(Color(n,n,c));
-  scene.addShape(c_001);
+  //// (-d,-d, d) ~ 001 ~ 1
+  //ImplicitShape* c_001 = new Sphere(Point3(-d,-d, d), sp_rad);
+  //c_001->setAlbedo(Color(n,n,c));
+  //scene.addShape(c_001);
+  
+  
+  // small sphere completely inside child 1->7->2
+  d = root_cube_dim/(2*2*2);
+  ImplicitShape* c_001_111_010 = new Sphere(Point3(d,3*d,d), d/1.5);
+  c_001_111_010->setAlbedo(Color(c,c,c));
+  scene.addShape(c_001_111_010);
 
   scene.set_suggested_ticks(1);
 
