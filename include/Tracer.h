@@ -304,22 +304,23 @@ class OctreeTracer : public Tracer {
         }
 
         bool reached_max_depth() const { return depth_ >= max_depth_; }
+        bool is_at_depth(int depth) const { return depth_ == depth; }
 
         bool add(int mask, int sign) {
           // returns true if it's all ok
-          std::cout << "\ndepth_ = " << depth_ << std::endl;
+          //std::cout << "\ndepth_ = " << depth_ << std::endl;
           int x=0, y=0, z=0;
           for (int i=0; i<=depth_; i++) {
             x ^= A_[1*row_size_+ i]<<(depth_-i);
             y ^= A_[2*row_size_+ i]<<(depth_-i);
             z ^= A_[3*row_size_+ i]<<(depth_-i);
           }
-          std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
           x += (mask & 4)? sign : 0;
           y += (mask & 2)? sign : 0;
           z += (mask & 1)? sign : 0;
-          std::cout << "\nmask = " << mask << "\nsign = " << sign << std::endl;
-          std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          //std::cout << "\nmask = " << mask << "\nsign = " << sign << std::endl;
+          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
 
           int idx = 0;
           for (int i=0; i<=depth_; i++) {
@@ -370,8 +371,7 @@ class OctreeTracer : public Tracer {
           return i;
         }
 
-        int round_position(int ancestor_depth) {
-          // return ancestor idx
+        void round_position(int ancestor_depth) {
           if (ancestor_depth < 0 || ancestor_depth > max_depth_) {
             std::cout << "ERROR: round_position : invalid depth=" << ancestor_depth << std::endl;
             exit(1);
@@ -383,7 +383,6 @@ class OctreeTracer : public Tracer {
             A_[3*row_size_ + i] = null_value_;
           }
           depth_ = ancestor_depth;
-          return A_[0*row_size_ + ancestor_depth];
         }
 
         int get_idx_at(int depth) {

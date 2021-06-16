@@ -166,51 +166,51 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 /// OctreeTracer ---------------------------------------------------------- ///
 Color OctreeTracer::trace(const Ray& r) {
 
-  // DEBUG STUFF
-  //
-      // TODO TEST // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
-  //
-  Pos pos(oct_scene_->getHeight());
-  std::cout << pos << std::endl;;
-    
-  pos.step_in(3);
-  //std::cout << pos << std::endl;;
-  pos.step_in(3);
-  //std::cout << pos << std::endl;;
-  pos.step_in(5);
-  //std::cout << pos << std::endl;;
+  /// // DEBUG STUFF
+  /// //
+  ///     // TODO TEST // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
+  /// //
+  /// Pos pos(oct_scene_->getHeight());
+  /// std::cout << pos << std::endl;;
+  ///   
+  /// pos.step_in(3);
+  /// //std::cout << pos << std::endl;;
+  /// pos.step_in(3);
+  /// //std::cout << pos << std::endl;;
+  /// pos.step_in(5);
+  /// //std::cout << pos << std::endl;;
 
-  Pos old_pos(pos);
-  bool pos_add_ok = pos.add(4, 1);
-  bool neg_add_ok = pos.add(2,-1);
-  std::cout <<
-    "old_pos\n" <<
-    old_pos <<
-    "pos\n" <<
-    pos <<
-    "\npos_add_ok = " << pos_add_ok <<
-    "\nneg_add_ok = " << neg_add_ok <<
-    std::endl;
+  /// Pos old_pos(pos);
+  /// bool pos_add_ok = pos.add(4, 1);
+  /// bool neg_add_ok = pos.add(2,-1);
+  /// std::cout <<
+  ///   "old_pos\n" <<
+  ///   old_pos <<
+  ///   "pos\n" <<
+  ///   pos <<
+  ///   "\npos_add_ok = " << pos_add_ok <<
+  ///   "\nneg_add_ok = " << neg_add_ok <<
+  ///   std::endl;
 
-    int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
-    int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
+  ///   int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
+  ///   int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
 
-    std::cout <<
-      "\nancestor_depth = " <<
-      ancestor_depth <<
-      "\nancestor_idx = " <<
-      ancestor_idx <<
-      std::endl;
+  ///   std::cout <<
+  ///     "\nancestor_depth = " <<
+  ///     ancestor_depth <<
+  ///     "\nancestor_idx = " <<
+  ///     ancestor_idx <<
+  ///     std::endl;
 
-  int anc_idx = pos.round_position(ancestor_depth);
-  std::cout <<
-    "round pos at ancestor_depth\n" <<
-    pos <<
-    "\nis right ancestor : " << (anc_idx == ancestor_idx) <<
-    std::endl;
+  /// int anc_idx = pos.round_position(ancestor_depth);
+  /// std::cout <<
+  ///   "round pos at ancestor_depth\n" <<
+  ///   pos <<
+  ///   "\nis right ancestor : " << (anc_idx == ancestor_idx) <<
+  ///   std::endl;
 
-  exit(1);
-  // END // DEBUG STUFF
+  /// exit(1);
+  /// // END // DEBUG STUFF
 
   std::cout << "\n================= " << r.direction() << " =================" << std::endl;
 
@@ -254,7 +254,7 @@ Color OctreeTracer::trace(const Ray& r) {
   //if (t_min < 0) // miss
   //  return Color(0);
   //Color c(t_min, 0, 0);
-  Color c(t_min/30,0,0);
+  Color c(t_min/20,0,0);
   //std::cout << c << std::endl;
   return c;
 }
@@ -333,13 +333,15 @@ float OctreeTracer::octTrace(const Ray *r) {
   }
 
 
-  while (!pos.reached_max_depth()) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
+  while (!pos.is_at_depth(oct_scene_->getHeight()+1)) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
   //while (!pos.reached_max_depth() && t.min <= t.max) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
   {
     //TODO check OCTREE EXIT after miss or during POP
 
     if (DEBUG_octTrace) {
-      std::cout << "\n--- New While Cycle ---";
+      std::cout << "\n--- New While Cycle ---" <<
+        "\nt = " << t <<
+        "\nparent_info = " << *parent_info;
     }
 
     Span tc = project_cube(parent_info, child_idx, ray_info);
@@ -366,28 +368,33 @@ float OctreeTracer::octTrace(const Ray *r) {
 
 
       NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx); // TODO work to remove child_info
-      if (!child_info_tmp->isEmpty()) { //if (voxel has a contour)
+      if (!child_info_tmp->isEmpty() && parent_info->depth == oct_scene_->getHeight()-1) {
         float t_min = sphereTrace(r, child_info_tmp->getShape(), tv);
         tv = Span(fmaxf(tv.min, t_min), tv.max);
         if (DEBUG_octTrace) {
           std::cout << "\nsphereTrace result" <<
             "\nt_min = " << t_min <<
-            "\ntv.min = " << tv.min <<
-            "\ntv.max = " << tv.min <<
             "\ntv = " << tv <<
             std::endl;
         }
+      } else if (DEBUG_octTrace) {
+        std::cout << "\nNon leaf empty node" <<
+          std::endl;
       }
 
       if (tv.min <= tv.max) { // non empty intersection
-        if (parent_info->depth == oct_scene_->getHeight()-1) return tv.min; // because sphere trace has not moved tmin over the current leaf
+        if (parent_info->depth == oct_scene_->getHeight()-1) {
+          if (DEBUG_octTrace || DEBUG_octTrace_return) {
+            std::cout <<
+              "Intersection found via sphere tracing in leaf node!" <<
+              std::endl;
+          }
+          return tv.min; // because sphere trace has not moved tmin past the current leaf
+        }
 
         if (DEBUG_octTrace) {
           std::cout <<
-            "\nNon empty intersection" <<
-            //"\nIs leaf? " << (child_info->depth == oct_scene_->getHeight()) <<
-            "\nIs leaf? " << (parent_info->depth == oct_scene_->getHeight()-1) <<
-            //"\nchild_info->depth = " << child_info->depth <<
+            "\nNeed to visit inside" <<
             "\nparent_info->depth = " << parent_info->depth <<
             "\noct_scene_->getHeight() = " << oct_scene_->getHeight() << std::endl;
           //exit(1);
@@ -446,17 +453,13 @@ float OctreeTracer::octTrace(const Ray *r) {
         if (DEBUG_octTrace)
           std::cout <<
             "\nNOT tv.min <= tv.max" <<
+            "\nsphereTracing made me skip over this voxel" <<
             "\ntv = " << tv <<
             std::endl;
-        if (DEBUG_octTrace_return)
-          std::cout <<
-            "Exiting by NOT tv.min <= tv.max" <<
-            std::endl;
-        //std::cout << "\n\tEMPTY INTERSECTION!!!!" << std::endl;
       }
     } else if (DEBUG_octTrace) {
       std::cout <<
-        "Empty child" <<
+        "Child doesn't exist" <<
         std::endl;
     }
     // ADVANCE
@@ -510,6 +513,14 @@ float OctreeTracer::octTrace(const Ray *r) {
         "\nnegative_add_ok = " << negative_add_ok <<
         std::endl;
     }
+    if (!(positive_add_ok && negative_add_ok)) {
+      if (DEBUG_octTrace || DEBUG_octTrace_return) {
+        std::cout <<
+          "Exiting gently from root via add" <<
+          std::endl;
+        return exit_root_t;
+      }
+    }
 
     if (t.min == exit_root_t) {
       if (DEBUG_octTrace) {
@@ -545,12 +556,11 @@ float OctreeTracer::octTrace(const Ray *r) {
 
 
       // if advance was wrong means we needed a pop
-      int ancestor_depth = pos.highest_ancestor_depth(&old_pos);
+      int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
       if (DEBUG_octTrace) {
         std::cout <<
           "\nancestor_depth = " << ancestor_depth <<
           std::endl;
-        exit(1);
       }
 
       // questa e' una cagata
@@ -577,27 +587,33 @@ float OctreeTracer::octTrace(const Ray *r) {
         return exit_root_t; // miss // TODO decide the value
       }
 
+      if (ancestor_depth == 0) {
+        std::cout <<
+          "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
+          std::endl;
+      }
+
       std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth]; // [anch_depth-1] // TODO check index correctness
-        if (DEBUG_octTrace)
-          std::cout <<
-            "tmp_pair = [" << tmp_pair.first << ", " << tmp_pair.second << "]" <<
-            std::endl;
+      if (DEBUG_octTrace)
+        std::cout <<
+          "tmp_pair = [" << tmp_pair.first << ", " << tmp_pair.second << "]" <<
+          std::endl;
       parent_info = tmp_pair.first;
-        if (DEBUG_octTrace)
-          std::cout <<
-            "parent_info = " << parent_info <<
-            std::endl;
+      if (DEBUG_octTrace)
+        std::cout <<
+          "parent_info = " << parent_info <<
+          std::endl;
       t.max = tmp_pair.second;
-        if (DEBUG_octTrace)
-          std::cout <<
-            "t.max = " << t.max <<
-            std::endl;
-      child_idx = pos.round_position(ancestor_depth);
-        if (DEBUG_octTrace)
-          std::cout <<
-            "rounded pos at " << ancestor_depth << "\n" <<
-            pos <<
-            std::endl;
+      if (DEBUG_octTrace)
+        std::cout <<
+          "t.max = " << t.max <<
+          std::endl;
+      pos.round_position(ancestor_depth);
+      if (DEBUG_octTrace)
+        std::cout <<
+          "rounded pos at " << ancestor_depth << "\n" <<
+          pos <<
+          std::endl;
 
       //child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
       //  if (DEBUG_octTrace)
@@ -606,6 +622,11 @@ float OctreeTracer::octTrace(const Ray *r) {
       //      child_info <<
       //      std::endl;
 
+      child_idx = select_child(parent_info, ray_info, t.min);
+      if (DEBUG_octTrace)
+        std::cout <<
+          "child_idx" << child_idx <<
+          std::endl;
       h = 0;
     }
   }

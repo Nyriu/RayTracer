@@ -26,8 +26,8 @@ void octree_rendering(Window& window, Scene& scene) {
 
   Renderer renderer(&window);
   renderer
-    //.disableWindow();
-    .enableWindow();
+    .disableWindow();
+    //.enableWindow();
 
   renderer
     .setScene(&scene)

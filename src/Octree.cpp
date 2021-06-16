@@ -6,6 +6,9 @@
 
 
 void Octree::fromScene(Scene *scene) {
+
+  // TODO only LEAF can be NonEmpty
+
   root_ = new Node;
   root_->depth_ = 0;
 
@@ -98,15 +101,31 @@ void Octree::dfs_print(Node *node, int depth) {
   for (int i=0; i<depth; i++) space.append("  ");
 
   if (depth == height_-1) {
-    std::cout <<
-      "leaf" <<
-      std::endl;
+    std::cout << "leaf";
+    if (node->isEmpty()) {
+      std::cout <<
+        " e" <<
+        std::endl;
+    } else {
+      std::cout <<
+        " ne" <<
+        std::endl;
+    }
     return;
   }
 
   std::cout <<
-    std::bitset<8>(node->child_mask_) <<
-    std::endl;
+    std::bitset<8>(node->child_mask_);
+  if (node->isEmpty()) {
+    std::cout <<
+      " e" <<
+      std::endl;
+  } else {
+    std::cout <<
+      " ne" <<
+      std::endl;
+  }
+
   bool is_first_child = true;
   Node *child = nullptr;
   for (unsigned char i=0; i<8; i++) {
@@ -122,4 +141,6 @@ void Octree::dfs_print(Node *node, int depth) {
       dfs_print(child, depth+1);
     }
   }
+
+
 }
