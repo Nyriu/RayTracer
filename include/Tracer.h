@@ -136,10 +136,35 @@ class OctreeTracer : public Tracer {
         float tx0=0.f, ty0=0.f, tz0=0.f;
         float tx1=0.f, ty1=0.f, tz1=0.f;
 
-        NodeInfo(Point3 default_p0, Point3 default_p1, const RayInfo *ri, float node_size, int node_depth, Node *node) :
-          size(node_size), depth(node_depth), node_ptr(node), rayinfo_ptr(ri) {
-          x0 = default_p0.x(); y0 = default_p0.y(); z0 = default_p0.z();
-          x1 = default_p1.x(); y1 = default_p1.y(); z1 = default_p1.z();
+        NodeInfo(Point3 default_p0, Point3 default_p1, const RayInfo *ri, float node_size, int node_depth, Node *node) : size(node_size), depth(node_depth), node_ptr(node), rayinfo_ptr(ri) {
+          Point3 orig = ri->origin;
+
+          // sort vertices' planes using distance
+          if ( std::fabs(orig.x() - default_p0.x()) > std::fabs(orig.x() - default_p1.x()) ) {
+            x0 = default_p1.x();
+            x1 = default_p0.x();
+          } else {
+            x0 = default_p0.x();
+            x1 = default_p1.x();
+          }
+          if ( std::fabs(orig.y() - default_p0.y()) > std::fabs(orig.y() - default_p1.y()) ) {
+            y0 = default_p1.y();
+            y1 = default_p0.y();
+          } else {
+            y0 = default_p0.y();
+            y1 = default_p1.y();
+          }
+          if ( std::fabs(orig.z() - default_p0.z()) > std::fabs(orig.z() - default_p1.z()) ) {
+            z0 = default_p1.z();
+            z1 = default_p0.z();
+          } else {
+            z0 = default_p0.z();
+            z1 = default_p1.z();
+          }
+
+
+          //x0 = default_p0.x(); y0 = default_p0.y(); z0 = default_p0.z();
+          //x1 = default_p1.x(); y1 = default_p1.y(); z1 = default_p1.z();
 
           tx0 = x0*ri->tx_coef + ri->tx_bias;
           ty0 = y0*ri->ty_coef + ri->ty_bias;
@@ -149,21 +174,26 @@ class OctreeTracer : public Tracer {
           ty1 = y1*ri->ty_coef + ri->ty_bias;
           tz1 = z1*ri->tz_coef + ri->tz_bias;
 
-          if (tx0 > tx1) {
-            float tmp_x = x0; float tmp_t = tx0;
-            x0 = x1; tx0 = tx1;
-            x1 = tmp_x; tx1 = tmp_t;
-          }
-          if (ty0 > ty1) {
-            float tmp_y = y0; float tmp_t = ty0;
-            y0 = y1; ty0 = ty1;
-            y1 = tmp_y; ty1 = tmp_t;
-          }
-          if (tz0 > tz1) {
-            float tmp_z = z0; float tmp_t = tz0;
-            z0 = z1; tz0 = tz1;
-            z1 = tmp_z; tz1 = tmp_t;
-          }
+          if (tx1 < 0) tx1 = utilities::infinity; // TODO here a fixed tmax?
+          if (ty1 < 0) ty1 = utilities::infinity; // TODO here a fixed tmax?
+          if (tz1 < 0) tz1 = utilities::infinity; // TODO here a fixed tmax?
+
+
+          //if (tx0 > tx1) {
+          //  float tmp_x = x0; float tmp_t = tx0;
+          //  x0 = x1; tx0 = tx1;
+          //  x1 = tmp_x; tx1 = tmp_t;
+          //}
+          //if (ty0 > ty1) {
+          //  float tmp_y = y0; float tmp_t = ty0;
+          //  y0 = y1; ty0 = ty1;
+          //  y1 = tmp_y; ty1 = tmp_t;
+          //}
+          //if (tz0 > tz1) {
+          //  float tmp_z = z0; float tmp_t = tz0;
+          //  z0 = z1; tz0 = tz1;
+          //  z1 = tmp_z; tz1 = tmp_t;
+          //}
 
           if (!(tx0 <= tx1 && ty0 <= ty1 && tz0 <= tz1)) {
             std::cout << "ERROR on NodeInfo" <<
@@ -301,7 +331,7 @@ class OctreeTracer : public Tracer {
           idx += ((y & (1<<(depth_)))? 1:0)<<1;
           idx += ((z & (1<<(depth_)))? 1:0)<<0;
           if (idx != 0) {
-            std::cout << "WARING : changing root idx : " << idx << std::endl;
+            std::cout << "WARNING : changing root idx : " << idx << std::endl;
             //exit(1);
           }
           return idx == 0;

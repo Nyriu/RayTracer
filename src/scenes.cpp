@@ -944,57 +944,18 @@ Scene makeScene_Octree_2() {
     "\nsp_rad = " << sp_rad <<
     std::endl;
 
-  // (-d,-d,-d) ~ 000 ~ 0
-  ImplicitShape* c_000 = new Sphere(Point3(-d,-d,-d), sp_rad);
-  c_000->setAlbedo(Color(n,n,n));
-  scene.addShape(c_000);
-  //{ // 000 has all children
-  //  Point3 p_pos(-d,-d,-d); // parent position offset
-  //  Color  p_col(n,n,n);    // parent color offset
-  //  float o_sp_rad = sp_rad;
-  //  float d = root_cube_dim/4 - root_cube_dim/8;
-  //  float sp_rad = o_sp_rad/4;
-  //  // (-d,-d,-d) ~ 000 ~ 0
-  //  ImplicitShape* c_000 = new Sphere(p_pos + Point3(-d,-d,-d), sp_rad);
-  //  c_000->setAlbedo(p_col * Color(n,n,n));
-  //  scene.addShape(c_000);
-  //  // (-d,-d, d) ~ 001 ~ 1
-  //  ImplicitShape* c_001 = new Sphere(p_pos + Point3(-d,-d, d), sp_rad);
-  //  c_001->setAlbedo(p_col * Color(n,n,c));
-  //  scene.addShape(c_001);
-  //  // ( d,-d, d) ~ 010 ~ 2
-  //  ImplicitShape* c_010 = new Sphere(p_pos + Point3(-d, d,-d), sp_rad);
-  //  c_010->setAlbedo(p_col * Color(n,c,n));
-  //  scene.addShape(c_010);
-  //  // (-d, d, d) ~ 011 ~ 3
-  //  ImplicitShape* c_011 = new Sphere(p_pos + Point3(-d, d, d), sp_rad);
-  //  c_011->setAlbedo(p_col * Color(n,c,c));
-  //  scene.addShape(c_011);
-  //  // (d,-d,-d) ~ 100 ~ 4
-  //  ImplicitShape* c_100 = new Sphere(p_pos + Point3( d,-d,-d), sp_rad);
-  //  c_100->setAlbedo(p_col * Color(c,n,n));
-  //  scene.addShape(c_100);
-  //  // ( d,-d, d) ~ 101 ~ 5
-  //  ImplicitShape* c_101 = new Sphere(p_pos + Point3( d,-d, d), sp_rad);
-  //  c_101->setAlbedo(p_col * Color(c,n,c));
-  //  scene.addShape(c_101);
-  //  // (d, d,-d) ~ 110 ~ 6
-  //  ImplicitShape* c_110 = new Sphere(p_pos + Point3( d, d,-d), sp_rad);
-  //  c_110->setAlbedo(p_col * Color(c,c,n));
-  //  scene.addShape(c_110);
-  //  // ( d, d, d) ~ 111 ~ 7
-  //  ImplicitShape* c_111 = new Sphere(p_pos + Point3( d, d, d), sp_rad);
-  //  c_111->setAlbedo(p_col * Color(c,c,c));
-  //  scene.addShape(c_111);
-  //} // END 000 children
-
+  // (-d,-d, d) ~ 001 ~ 1
+  ImplicitShape* c_001 = new Sphere(Point3(-d,-d, d), sp_rad);
+  c_001->setAlbedo(Color(n,n,c));
+  scene.addShape(c_001);
 
   scene.set_suggested_ticks(1);
 
   // Camera
   float cam_distance = root_cube_dim + 1;
-  Point3 camera_origin(cam_distance* Vec3(0.7,0.7,0.5).normalize().as_Point());
-  //Point3 camera_origin(cam_distance* Vec3(0,0,1).normalize().as_Point());
+  //Point3 camera_origin(.2,.2,7);
+  //Point3 camera_origin(0.00001,0.00001,7); // For now only this is stable and useful
+  Point3 camera_origin(1,1,7);
   float fov = 45;
   Camera cam;
   cam.translate(camera_origin.as_Vec3());

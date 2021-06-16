@@ -12,8 +12,8 @@
 
 void default_rendering(Window& window, Scene& scene) {
   Renderer renderer(&window);
-  //renderer.disableWindow();
-  renderer.enableWindow();
+  renderer.disableWindow();
+  //renderer.enableWindow();
 
   renderer.setScene(&scene, true); // true to generate scene's right number of frames
   //renderer.addCamera(Camera ... );
@@ -26,8 +26,8 @@ void octree_rendering(Window& window, Scene& scene) {
 
   Renderer renderer(&window);
   renderer
-    //.disableWindow()
-    .enableWindow();
+    .disableWindow();
+    //.enableWindow();
 
   renderer
     .setScene(&scene)
@@ -76,8 +76,8 @@ int main() {
     //makeScene_Octree_1();
     makeScene_Octree_2();
 
-  default_rendering(window, scene);
-  //octree_rendering(window, scene);
+  //default_rendering(window, scene);
+  octree_rendering(window, scene);
 
   return 0;
 }
