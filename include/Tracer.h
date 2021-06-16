@@ -362,29 +362,28 @@ class OctreeTracer : public Tracer {
               ) {
             i++;
           }
-          if (i>0) i--;
+          i--;
+          if (i<0) {
+            std::cout << "ERROR: highest_ancestor_depth : i = " << i << std::endl;
+            exit(1);
+          }
           return i;
         }
 
-        int round_position(int depth) {
-          depth--;
-          //if (depth < 0 || depth >= max_depth_) 
-          if (depth < -1 || depth >= max_depth_) {
-            std::cout << "ERROR: round_position : invalid depth=" << depth << std::endl;
+        int round_position(int ancestor_depth) {
+          // return ancestor idx
+          if (ancestor_depth < 0 || ancestor_depth > max_depth_) {
+            std::cout << "ERROR: round_position : invalid depth=" << ancestor_depth << std::endl;
             exit(1);
           }
-          if (depth == -1) {
-            depth = 0;
+          for (int i=ancestor_depth+1; i<=depth_; i++) {
+            A_[0*row_size_ + i] = null_value_;
+            A_[1*row_size_ + i] = null_value_;
+            A_[2*row_size_ + i] = null_value_;
+            A_[3*row_size_ + i] = null_value_;
           }
-          for (int i=depth; i<depth_; i++) {
-            A_[0*max_depth_ + i] = null_value_;
-            A_[1*max_depth_ + i] = null_value_;
-            A_[2*max_depth_ + i] = null_value_;
-            A_[3*max_depth_ + i] = null_value_;
-          }
-          depth_ = depth;
-          if (depth_ == 0) return 0;
-          return A_[0*max_depth_ + depth];
+          depth_ = ancestor_depth;
+          return A_[0*row_size_ + ancestor_depth];
         }
 
         int get_idx_at(int depth) {

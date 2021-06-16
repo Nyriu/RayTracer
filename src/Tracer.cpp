@@ -175,19 +175,21 @@ Color OctreeTracer::trace(const Ray& r) {
     
   pos.step_in(3);
   //std::cout << pos << std::endl;;
-  pos.step_in(5);
+  pos.step_in(3);
   //std::cout << pos << std::endl;;
-  //pos.step_in(5);
+  pos.step_in(5);
   //std::cout << pos << std::endl;;
 
   Pos old_pos(pos);
-  bool pos_add_ok = pos.add(1,1);
+  bool pos_add_ok = pos.add(4, 1);
+  bool neg_add_ok = pos.add(2,-1);
   std::cout <<
     "old_pos\n" <<
     old_pos <<
     "pos\n" <<
     pos <<
     "\npos_add_ok = " << pos_add_ok <<
+    "\nneg_add_ok = " << neg_add_ok <<
     std::endl;
 
     int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
@@ -200,11 +202,12 @@ Color OctreeTracer::trace(const Ray& r) {
       ancestor_idx <<
       std::endl;
 
-  //pos.round_position(ancestor_depth);
-  //std::cout <<
-  //  "round pos at ancestor_depth\n" <<
-  //  pos <<
-  //  std::endl;
+  int anc_idx = pos.round_position(ancestor_depth);
+  std::cout <<
+    "round pos at ancestor_depth\n" <<
+    pos <<
+    "\nis right ancestor : " << (anc_idx == ancestor_idx) <<
+    std::endl;
 
   exit(1);
   // END // DEBUG STUFF
