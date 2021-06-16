@@ -263,102 +263,107 @@ class OctreeTracer : public Tracer {
         int max_depth_ = -1;
         int depth_ = 0;
         int null_value_ = 9;
+        int row_size_ = -1;
       public:
-        Pos(int max_depth) : max_depth_(max_depth) {
-          size_t size = max_depth_*4* sizeof(int);
+        Pos(int max_depth) : max_depth_(max_depth) , row_size_(max_depth+1) {
+          size_t size = row_size_*4* sizeof(int);
           A_ = (int *)malloc(size);
 
-          for (int i=0; i<max_depth_; i++) {
-            A_[0*max_depth_ + i] = null_value_;
-            A_[1*max_depth_ + i] = null_value_;
-            A_[2*max_depth_ + i] = null_value_;
-            A_[3*max_depth_ + i] = null_value_;
+          for (int i=0; i<=max_depth_; i++) {
+            A_[0*row_size_ + i] = null_value_;
+            A_[1*row_size_ + i] = null_value_;
+            A_[2*row_size_ + i] = null_value_;
+            A_[3*row_size_ + i] = null_value_;
           }
-
           depth_ = 0; // root is 0, leaf is octree.height
+          // set root info
+          // note that (0,0,0) in the root's column doesn't mean zero-th child
+          // but that we are using the right root
+          // if one of the zeros becomes 1 then something is wrong
+          A_[0*row_size_ + 0] = 0;
+          A_[1*row_size_ + 0] = 0;
+          A_[2*row_size_ + 0] = 0;
+          A_[3*row_size_ + 0] = 0;
         }
 
-        Pos(const Pos& pos) : max_depth_(pos.max_depth_), depth_(pos.depth_) {
-          size_t size = max_depth_*4* sizeof(int);
+        Pos(const Pos& pos) : max_depth_(pos.max_depth_), depth_(pos.depth_), row_size_(pos.row_size_) {
+          size_t size = row_size_*4* sizeof(int);
           A_ = (int *)malloc(size);
-          for (int i=0; i<depth_; i++) {
-            A_[0*max_depth_ + i] = pos.A_[0*max_depth_ + i];
-            A_[1*max_depth_ + i] = pos.A_[1*max_depth_ + i];
-            A_[2*max_depth_ + i] = pos.A_[2*max_depth_ + i];
-            A_[3*max_depth_ + i] = pos.A_[3*max_depth_ + i];
+          for (int i=0; i<=depth_; i++) {
+            A_[0*row_size_ + i] = pos.A_[0*row_size_ + i];
+            A_[1*row_size_ + i] = pos.A_[1*row_size_ + i];
+            A_[2*row_size_ + i] = pos.A_[2*row_size_ + i];
+            A_[3*row_size_ + i] = pos.A_[3*row_size_ + i];
           }
-          for (int i=depth_+1; i<max_depth_; i++) {
-            A_[0*max_depth_ + i] = null_value_;
-            A_[1*max_depth_ + i] = null_value_;
-            A_[2*max_depth_ + i] = null_value_;
-            A_[3*max_depth_ + i] = null_value_;
+          for (int i=depth_+1; i<=max_depth_; i++) {
+            A_[0*row_size_ + i] = null_value_;
+            A_[1*row_size_ + i] = null_value_;
+            A_[2*row_size_ + i] = null_value_;
+            A_[3*row_size_ + i] = null_value_;
           }
         }
 
         bool reached_max_depth() const { return depth_ >= max_depth_; }
 
-        bool add(int positive_mask, int sign) {
+        bool add(int mask, int sign) {
           // returns true if it's all ok
-          // TODO check correctness when depth_ < max_depth_
-          // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
-          // sign must be 1 or -1 for positve and negative
+          std::cout << "\ndepth_ = " << depth_ << std::endl;
           int x=0, y=0, z=0;
-          for (int i=0; i<depth_; i++) {
-            x ^= A_[1*max_depth_+ i]<<(depth_-i-1);
-            y ^= A_[2*max_depth_+ i]<<(depth_-i-1);
-            z ^= A_[3*max_depth_+ i]<<(depth_-i-1);
+          for (int i=0; i<=depth_; i++) {
+            x ^= A_[1*row_size_+ i]<<(depth_-i);
+            y ^= A_[2*row_size_+ i]<<(depth_-i);
+            z ^= A_[3*row_size_+ i]<<(depth_-i);
           }
-          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
-          x += (positive_mask & 4)? sign : 0;
-          y += (positive_mask & 2)? sign : 0;
-          z += (positive_mask & 1)? sign : 0;
-          //std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+          x += (mask & 4)? sign : 0;
+          y += (mask & 2)? sign : 0;
+          z += (mask & 1)? sign : 0;
+          std::cout << "\nmask = " << mask << "\nsign = " << sign << std::endl;
+          std::cout << "\nx = " << x << "\ny = " << y << "\nz = " << z << "\n" << std::endl;
+
           int idx = 0;
-          for (int i=0; i<depth_; i++) {
+          for (int i=0; i<=depth_; i++) {
             idx=0;
-            idx += ((x & (1<<(depth_-i-1)))? 1:0)<<2;
-            idx += ((y & (1<<(depth_-i-1)))? 1:0)<<1;
-            idx += ((z & (1<<(depth_-i-1)))? 1:0)<<0;
+            idx += ((x & (1<<(depth_-i)))? 1:0)<<2;
+            idx += ((y & (1<<(depth_-i)))? 1:0)<<1;
+            idx += ((z & (1<<(depth_-i)))? 1:0)<<0;
             A_[i] = idx;
-            A_[1*max_depth_ + i] = (idx & 4)? 1 : 0; // x
-            A_[2*max_depth_ + i] = (idx & 2)? 1 : 0; // y
-            A_[3*max_depth_ + i] = (idx & 1)? 1 : 0; // z
+            A_[1*row_size_+ i] = (idx & 4)? 1 : 0; // x
+            A_[2*row_size_+ i] = (idx & 2)? 1 : 0; // y
+            A_[3*row_size_+ i] = (idx & 1)? 1 : 0; // z
           }
 
-          // check on root
-          idx=0;
-          idx += ((x & (1<<(depth_)))? 1:0)<<2;
-          idx += ((y & (1<<(depth_)))? 1:0)<<1;
-          idx += ((z & (1<<(depth_)))? 1:0)<<0;
-          if (idx != 0) {
+          if (A_[0] != 0) { // changed root idx
             std::cout << "WARNING : changing root idx : " << idx << std::endl;
             //exit(1);
           }
-          return idx == 0;
+          return A_[0] == 0;
         }
 
         void step_in(int idx) {
-          if (depth_+1 > max_depth_) {
-            std::cout << "ERROR: step_in : already at max depth : " << depth_ << std::endl;
+          if (depth_ == max_depth_) {
+            std::cout <<
+              "ERROR: step_in : depth_ " << depth_ << " already at max_depth_ " << max_depth_ << std::endl;
             exit(1);
           }
           depth_++;
-          A_[0*max_depth_ + depth_-1] = idx;              // idx
-          A_[1*max_depth_ + depth_-1] = (idx & 4)? 1 : 0; // x
-          A_[2*max_depth_ + depth_-1] = (idx & 2)? 1 : 0; // y
-          A_[3*max_depth_ + depth_-1] = (idx & 1)? 1 : 0; // z
+          A_[0*row_size_ + depth_] = idx;              // idx
+          A_[1*row_size_ + depth_] = (idx & 4)? 1 : 0; // x
+          A_[2*row_size_ + depth_] = (idx & 2)? 1 : 0; // y
+          A_[3*row_size_ + depth_] = (idx & 1)? 1 : 0; // z
         }
 
         //int highest_differing_bit(Pos *pos_ptr)
         int highest_ancestor_depth(Pos *pos_ptr) {
           int i=0;
           while (
-              i<depth_ &&
-              A_[0*max_depth_ + i] == pos_ptr->A_[0*max_depth_ + i]
+              i<=depth_ &&
+              A_[0*row_size_ + i] == pos_ptr->A_[0*row_size_ + i]
               ) {
             i++;
           }
-          return i==0 ? 0 : i-1;
+          if (i>0) i--;
+          return i;
         }
 
         int round_position(int depth) {
@@ -383,21 +388,24 @@ class OctreeTracer : public Tracer {
         }
 
         int get_idx_at(int depth) {
-          depth--;
-          if (depth < -1 || depth >= max_depth_) {
+          if (depth < 0 || depth > max_depth_) {
             std::cout << "ERROR: get_idx_at : invalid depth=" << depth << std::endl;
             exit(1);
           }
-          if (depth == -1) return 0; // asking for root
-          return A_[0*max_depth_ + depth];
+          return A_[0*row_size_ + depth];
         }
 
         friend std::ostream& operator<<(std::ostream& out, const Pos& pos) {
+          out << "dpt";
+          for (int i=0; i<=pos.max_depth_; i++) {
+            out << " " << i;
+          }
+          out << "\n";
           std::string line_init[4] = {"idx", " x ", " y ", " z "};
           for (int j=0; j<4; j++) {
             out << line_init[j];
-            for (int i=0; i<pos.max_depth_; i++) {
-              int tmp_val = pos.A_[j*pos.max_depth_ + i];
+            for (int i=0; i<=pos.max_depth_; i++) {
+              int tmp_val = pos.A_[j*pos.row_size_ + i];
               if (tmp_val == pos.null_value_) {
                 out << " N";
                 continue;

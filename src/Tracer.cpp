@@ -166,46 +166,50 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 /// OctreeTracer ---------------------------------------------------------- ///
 Color OctreeTracer::trace(const Ray& r) {
 
-  /// // END // DEBUG STUFF
-  /// Pos pos(oct_scene_->getHeight());
-  /// pos.step_in(3);
-  /// pos.step_in(7);
-  /// pos.step_in(3);
+  // DEBUG STUFF
+  //
+      // TODO TEST // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
+  //
+  Pos pos(oct_scene_->getHeight());
+  std::cout << pos << std::endl;;
+    
+  pos.step_in(3);
+  //std::cout << pos << std::endl;;
+  pos.step_in(5);
+  //std::cout << pos << std::endl;;
+  //pos.step_in(5);
+  //std::cout << pos << std::endl;;
 
-  /// std::cout <<
-  ///   pos <<
-  ///   "reached_max_depth = " <<
-  ///   pos.reached_max_depth() <<
-  ///   std::endl;
+  Pos old_pos(pos);
+  bool pos_add_ok = pos.add(1,1);
+  std::cout <<
+    "old_pos\n" <<
+    old_pos <<
+    "pos\n" <<
+    pos <<
+    "\npos_add_ok = " << pos_add_ok <<
+    std::endl;
 
-  /// Pos old_pos(pos);
-  /// pos.add(4,  1);
-  /// pos.add(2, -1);
+    int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
+    int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
 
-  /// int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
-  /// int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
+    std::cout <<
+      "\nancestor_depth = " <<
+      ancestor_depth <<
+      "\nancestor_idx = " <<
+      ancestor_idx <<
+      std::endl;
 
-  /// std::cout <<
-  ///   "old_pos\n" <<
-  ///   old_pos <<
-  ///   "pos\n" <<
-  ///   pos <<
-  ///   "\nancestor_depth = " <<
-  ///   ancestor_depth <<
-  ///   "\nancestor_idx = " <<
-  ///   ancestor_idx <<
-  ///   std::endl;
+  //pos.round_position(ancestor_depth);
+  //std::cout <<
+  //  "round pos at ancestor_depth\n" <<
+  //  pos <<
+  //  std::endl;
 
-  /// pos.round_position(ancestor_depth);
-  /// std::cout <<
-  ///   "round pos at ancestor_depth\n" <<
-  ///   pos <<
-  ///   std::endl;
+  exit(1);
+  // END // DEBUG STUFF
 
-  /// exit(1);
-  /// // END // DEBUG STUFF
-
-  std::cout << "\n\t" << r.direction() << "=========================" << std::endl;
+  std::cout << "\n================= " << r.direction() << " =================" << std::endl;
 
   Vec3 dir = r.direction();
   Vec3 target_dir(0, 0, 0);
