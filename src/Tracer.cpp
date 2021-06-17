@@ -13,7 +13,7 @@ bool DEBUG_general = true;
 bool DEBUG_octTrace          = !true;
 bool DEBUG_octTrace_return   = !true;
 bool DEBUG_octTrace_ancestor = !true;
-bool DEBUG_oct_sphereTrace   = true;
+bool DEBUG_oct_sphereTrace   = !true;
 
 using namespace utilities;
 // END // DEBUG STUFF
@@ -42,6 +42,11 @@ Color SphereTracer::sphereTrace(const Ray& r) {
 
     // did we intersect the shape?
     if (minDistance <= hit_threshold_ * t) {
+      //std::cout <<
+      //  "\nsphereTrace hit at t = " << t <<
+      //  "\nray orig = " << r.origin() <<
+      //  "\nray dir  = " << r.direction() <<
+      //  std::endl;
       return shade(r.at(t), r.direction(), intersectedShape);  // use lights
       //return intersectedShape->color_;        // use only surf color
       //return Color(float(n_steps)/tmax,0, 0); // color by pixel comput cost
@@ -49,6 +54,11 @@ Color SphereTracer::sphereTrace(const Ray& r) {
     }
     t += minDistance;
   }
+  //std::cout <<
+  //  "sphereTrace miss at t = " << t <<
+  //  "\nray orig = " << r.origin() <<
+  //  "\nray dir  = " << r.direction() <<
+  //  std::endl;
   return Color(0); // bg color // no hit color
   //return Color(1,0,0);
   //return Color(0.2,.2,.7);
@@ -157,7 +167,6 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 
   return false;
 }
-
 // END /// SphereTracer --------------------------------------------------- ///
 
 
@@ -165,7 +174,7 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 
 /// OctreeTracer ---------------------------------------------------------- ///
 Color child_color(int idx) {
-  // utility fuction
+  // utility fuction for debug
   if (idx == 8) { // called sphere trace
     return Color(0.25, 0.25, 0);
   }
@@ -199,107 +208,22 @@ Color child_color(int idx) {
 }
 
 Color OctreeTracer::trace(const Ray& r) {
-
-  /// // DEBUG STUFF
-  /// //
-  ///     // TODO TEST // esempio al momento idx 1 7 0 diventa 1 0 0 con neg=7 e pos=0 // e' giusto???
-  /// //
-  /// Pos pos(oct_scene_->getHeight());
-  /// std::cout << pos << std::endl;;
-  ///   
-  /// pos.step_in(3);
-  /// //std::cout << pos << std::endl;;
-  /// pos.step_in(3);
-  /// //std::cout << pos << std::endl;;
-  /// pos.step_in(5);
-  /// //std::cout << pos << std::endl;;
-
-  /// Pos old_pos(pos);
-  /// bool pos_add_ok = pos.add(4, 1);
-  /// bool neg_add_ok = pos.add(2,-1);
-  /// std::cout <<
-  ///   "old_pos\n" <<
-  ///   old_pos <<
-  ///   "pos\n" <<
-  ///   pos <<
-  ///   "\npos_add_ok = " << pos_add_ok <<
-  ///   "\nneg_add_ok = " << neg_add_ok <<
-  ///   std::endl;
-
-  ///   int ancestor_depth = old_pos.highest_ancestor_depth(&pos);
-  ///   int ancestor_idx   = old_pos.get_idx_at(ancestor_depth);
-
-  ///   std::cout <<
-  ///     "\nancestor_depth = " <<
-  ///     ancestor_depth <<
-  ///     "\nancestor_idx = " <<
-  ///     ancestor_idx <<
-  ///     std::endl;
-
-  /// int anc_idx = pos.round_position(ancestor_depth);
-  /// std::cout <<
-  ///   "round pos at ancestor_depth\n" <<
-  ///   pos <<
-  ///   "\nis right ancestor : " << (anc_idx == ancestor_idx) <<
-  ///   std::endl;
-
-  /// exit(1);
-  /// // END // DEBUG STUFF
-
   if (
-  DEBUG_octTrace          ||
-  DEBUG_octTrace_return   ||
-  DEBUG_octTrace_ancestor ||
-  DEBUG_oct_sphereTrace   )
+      DEBUG_octTrace          ||
+      DEBUG_octTrace_return   ||
+      DEBUG_octTrace_ancestor ||
+      DEBUG_oct_sphereTrace   )
     std::cout << "\n================= " << r.direction() << " =================" << std::endl;
 
-  //Vec3 dir = r.direction();
-  //Vec3 target_dir(0, 0, 0);
-  //Vec3 target_dir(-0.543911, -0.407504, -0.733554);
-  //Vec3 target_dir(-0.241322, -0.471267, -0.848335);
-  //Vec3 target_dir(-0.375367, -0.375759, -0.847293);
-  //Vec3 target_dir(-0.445308, -0.434812, -0.782712);
-  //Vec3 target_dir(-0.00217804, 0.324882, -0.945752);
-
-  //if (
-  //    target_dir.x() - 0.0001 <= dir.x() && dir.x() <= target_dir.x() + 0.0001
-  //    &&
-  //    target_dir.y() - 0.0001 <= dir.y() && dir.y() <= target_dir.y() + 0.0001
-  //    &&
-  //    target_dir.z() - 0.0001 <= dir.z() && dir.z() <= target_dir.z() + 0.0001
-  //   ) {
-  //  std::cout << "Activate" << std::endl;
-  //  DEBUG_octTrace          = true;
-  //  DEBUG_octTrace_return   = true;
-  //  DEBUG_octTrace_ancestor = true;
-  //  DEBUG_oct_sphereTrace   = false;
-  //}
-  float t_min = octTrace(&r);
-  //if (
-  //    target_dir.x() - 0.0001 <= dir.x() && dir.x() <= target_dir.x() + 0.0001
-  //    &&
-  //    target_dir.y() - 0.0001 <= dir.y() && dir.y() <= target_dir.y() + 0.0001
-  //    &&
-  //    target_dir.z() - 0.0001 <= dir.z() && dir.z() <= target_dir.z() + 0.0001
-  //   ) {
-  //  std::cout << "Quit" << std::endl;
-  //  exit(1);
-  //}
-  //exit(1);
-
-  //if (t_min == -1) exit(1);
-
-  //std::cout << t_min << std::endl;
-  //exit(1);
-  //if (t_min < 0) // miss
-  //  return Color(0);
-  //Color c(t_min, 0, 0);
-  //Color c(1 - t_min/23,0,0);
-  Color c = child_color(t_min); // child idx coloring
-  //std::cout << c << std::endl;
+  OctreeTracer::HitRecord ht = octTrace(&r);
+  if (ht.isMiss()) {
+    return Color(0);
+  }
+  Color c = shade(&ht);
   return c;
 }
-float OctreeTracer::octTrace(const Ray *r) {
+
+OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
   RayInfo *ray_info = new RayInfo(r);
   NodeInfo *parent_info = new NodeInfo( // root_info
       Point3(
@@ -321,9 +245,10 @@ float OctreeTracer::octTrace(const Ray *r) {
   Span t = project_cube(parent_info, ray_info);
   float h=t.max;
   int child_idx = select_child(parent_info, ray_info, t.min);
-  //NodeInfo *child_info = get_child_info(parent_info, child_idx); // really necessary?
-  pos.step_in(child_idx);
-  //int depth = 1; // already in pos
+  
+  if (0 <= child_idx && child_idx <= 7) {
+    pos.step_in(child_idx);
+  }
 
   if (DEBUG_octTrace) {
     std::cout <<
@@ -345,7 +270,8 @@ float OctreeTracer::octTrace(const Ray *r) {
         "Exiting via select_child miss! Awesome!" <<
         std::endl;
     }
-    return t.max;
+    //return t.max;
+    return HitRecord(); // miss
   }
 
   const float exit_root_t = t.max;
@@ -359,18 +285,13 @@ float OctreeTracer::octTrace(const Ray *r) {
       "(" << stack[0].first << ", " << stack[0].second << ")" << 
       "\nstack[1] =" << 
       "(" << stack[1].first << ", " << stack[1].second << ")" << 
-      //"\nstack[2] =" << 
-      //"(" << stack[2].first << ", " << stack[2].second << ")" << 
       std::endl;
     //exit(1);
   }
 
 
   while (!pos.is_at_depth(oct_scene_->getHeight()+1)) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
-  //while (!pos.reached_max_depth() && t.min <= t.max) // && t.min < exit_root_t && t.max < exit_root_t) // or voxel hit or exit octree
   {
-    //TODO check OCTREE EXIT after miss or during POP
-
     if (DEBUG_octTrace) {
       std::cout << "\n--- New While Cycle ---" <<
         "\nt = " << t <<
@@ -382,14 +303,13 @@ float OctreeTracer::octTrace(const Ray *r) {
     if (DEBUG_octTrace) {
       std::cout <<
         "\nchild_idx = " << child_idx <<
-        //"\nchild_info = " << child_info <<
         "\ntc = " << tc <<
         std::endl;
       //exit(1);
     }
 
     if (parent_info->doesChildExist(child_idx) && t.min <= t.max)  {
-      if (false) return t.min; // voxel is small enough // TODO use another formula // LOD related stuff // here disabled
+      if (false) { std::cout << "ERROR : LOD not implemented!" << std::endl;  exit(1); } //return t.min; // voxel is small enough // TODO use another formula // LOD related stuff // here disabled
       // INTERSECT
       if (DEBUG_octTrace) std::cout << "\n--- INTERSECT ---" << std::endl;
 
@@ -401,17 +321,34 @@ float OctreeTracer::octTrace(const Ray *r) {
 
 
       NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx); // TODO work to remove child_info
+      HitRecord ht;
       if (!child_info_tmp->isEmpty() && parent_info->depth == oct_scene_->getHeight()-1) {
-        float t_min = sphereTrace(r, child_info_tmp->getShape(), tv);
+        float t_min = -1;
+
+        if (DEBUG_octTrace) {
+          std::cout <<
+            "\nbefore assignement" <<
+            "\nht" << ht <<
+            std::endl;
+        }
+        ht = sphereTrace(r, child_info_tmp->getShape(), tv); 
+        if (DEBUG_octTrace) {
+          std::cout <<
+            "\after assignement" <<
+            "\nht" << ht <<
+            std::endl;
+        }
+
+
+        t_min = ht.t_;
         tv = Span(fmaxf(tv.min, t_min), tv.max);
         if (DEBUG_octTrace) {
           std::cout << "\nsphereTrace result" <<
+            "\nht.isMiss() = " << ht.isMiss() <<
             "\nt_min = " << t_min <<
             "\ntv = " << tv <<
             std::endl;
         }
-        return 8;
-
         //return child_idx; // for debugging // TODO REMOVEME
 
       } else if (DEBUG_octTrace) {
@@ -426,7 +363,13 @@ float OctreeTracer::octTrace(const Ray *r) {
               "Intersection found via sphere tracing in leaf node!" <<
               std::endl;
           }
-          return tv.min; // because sphere trace has not moved tmin past the current leaf
+          if (ht.isMiss()) {
+            std::cout <<
+              "HitRecord shouldn't be a MISS!!" <<
+              std::endl;
+            exit(1); // TODO if here... FIX IT
+          }
+          return ht; // because sphere trace has not moved tmin past the current leaf
         }
 
         if (DEBUG_octTrace) {
@@ -477,7 +420,6 @@ float OctreeTracer::octTrace(const Ray *r) {
           exit(1);
         }
 
-        //child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
         pos.step_in(child_idx);
         t = tv;
 
@@ -489,7 +431,6 @@ float OctreeTracer::octTrace(const Ray *r) {
             "\nparent_info (ptr) = " << parent_info <<
             "\nparent_info = " << *parent_info <<
             "\nchild_idx = " << child_idx <<
-            //"\nchild_info = " << *child_info <<
             "\npos =\n" << pos <<
             std::endl;
         }
@@ -510,11 +451,7 @@ float OctreeTracer::octTrace(const Ray *r) {
     // ADVANCE
     if (DEBUG_octTrace) std::cout << "\n--- ADVANCE ---" << std::endl;
     Pos old_pos(pos);
-    // step along ray // assumed always possible
-    //int step_mask=0;
-    //if (child_info->tx1 == tc.max) step_mask^=4;
-    //if (child_info->ty1 == tc.max) step_mask^=2;
-    //if (child_info->tz1 == tc.max) step_mask^=1;
+    // step along ray // assumed always possible then check
     int positive_mask = 0;
     if (ray_info->direction.x() > 0) positive_mask^=4;
     if (ray_info->direction.y() > 0) positive_mask^=2;
@@ -529,21 +466,18 @@ float OctreeTracer::octTrace(const Ray *r) {
     int     parent_idx = pos.get_idx_at(parent_info->depth);
     int old_parent_idx = old_pos.get_idx_at(parent_info->depth);
 
-    //child_idx ^= step_mask;     // TODO better to do all without step_mask
-    //child_idx = pos.get_idx_at(child_info->depth);
     child_idx = pos.get_idx_at(parent_info->depth+1);
 
     t.min = tc.max; // actual time advancement
 
     bool pop_needed =
-      //!( ((child_idx & step_mask & positive_mask) ^ ( (child_idx^7) & step_mask & negative_mask)) & step_mask);
       parent_idx != old_parent_idx;
     // if at least the parent changes, we need a pop
+    // TODO is this completely safe? What if parent's parent chages but not direct parent? it's possible?
 
     if (DEBUG_octTrace) {
       std::cout <<
         "\nold_pos =\n" << old_pos <<
-        //"\nstep_mask = " << step_mask <<
         "\npositive_mask = " << positive_mask <<
         "\nnegative_mask = " << negative_mask <<
         "\nchild_idx = " << child_idx <<
@@ -564,7 +498,7 @@ float OctreeTracer::octTrace(const Ray *r) {
           "Exiting gently from root via add" <<
           std::endl;
       }
-      return exit_root_t;
+      return HitRecord(exit_root_t);
     }
 
     if (t.min == exit_root_t) {
@@ -582,7 +516,7 @@ float OctreeTracer::octTrace(const Ray *r) {
           std::endl;
         exit(1);
       }
-      return exit_root_t; // TODO here miss
+      return HitRecord(exit_root_t);
     }
 
     if (pop_needed) { // need pop and sure not to exit from root
@@ -608,28 +542,14 @@ float OctreeTracer::octTrace(const Ray *r) {
           std::endl;
       }
 
-      // questa e' una cagata
-      //if (ancestor_depth == 0) {
-      //  if (DEBUG_octTrace_ancestor)
-      //    std::cout <<
-      //      "\npos =\n" << pos <<
-      //      "\nold_pos =\n" << old_pos <<
-      //      "\nancestor_depth = " << ancestor_depth <<
-      //      std::endl;
-      //  if (DEBUG_octTrace_return)
-      //    std::cout <<
-      //      "Exiting from root by ancestor depth" <<
-      //      std::endl;
-      //  //return exit_root_t; // TODO here miss
-      //  return -1; // TODO here miss
-      //}
-
+      // pulire codice sotto
       if (ancestor_depth > oct_scene_->getHeight()) {
         if (DEBUG_octTrace_return)
           std::cout <<
             "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
             std::endl;
-        return exit_root_t; // miss // TODO decide the value
+        //return exit_root_t; // miss
+        return HitRecord(exit_root_t); // miss
       }
 
       if (ancestor_depth == 0) {
@@ -673,101 +593,123 @@ float OctreeTracer::octTrace(const Ray *r) {
       "Exiting last return" <<
       "\nt.min = " << t.min <<
       std::endl;
-  return t.min; // TODO here miss?
+  return HitRecord(t.min); // here miss
 }
 
-float OctreeTracer::sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv) {
-  if (DEBUG_oct_sphereTrace) std::cout << "\n--- sphereTrace ---";
+OctreeTracer::HitRecord OctreeTracer::sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv) {
+  if (DEBUG_oct_sphereTrace) {
+    std::cout <<
+      "\n--- sphereTrace ---" <<
+      "\ntv = " << tv <<
+      std::endl;
+  }
 
   //float t = tv.min;
   float t = 0;
 
+  float minDistance = infinity;
+  float d = infinity;
+  Point3 p(0);
   //while (t < tv.max) 
   while (t < 100) {
-    float minDistance = infinity;
-
-    float d = shape->getDistance(r->at(t));
+    p = r->at(t);
+    d = shape->getDistance(p);
 
     if (DEBUG_oct_sphereTrace) std::cout << "\nd = " << d;
 
     if (d < minDistance) {
+      if (DEBUG_oct_sphereTrace)
+        std::cout << "\nupdate minDistance" << std::endl;
       minDistance = d;
     }
     // did we intersect the shape?
     if (minDistance <= hit_threshold_ * t) {
-
       if (DEBUG_oct_sphereTrace)
         std::cout <<
           "\nminDistance = " << minDistance <<
           "\nt = " << t <<
           "\nhit_threshold_ * t = " << hit_threshold_ * t <<
           "\n--- sphereTrace END ---";
-      return t;
+      //exit(1);
+      //return t;
+      return HitRecord(
+          r,
+          shape,
+          t,
+          p,
+          shape->getNormalAt(p),
+          shape->getAlbedo(p)
+          );
     }
     t += minDistance;
   }
   if (DEBUG_oct_sphereTrace)
     std::cout <<
       "\nt = " << t <<
-      "\nHit max distance " << tv.max <<
+      //"\nHit max distance " << tv.max <<
       "\n--- sphereTrace END ---";
   //return tv.max;
-  return t; // better because t > t.max and this will induce advance or pop
-  //return -1; // TODO encode miss
-  //return (tv.min + tv.max)/2.f;
+  //return t; // better because t > t.max and this will induce advance or pop
+  return HitRecord(t); // this encodes a miss
 }
 
-Color OctreeTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape) {
-  // tmp stupid shading
-  Color outRadiance = shape->getAlbedo(p);
-  return outRadiance;
+Color OctreeTracer::shade(const HitRecord *hit_record) {
+  /// tmp stupid shading
+  //Color outRadiance = hit_record->alb_;
+  //return outRadiance;
 
-  //Vec3 n = shape->getNormalAt(p);
+  Point3 p = hit_record->p_;
+  Vec3 viewDir = hit_record->r_->direction();
 
-  //Color outRadiance = Color(0);
+  Vec3 n = hit_record->n_;
 
-  //Vec3 lightDir, h;
-  //float nDotl, nDotv, nDoth, vDoth;
-  //Color brdf;
+  Color outRadiance = Color(0);
+
+  Vec3 lightDir, h;
+  float nDotl, nDotv, nDoth, vDoth;
+  Color brdf;
 
   //bool shadow;
-  //float dist2 = 0;
+  float dist2 = 0;
 
-  //Color cdiff = shape->getAlbedo(p);
+  Color cdiff = hit_record->alb_;
   //float shininess_factor = shape->getShininess(p);
   //Color cspec = shape->getSpecular(p);
 
-  //for (const auto& light : scene_->getLights()) {
-  //  lightDir = (light->getPosition() - p);
-  //  dist2 = lightDir.length2(); // squared dist
-  //  lightDir.normalize();
-  //  nDotl = n.dot(lightDir);
+  for (const auto& light : scene_->getLights()) {
+    lightDir = (light->getPosition() - p);
+    dist2 = lightDir.length2(); // squared dist
+    lightDir.normalize();
+    nDotl = n.dot(lightDir);
 
-  //  if (nDotl > 0) {
-  //    h = (viewDir+lightDir).normalize();
-  //    vDoth = viewDir.dot(h);
-  //    nDotv = viewDir.dot(h);
-  //    nDoth = n.dot(h);
+    if (nDotl > 0) {
+      h = (viewDir+lightDir).normalize();
+      vDoth = viewDir.dot(h);
+      nDotv = viewDir.dot(h);
+      nDoth = n.dot(h);
 
-  //    Vec3 r = 2 * nDotl * n - lightDir;
-  //    float vDotr = viewDir.dot(r);
+      Vec3 r = 2 * nDotl * n - lightDir;
+      float vDotr = viewDir.dot(r);
 
-  //    brdf =
-  //      cdiff / M_PI +
-  //      cspec * powf(vDotr, shininess_factor);
+      brdf =
+        cdiff / M_PI // + cspec * powf(vDotr, shininess_factor)
+        ;
 
-  //    // With shadows below
-  //    shadow = sphereTraceShadow(Ray(p,lightDir), shape);
-  //    outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
-  //      / (float) (4 * dist2) // with square falloff
-  //      ;
-  //  }
-  //}
-  //if (scene_->hasAmbientLight()) {
-  //  Light* ambientLight = scene_->getAmbientLight();
-  //  outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff;
-  //}
-  //return outRadiance;
+      // With shadows below
+      //shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+      //outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+      //  / (float) (4 * dist2) // with square falloff
+      //  ;
+      outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl
+        / (float) (4 * dist2) // with square falloff
+        ;
+    }
+  }
+  if (scene_->hasAmbientLight()) {
+    Light* ambientLight = scene_->getAmbientLight();
+    outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff;
+  }
+  return outRadiance;
 }
 
 
@@ -804,11 +746,12 @@ OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *p_info, const int 
 
   if (!(t_min <= t_max)) {
     std::cout <<
-      "\nERROR in project_cube : not t_min <= t_max" <<
-      "\nt_min = " << t_min <<
-      "\nt_max = " << t_max <<
-      "\nray_info = " << *ri << 
-      "\nc_info = " << *c_info <<
+      "\nWARNING in project_cube : not t_min <= t_max" <<
+      //"\nERROR in project_cube : not t_min <= t_max" <<
+      //"\nt_min = " << t_min <<
+      //"\nt_max = " << t_max <<
+      //"\nray_info = " << *ri << 
+      //"\nc_info = " << *c_info <<
       std::endl;
     //exit(1);
   }
@@ -821,8 +764,7 @@ OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *p_info, const int 
 int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float t_min) {
   const int no_child = -1;
 
-  //int idx = 0;
-  // t_min vs tx,ty,tz center of parent
+  int idx = 0;
 
   float x_center = (p_info->x0 + p_info->x1)/2;
   float y_center = (p_info->y0 + p_info->y1)/2;
@@ -841,10 +783,6 @@ int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float 
     return no_child;
   }
 
-  //bool x_ok = false;
-  //bool y_ok = false;
-  //bool z_ok = false;
-
   // ASSUMPTIONS // IMPORTANT
   // ray origin in positivie x,y,z quadrant looking towards origin
   // completely *to the right*, *above* and *+out the screen* w.r.t. the root cube
@@ -853,55 +791,22 @@ int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float 
   //
   // Beware because this influence the scene setup!
 
-  //if (std::fabs( ri->origin.x() -         x_center ) >=
-  //   std::fabs( ri->origin.x() - p_info->x0       ) && ri->direction.x() < 0)  {
-  //  idx ^= 4;
-  //  x_ok = tx_center >= t_min;
-  //} else 
-  //  // se origine in mezzo allora piglio per primo quello nella direzione giusta
-  //  if (
-  //      (x_center < ri->origin.x() && ri->origin.x() < p_info->x0)
-  //     )  {
-  //    idx ^= 4;
-  //    x_ok = tx_center >= t_min;
-  //} else {
-  //  x_ok = !(tx_center >= t_min);
-  //}
-
-
-  //if (std::fabs( ri->origin.y() -         y_center ) >=
-  //    std::fabs( ri->origin.y() - p_info->y0       ) )  {
-  //  idx ^= 2;
-  //  y_ok = ty_center >= t_min;
-  //} else {
-  //  y_ok = !(ty_center >= t_min);
-  //}
-  //if (std::fabs( ri->origin.z() -         z_center ) >=
-  //    std::fabs( ri->origin.z() - p_info->z0       ) )  {
-  //  idx ^= 1;
-  //  z_ok = tz_center >= t_min;
-  //} else {
-  //  z_ok = !(tz_center >= t_min);
-  //}
-
-
-  int tmp_idx = 0;
   if (
       tx_center >= t_min
      ) {
-    tmp_idx ^= 4;
+    idx ^= 4;
   }
   if (
       ty_center >= t_min
      ) {
-    tmp_idx ^= 2;
+    idx ^= 2;
   }
   if (
       tz_center >= t_min
      ) {
-    tmp_idx ^= 1;
+    idx ^= 1;
   }
-  //if ( tmp_idx != idx || !(x_ok && y_ok && z_ok) ) { 
+  if (DEBUG_octTrace) {
     std::cout <<
       "\nSelect Child = " <<
       //"\nx_ok = " << x_ok <<
@@ -913,15 +818,10 @@ int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float 
       "\np_info (ptr) = " << p_info <<
       "\np_info = " << *p_info <<
       "\nr_info = " << *ri <<
-      //"\nidx = " << idx <<
-      "\ntmp_idx = " << tmp_idx <<
+      "\nidx = " << idx <<
       std::endl;
-    //exit(1);
-  //}
-
-
-  //return idx;
-  return tmp_idx;
+  }
+  return idx;
 }
 
 OctreeTracer::NodeInfo* OctreeTracer::get_child_info(const NodeInfo *p_info, int child_idx) {

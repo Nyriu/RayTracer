@@ -951,8 +951,12 @@ Scene makeScene_Octree_2() {
   
   
   // small sphere completely inside child 1->7->2
-  d = root_cube_dim/(2*2*2);
-  ImplicitShape* c_001_111_010 = new Sphere(Point3(d,3*d,d), d/1.5);
+  ImplicitShape* c_001_111_010 = new Sphere(
+      Point3(
+        1,
+        3,
+        1),
+      0.5);
   c_001_111_010->setAlbedo(Color(c,c,c));
   scene.addShape(c_001_111_010);
 

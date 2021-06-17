@@ -30,10 +30,16 @@ I'm taking inspiration from:
 ## Examples
 
 ## Debugging "fun"
-
 ![](./imgs/octree_stuff/time_1623085255.png)
 ![](./imgs/octree_stuff/time_1623230427.png)
-![](./imgs/octree_stuff/time_1623913905.png)
+![](./imgs/octree_stuff/time_1623913907.png)
 ![](./imgs/octree_stuff/time_1623914189.png)
 ![](./imgs/octree_stuff/time_1623916258.png)
 ![](./imgs/octree_stuff/time_1623916940.png)
+![](./imgs/octree_stuff/time_1623929507.png)
+![](./imgs/octree_stuff/time_1623929869.png)
+![](./imgs/octree_stuff/time_1623937119.png)
+![](./imgs/octree_stuff/time_1623938505.png)
+
+
+

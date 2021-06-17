@@ -16,6 +16,63 @@ class Tracer {
     int   max_distance_  = 100; // max n of steps along a ray // draw distance?
     float hit_threshold_ = 10e-6; // min distance to signal a ray-sruface hit
     //float anti_selfhit_shadow_threshold_ = 10e-15;
+
+    class HitRecord {
+      //private: // TODO + getters and setters
+      public:
+        const Ray *r_ = nullptr;
+        const ImplicitShape *shape_ = nullptr;
+              float t_ = -1;         // hit time
+              Point3 p_ = Point3(0); // hit point
+              Vec3 n_ = Vec3(0);     // normal at p_
+              Color alb_ = Color(0); // albedo at p_
+        //const float d_ = -1; // distance from surface
+      public:
+        HitRecord() : // Empty HitRecord // that's a miss
+          r_(nullptr), shape_(nullptr), t_(-1), p_(Point3()), n_(Vec3()), alb_(Color(.35)) {}
+        HitRecord(const float t_max) : // that's a miss
+          r_(nullptr), shape_(nullptr), t_(t_max), p_(Point3()), n_(Vec3()), alb_(Color(.35)) {}
+
+        HitRecord(
+            const Ray *r,
+            const ImplicitShape *shape,
+            const float t,
+            const Point3 p,
+            const Vec3 n,
+            const Color alb//, const float d
+            ) : r_(r), shape_(shape), t_(t), p_(p), n_(n), alb_(alb) {}
+
+        bool isMiss() const {
+          return
+            r_     == nullptr ||
+            shape_ == nullptr ||
+            t_ < 0             //|| other info?
+            ;
+        }
+
+        HitRecord& operator=(Tracer::HitRecord ht) {
+          r_     = ht.r_;
+          shape_ = ht.shape_;
+          t_     = ht.t_;
+          p_     = ht.p_;
+          n_     = ht.n_;
+          alb_   = ht.alb_;
+          return *this;
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const HitRecord& ht) {
+          return out << "{"
+            "\n\tr = "     << ht.r_       <<
+            "\n\tshape = " << ht.shape_   <<
+            "\n\tt = "     << ht.t_       <<
+            "\n\tp = "     << ht.p_       <<
+            "\n\tn = "     << ht.n_       <<
+            "\n\talb = "   << ht.alb_     <<
+            "\n}";
+        }
+
+    };
+
   public:
     //virtual bool hasScene() const = 0;
     virtual bool hasScene() const {
@@ -33,6 +90,7 @@ class Tracer {
       std::cout << "ERROR: Tracer.trace(ray) not implemented!" << std::endl;
       exit(1);
     }
+
 };
 
 
@@ -59,6 +117,7 @@ class SphereTracer : public Tracer {
 
 class OctreeTracer : public Tracer {
   private:
+    const Scene* scene_ = nullptr;
     const Octree* oct_scene_ = nullptr;
     struct Span {
       public:
@@ -349,7 +408,7 @@ class OctreeTracer : public Tracer {
         void step_in(int idx) {
           if (idx<0 || idx > 7) {
             std::cout << "ERROR: step_in : idx = " << idx << std::endl;
-            //exit(1);
+            exit(1);
             return;
           }
 
@@ -430,6 +489,7 @@ class OctreeTracer : public Tracer {
   public:
     bool hasScene() const { return oct_scene_ != nullptr; }
     virtual Tracer setScene(Scene* scene) {
+      scene_ = scene;
       oct_scene_ = new Octree(scene);
       return *this;
     }
@@ -437,14 +497,12 @@ class OctreeTracer : public Tracer {
     Color trace(const Ray& r); // better with pointer?
 
   private:
-    Color octTrace(const Ray& r); // better with pointer?
-    float octTrace(const Ray *r);
-    float sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv);
+    HitRecord octTrace(const Ray *r);
+    HitRecord sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv);
 
-    Color shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape);
+    Color shade(const HitRecord *hit_record);
     //bool sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow);
 
-    //inline Span project_cube(const Point3& p0, const Point3& p1, const Ray *r);
     Span project_cube(const Point3& p0, const Point3& p1, const Ray *r);
     Span project_cube(const NodeInfo *p_info, const int child_idx, const RayInfo *ri);
 
@@ -453,10 +511,9 @@ class OctreeTracer : public Tracer {
     int select_child(const NodeInfo  *p_info, const RayInfo *ri, float t_min);
     NodeInfo* get_child_info(const NodeInfo *p_info, int child_idx);
     int gen_step_mask(const NodeInfo *ni, const RayInfo *ri, float t_max);
-
+};
 // END /// OctreeTracer --------------------------------------------------- ///
 
-};
 
 
 #endif
