@@ -10,10 +10,10 @@ bool DEBUG_sphereTraceShadow = false;
 bool DEBUG_general = true;
 
 // OctreeTracer
-bool DEBUG_octTrace          = true;
-bool DEBUG_octTrace_return   = true;
-bool DEBUG_octTrace_ancestor = true;
-bool DEBUG_oct_sphereTrace   = false;
+bool DEBUG_octTrace          = !true;
+bool DEBUG_octTrace_return   = !true;
+bool DEBUG_octTrace_ancestor = !true;
+bool DEBUG_oct_sphereTrace   = true;
 
 using namespace utilities;
 // END // DEBUG STUFF
@@ -164,6 +164,40 @@ bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToS
 
 
 /// OctreeTracer ---------------------------------------------------------- ///
+Color child_color(int idx) {
+  // utility fuction
+  if (idx == 8) { // called sphere trace
+    return Color(0.25, 0.25, 0);
+  }
+  if (idx < 0) { // miss
+    return Color(0.25); // grey
+  }
+  if (
+      idx != 0 &&
+      idx != 1 &&
+      idx != 2 &&
+      idx != 3 &&
+      idx != 4 &&
+      idx != 5 &&
+      idx != 6 &&
+      idx != 7
+      ) {
+    return Color(0);
+  }
+
+  Color c(
+      (idx & 4) ? 1 : 0,
+      (idx & 2) ? 1 : 0,
+      (idx & 1) ? 1 : 0
+      );
+  //std::cout <<
+  //  "idx = " <<
+  //  "c = " << c <<
+  //  std::endl;
+  return c;
+  //return Color(idx/8.f);
+}
+
 Color OctreeTracer::trace(const Ray& r) {
 
   /// // DEBUG STUFF
@@ -260,25 +294,11 @@ Color OctreeTracer::trace(const Ray& r) {
   //if (t_min < 0) // miss
   //  return Color(0);
   //Color c(t_min, 0, 0);
-  Color c(1 - t_min/23,0,0);
+  //Color c(1 - t_min/23,0,0);
+  Color c = child_color(t_min); // child idx coloring
   //std::cout << c << std::endl;
   return c;
 }
-
-Color child_color(int idx) {
-  Color c(
-      (idx & 4) ? 1 : 0,
-      (idx & 2) ? 1 : 0,
-      (idx & 1) ? 1 : 0
-      );
-  //std::cout <<
-  //  "idx = " <<
-  //  "c = " << c <<
-  //  std::endl;
-  return c;
-  //return Color(idx/8.f);
-}
-
 float OctreeTracer::octTrace(const Ray *r) {
   RayInfo *ray_info = new RayInfo(r);
   NodeInfo *parent_info = new NodeInfo( // root_info
@@ -319,7 +339,14 @@ float OctreeTracer::octTrace(const Ray *r) {
       std::endl;
     //exit(1);
   }
-
+  if (child_idx < 0 || child_idx > 7) { // select_child already dettected a miss
+    if (DEBUG_octTrace || DEBUG_octTrace_return) {
+      std::cout <<
+        "Exiting via select_child miss! Awesome!" <<
+        std::endl;
+    }
+    return t.max;
+  }
 
   const float exit_root_t = t.max;
 
@@ -383,6 +410,10 @@ float OctreeTracer::octTrace(const Ray *r) {
             "\ntv = " << tv <<
             std::endl;
         }
+        return 8;
+
+        //return child_idx; // for debugging // TODO REMOVEME
+
       } else if (DEBUG_octTrace) {
         std::cout << "\nNon leaf empty node" <<
           std::endl;
@@ -438,6 +469,14 @@ float OctreeTracer::octTrace(const Ray *r) {
         h = tc.max;
         parent_info = get_child_info(parent_info, child_idx);
         child_idx = select_child(parent_info, ray_info, tv.min);
+
+        //return child_idx; // just for debugging // TODO REMOVEME
+
+        if (child_idx < 0 || child_idx > 7) {
+          std::cout << "select_child miss inside while!" << std::endl;
+          exit(1);
+        }
+
         //child_info = get_child_info(parent_info, child_idx); // really necessary? // TODO work to remove child_info
         pos.step_in(child_idx);
         t = tv;
@@ -524,8 +563,8 @@ float OctreeTracer::octTrace(const Ray *r) {
         std::cout <<
           "Exiting gently from root via add" <<
           std::endl;
-        return exit_root_t;
       }
+      return exit_root_t;
     }
 
     if (t.min == exit_root_t) {
@@ -640,9 +679,11 @@ float OctreeTracer::octTrace(const Ray *r) {
 float OctreeTracer::sphereTrace(const Ray *r, const ImplicitShape *shape, const Span& tv) {
   if (DEBUG_oct_sphereTrace) std::cout << "\n--- sphereTrace ---";
 
-  float t = tv.min;
+  //float t = tv.min;
+  float t = 0;
 
-  while (t < tv.max) {
+  //while (t < tv.max) 
+  while (t < 100) {
     float minDistance = infinity;
 
     float d = shape->getDistance(r->at(t));
@@ -778,8 +819,9 @@ OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *p_info, const int 
 
 
 int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float t_min) {
-  //work here
-  int idx = 0;
+  const int no_child = -1;
+
+  //int idx = 0;
   // t_min vs tx,ty,tz center of parent
 
   float x_center = (p_info->x0 + p_info->x1)/2;
@@ -787,40 +829,99 @@ int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float 
   float z_center = (p_info->z0 + p_info->z1)/2;
 
   float tx_center = x_center*ri->tx_coef + ri->tx_bias ;
-  //tx_center = (tx_center < 0)? 0 : tx_center;
   float ty_center = y_center*ri->ty_coef + ri->ty_bias ;
-  //ty_center = (ty_center < 0)? 0 : ty_center;
   float tz_center = z_center*ri->tz_coef + ri->tz_bias ;
-  //tz_center = (tz_center < 0)? 0 : tz_center;
 
-  //std::cout <<
-  //  "\nt_min = " << t_min <<
-  //  "\nbox_center = " << Point3(x_center, y_center, z_center) <<
-  //  "\nt_box_center = " << Point3(tx_center, ty_center, tz_center) <<
-  //  std::endl;
-
-  // TODO make adaptable to camera position and orientation
-  // for now camera all positive (>0,>0,>0)
   if (
-      tx_center < 0 || // given hypothesis camera on the right looking right
-      tx_center >= t_min // camera looks through plane
+      p_info->tx0 < 0 ||
+      p_info->ty0 < 0 ||
+      p_info->tz0 < 0 
+     )
+  {
+    return no_child;
+  }
+
+  //bool x_ok = false;
+  //bool y_ok = false;
+  //bool z_ok = false;
+
+  // ASSUMPTIONS // IMPORTANT
+  // ray origin in positivie x,y,z quadrant looking towards origin
+  // completely *to the right*, *above* and *+out the screen* w.r.t. the root cube
+  // so the cam origin can never be between the center and one defining plane of a voxel
+  // in other words: the 3 cam org defining planes will *always* be greater than any voxel's plane
+  //
+  // Beware because this influence the scene setup!
+
+  //if (std::fabs( ri->origin.x() -         x_center ) >=
+  //   std::fabs( ri->origin.x() - p_info->x0       ) && ri->direction.x() < 0)  {
+  //  idx ^= 4;
+  //  x_ok = tx_center >= t_min;
+  //} else 
+  //  // se origine in mezzo allora piglio per primo quello nella direzione giusta
+  //  if (
+  //      (x_center < ri->origin.x() && ri->origin.x() < p_info->x0)
+  //     )  {
+  //    idx ^= 4;
+  //    x_ok = tx_center >= t_min;
+  //} else {
+  //  x_ok = !(tx_center >= t_min);
+  //}
+
+
+  //if (std::fabs( ri->origin.y() -         y_center ) >=
+  //    std::fabs( ri->origin.y() - p_info->y0       ) )  {
+  //  idx ^= 2;
+  //  y_ok = ty_center >= t_min;
+  //} else {
+  //  y_ok = !(ty_center >= t_min);
+  //}
+  //if (std::fabs( ri->origin.z() -         z_center ) >=
+  //    std::fabs( ri->origin.z() - p_info->z0       ) )  {
+  //  idx ^= 1;
+  //  z_ok = tz_center >= t_min;
+  //} else {
+  //  z_ok = !(tz_center >= t_min);
+  //}
+
+
+  int tmp_idx = 0;
+  if (
+      tx_center >= t_min
      ) {
-    idx ^= 4;
+    tmp_idx ^= 4;
   }
   if (
-      ty_center < 0 || // given hypothesis camera above looking up
       ty_center >= t_min
-      ) {
-    idx ^= 2;
+     ) {
+    tmp_idx ^= 2;
   }
   if (
-      tz_center < 0 || // given hypothesis camera "in front of the screen" looking "through screen"
       tz_center >= t_min
-      ) {
-    idx ^= 1;
+     ) {
+    tmp_idx ^= 1;
   }
+  //if ( tmp_idx != idx || !(x_ok && y_ok && z_ok) ) { 
+    std::cout <<
+      "\nSelect Child = " <<
+      //"\nx_ok = " << x_ok <<
+      //"\ny_ok = " << y_ok <<
+      //"\nz_ok = " << z_ok <<
+      "\nt_min = " << t_min <<
+      "\nbox_center = " << Point3(x_center, y_center, z_center) <<
+      "\nt_box_center = " << Point3(tx_center, ty_center, tz_center) <<
+      "\np_info (ptr) = " << p_info <<
+      "\np_info = " << *p_info <<
+      "\nr_info = " << *ri <<
+      //"\nidx = " << idx <<
+      "\ntmp_idx = " << tmp_idx <<
+      std::endl;
+    //exit(1);
+  //}
 
-  return idx;
+
+  //return idx;
+  return tmp_idx;
 }
 
 OctreeTracer::NodeInfo* OctreeTracer::get_child_info(const NodeInfo *p_info, int child_idx) {

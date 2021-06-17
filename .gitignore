@@ -11,6 +11,7 @@ src_old
 include_old
 *_old*
 *.log*
+./*.png
 
 notes.txt
 TODO.txt

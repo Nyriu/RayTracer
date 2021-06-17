@@ -962,9 +962,12 @@ Scene makeScene_Octree_2() {
   float cam_distance = root_cube_dim + 1;
   //Point3 camera_origin(.2,.2,7);
   //Point3 camera_origin(0.00001,0.00001,7); // For now only this is stable and useful
-  Point3 camera_origin(1,1,7);
+  //Point3 camera_origin(1,1,7);
+
   float fov = 45;
   Camera cam;
+  d = root_cube_dim/2.f+1;
+  Point3 camera_origin(d,d,2*d);
   cam.translate(camera_origin.as_Vec3());
   cam.lookAt(0,0,0);
   scene.addCamera(cam);

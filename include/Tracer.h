@@ -174,6 +174,11 @@ class OctreeTracer : public Tracer {
           ty1 = y1*ri->ty_coef + ri->ty_bias;
           tz1 = z1*ri->tz_coef + ri->tz_bias;
 
+          // If direction almost parallel, do not use
+          if (tx0 > 100) tx0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
+          if (ty0 > 100) ty0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
+          if (tz0 > 100) tz0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
+
           if (tx1 < 0) tx1 = utilities::infinity; // TODO here a fixed tmax?
           if (ty1 < 0) ty1 = utilities::infinity; // TODO here a fixed tmax?
           if (tz1 < 0) tz1 = utilities::infinity; // TODO here a fixed tmax?
@@ -342,6 +347,12 @@ class OctreeTracer : public Tracer {
         }
 
         void step_in(int idx) {
+          if (idx<0 || idx > 7) {
+            std::cout << "ERROR: step_in : idx = " << idx << std::endl;
+            //exit(1);
+            return;
+          }
+
           if (depth_ == max_depth_) {
             std::cout <<
               "ERROR: step_in : depth_ " << depth_ << " already at max_depth_ " << max_depth_ << std::endl;

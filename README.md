@@ -29,40 +29,11 @@ I'm taking inspiration from:
 
 ## Examples
 
-### Without Blending and Anti-Aliasing
-![](./imgs/img_00.png)
-![](./imgs/img_01.png)
-![](./imgs/2020_03_22_spheres.png)
+## Debugging "fun"
 
-![](./imgs/img_02.png)
-![](./imgs/2020_03_22_toruses.png)
-
-Simple CSG
-
-![](./imgs/img_03.png)
-
-CSG Shadow Debug Process
-
-![](./imgs/funny_shadow_debug_process.gif)
-
-
-### New Images
-
-![](./imgs/time_1617089573.png)
-![](./imgs/time_1617091499.png)
-![](./imgs/time_1617092196.png)
-![](./imgs/time_1617092777.png)
-![](./imgs/time_1617093337.png)
-![](./imgs/time_1617093299.png)
-
-### Transformations
-![](./imgs/rotation.gif)
-![](./imgs/rotation_2.gif)
-![](./imgs/rotation_3.gif)
-
-### Smooth Union and Mixing
-![](./imgs/smooth_union.gif);
-![](./imgs/cube_sphere_mix.gif);
-
-### Better Specular
-![](./imgs/specular.gif);
+![](./imgs/octree_stuff/time_1623085255.png)
+![](./imgs/octree_stuff/time_1623230427.png)
+![](./imgs/octree_stuff/time_1623913905.png)
+![](./imgs/octree_stuff/time_1623914189.png)
+![](./imgs/octree_stuff/time_1623916258.png)
+![](./imgs/octree_stuff/time_1623916940.png)
