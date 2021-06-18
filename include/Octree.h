@@ -16,7 +16,7 @@ class Node;
 class Octree {
   private:
     int root_dim_ = 1<<3;
-    int height_ = 2;
+    int height_ = 2; // TODO atm it's more max_dept_ than an actual height_ // root = 0 child=1 ... leaf=height
     Node *root_;
 
   public:

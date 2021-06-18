@@ -964,7 +964,6 @@ Scene makeScene_Octree_2() {
 }
 
 Scene makeScene_Octree_3() {
-  // TODO
   Scene scene;
   // Lights
   scene.addLight(new PointLight(Point3(5, 4,0), Color(1), 400));
@@ -1028,6 +1027,41 @@ Scene makeScene_Octree_3() {
 
   scene.set_suggested_ticks(1);
 
+
+  // Camera
+  float fov = 45;
+  float cam_distance = root_cube_dim + 1;
+
+  Point3 camera_origin(5,5,10);
+  Camera cam;
+  cam.translate(camera_origin.as_Vec3());
+  cam.lookAt(0,0,0);
+  scene.addCamera(cam);
+
+  return scene;
+}
+
+Scene makeScene_Octree_4() {
+  Scene scene;
+  // Lights
+  scene.addLight(new PointLight(Point3(5, 4,0), Color(1), 400));
+  scene.addAmbientLight(new AmbientLight(Color(1), 1.0));
+
+  /// Colors associated with children names
+  float root_cube_dim = 8.f;
+  float d = root_cube_dim/2.f - root_cube_dim/4.f; // sphere child-centered centered 
+  float sp_rad = root_cube_dim/4.f - root_cube_dim/50.f; // half of half of child dim (minus a bit to not touch child edges)
+  float c = 0.8f;  // color
+  float n = 0.09f; // no color
+
+  // Shapes
+  scene.addShape(new Torus(Point3(0,3,0),1,0.2));
+  scene.addShape(new Torus(Point3(0,1.5,0),1.5,0.4));
+  scene.addShape(new Torus(2,0.65));
+
+  //scene.addShape(new Sphere(Point3(0,-102,0),100)); // Terrain
+
+  scene.set_suggested_ticks(1);
 
   // Camera
   float fov = 45;

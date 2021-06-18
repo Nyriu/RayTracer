@@ -7,8 +7,10 @@
 #include "Renderer.h"
 #include "Octree.h"
 #include "scenes.h"
-
 #include "geometry.h"
+
+#include <chrono>
+#include <thread>
 
 void default_rendering(Window& window, Scene& scene) {
   Renderer renderer(&window);
@@ -75,9 +77,13 @@ int main() {
     //makeScene_Octree();
     //makeScene_Octree_1();
     //makeScene_Octree_2();
-    makeScene_Octree_3();
+    //makeScene_Octree_3();
+    makeScene_Octree_4();
+
 
   default_rendering(window, scene);
+  using namespace std::this_thread; // sleep_for, sleep_until
+  sleep_for(std::chrono::nanoseconds(10));
   octree_rendering(window, scene);
 
   return 0;

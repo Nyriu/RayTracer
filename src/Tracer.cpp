@@ -642,8 +642,8 @@ OctreeTracer::HitRecord OctreeTracer::sphereTrace(const Ray *r, const ImplicitSh
   float minDistance = infinity;
   float d = infinity;
   Point3 p(0);
-  while (t < tv.max)
-  //while (t < 100) 
+  while (t <= tv.max)
+  //while (t < tv.max)
   {
     p = r->at(t);
     d = shape->getDistance(p);
