@@ -20,6 +20,7 @@ Scene makeScene_Operations();
 Scene makeScene_Octree();
 Scene makeScene_Octree_1();
 Scene makeScene_Octree_2();
+Scene makeScene_Octree_3();
 
 
 #endif

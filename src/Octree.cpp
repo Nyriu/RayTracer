@@ -34,7 +34,7 @@ void Octree::fromScene(Scene *scene) {
   }
   ImplicitShape *shape = shapes.back();
 
-  for (int h=0; h<height_; h++) {
+  for (int h=0; h<=height_; h++) {
     int future_n_to_pop = 0;
     for (int k=0; k<n_to_pop; k++) {
       if (node_stack.empty() || x0_stack.empty()) {
@@ -93,6 +93,7 @@ void Octree::DEBUG_print() {
     "\n\nroot " <<
     std::endl;
     dfs_print(root_, 0);
+    //exit(1);
 }
 
 
@@ -100,7 +101,7 @@ void Octree::dfs_print(Node *node, int depth) {
   std::string space;
   for (int i=0; i<depth; i++) space.append("  ");
 
-  if (depth == height_-1) {
+  if (depth == height_) {
     std::cout << "leaf";
     if (node->isEmpty()) {
       std::cout <<

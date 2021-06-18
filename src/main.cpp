@@ -74,9 +74,10 @@ int main() {
     //makeScene_Operations();
     //makeScene_Octree();
     //makeScene_Octree_1();
-    makeScene_Octree_2();
+    //makeScene_Octree_2();
+    makeScene_Octree_3();
 
-  //default_rendering(window, scene);
+  default_rendering(window, scene);
   octree_rendering(window, scene);
 
   return 0;

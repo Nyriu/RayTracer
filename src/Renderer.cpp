@@ -74,10 +74,6 @@ void Renderer::generateFrame() {
       Ray r = cam_->generate_ray(u,v);
 
 
-      //std::cout <<
-      //  "\n--------------------------------------------" << std::endl;
-      Color c = tracer_->trace(r);
-
       // DEBUG STUFF
       int target_i = -1; int target_j = -1; // on target
       //target_i = 190; target_j = 229;
@@ -87,6 +83,13 @@ void Renderer::generateFrame() {
       //target_i = 170; target_j = 182;
       //target_i = 168; target_j = 239-61;
       //target_i = 158; target_j = 239-71; // TODO
+      if (i == target_i && j == target_j)
+        std::cout <<
+          "\n--------------------------------------------" << std::endl;
+      // END // DEBUG STUFF
+      Color c = tracer_->trace(r);
+
+      // DEBUG STUFF
       if (-1 != target_i && j != -1) {
         std::cout <<
           "\npixel coords = [" << i << ", " << j << "]" <<

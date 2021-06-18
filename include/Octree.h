@@ -16,7 +16,7 @@ class Node;
 class Octree {
   private:
     int root_dim_ = 1<<3;
-    int height_ = 3;
+    int height_ = 2;
     Node *root_;
 
   public:
