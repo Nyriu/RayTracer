@@ -6,7 +6,7 @@
 #include <iostream>
 //#include <chrono>
 
-bool DEBUG_shapes_len = true;
+bool DEBUG_shapes_len = !true;
 
 using namespace utilities;
 // END // DEBUG STUFF
@@ -25,13 +25,13 @@ void Scene::addAmbientLight(AmbientLight* light) {
 }
 
 void Scene::optimizeScene() {
-  DEBUG_message(DEBUG_shapes_len, 
-      "shapes_.size() = " + std::to_string(shapes_.size()));
+  //DEBUG_message(DEBUG_shapes_len, 
+  //    "shapes_.size() = " + std::to_string(shapes_.size()));
 
   // collapse all shapes into one big union
   if (shapes_.size() < 2) return;
 
-  DEBUG_message(DEBUG_shapes_len, "optimizing scene...");
+  //DEBUG_message(DEBUG_shapes_len, "optimizing scene...");
 
   ImplicitShape* big_one = shapes_[0];
   shapes_.erase(shapes_.begin());
@@ -41,8 +41,8 @@ void Scene::optimizeScene() {
   shapes_ = Shapes();
   shapes_.push_back(big_one);
 
-  DEBUG_message(DEBUG_shapes_len, 
-      "shapes_.size() = " + std::to_string(shapes_.size()) + "\n");
+  //DEBUG_message(DEBUG_shapes_len, 
+  //    "shapes_.size() = " + std::to_string(shapes_.size()) + "\n");
 }
 
 

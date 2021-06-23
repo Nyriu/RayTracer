@@ -399,7 +399,7 @@ class OctreeTracer : public Tracer {
           }
 
           if (A_[0] != 0) { // changed root idx
-            std::cout << "WARNING : changing root idx : " << idx << std::endl;
+            //std::cout << "WARNING : changing root idx : " << idx << std::endl;
             //exit(1);
           }
           return A_[0] == 0;

@@ -118,24 +118,21 @@ void Renderer::mainLoop() {
       if (current_tick_ < max_num_ticks_) {
         //qui contare tempo per frame
         //https://stackoverflow.com/questions/22387586/measuring-execution-time-of-a-function-in-c
+        scene_->update();
 #ifdef DEBUG_FRAME_INFO
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         std::cout <<
           "generating frame num " <<
           current_tick_ << "\n" << std::endl;
 #endif
-
-        scene_->update();
         generateFrame();
-        current_tick_++;
-
 #ifdef DEBUG_FRAME_INFO
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
         //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 #endif
-
+        current_tick_++;
       }
       win_->drawImage(img_);
     }
@@ -144,9 +141,20 @@ void Renderer::mainLoop() {
     //std::string prefix = "./wip_imgs/seq_";
     std::string suffix = ".ppm";
     while (current_tick_ < max_num_ticks_) {
-      std::cout << "generating frame num " << current_tick_ << "\n" << std::endl;
       scene_->update();
+#ifdef DEBUG_FRAME_INFO
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+        std::cout <<
+          "generating frame num " <<
+          current_tick_ << "\n" << std::endl;
+#endif
       generateFrame();
+#ifdef DEBUG_FRAME_INFO
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+        std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+#endif
       img_.writePPM(prefix + std::to_string(std::time(0)) + suffix);
       current_tick_++;
     }

@@ -41,17 +41,17 @@ void octree_rendering(Window& window, Scene& scene) {
 
 int main() {
   // Image
+  const int height = 1080;
+  const int width = height*16/9;
+
   //const int height = 720;
   //const int width = height*16/9;
 
   //const int height = 480;
   //const int width = height*4/3;
 
-  const int height = 240;
-  const int width = height*4/3;
-
-  //const int height = 8;
-  //const int width  = 8;
+  //const int height = 240;
+  //const int width = height*4/3;
 
   std::cout << "Image " << width << "x" << height << std::endl;
 
@@ -75,15 +75,18 @@ int main() {
     //makeScene_Mix();
     //makeScene_Operations();
     //makeScene_Octree();
-    //makeScene_Octree_1();
+    makeScene_Octree_1();
     //makeScene_Octree_2();
     //makeScene_Octree_3();
-    makeScene_Octree_4();
+    //makeScene_Octree_4();
 
 
+  std::cout << "\nRendering without octree (default)" << std::endl;
   default_rendering(window, scene);
   using namespace std::this_thread; // sleep_for, sleep_until
-  sleep_for(std::chrono::nanoseconds(10));
+  sleep_for(std::chrono::nanoseconds(100));
+
+  std::cout << "\n\nRendering with octree" << std::endl;
   octree_rendering(window, scene);
 
   return 0;

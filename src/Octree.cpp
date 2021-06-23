@@ -83,7 +83,7 @@ void Octree::fromScene(Scene *scene) {
     n_to_pop = future_n_to_pop;
     current_dim /= 2;
   }
-  DEBUG_print();
+  //DEBUG_print();
 }
 
 void Octree::DEBUG_print() {

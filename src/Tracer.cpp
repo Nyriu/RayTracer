@@ -7,7 +7,7 @@
 #include <string>
 #include <system_error>
 bool DEBUG_sphereTraceShadow = false;
-bool DEBUG_general = true;
+bool DEBUG_general = false;
 
 // OctreeTracer
 bool DEBUG_octTrace          = !true;
@@ -64,8 +64,12 @@ Color SphereTracer::sphereTrace(const Ray& r) {
   //return Color(0.2,.2,.7);
 }
 
-
+// Same as the OctreeTracer's one
 Color SphereTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape) {
+  /// tmp stupid shading
+  //Color outRadiance = hit_record->alb_;
+  //return outRadiance;
+
   Vec3 n = shape->getNormalAt(p);
 
   Color outRadiance = Color(0);
@@ -74,12 +78,12 @@ Color SphereTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitSh
   float nDotl, nDotv, nDoth, vDoth;
   Color brdf;
 
-  bool shadow;
+  //bool shadow;
   float dist2 = 0;
 
   Color cdiff = shape->getAlbedo(p);
-  float shininess_factor = shape->getShininess(p);
-  Color cspec = shape->getSpecular(p);
+  //float shininess_factor = shape->getShininess(p);
+  //Color cspec = shape->getSpecular(p);
 
   for (const auto& light : scene_->getLights()) {
     lightDir = (light->getPosition() - p);
@@ -97,12 +101,15 @@ Color SphereTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitSh
       float vDotr = viewDir.dot(r);
 
       brdf =
-        cdiff / M_PI +
-        cspec * powf(vDotr, shininess_factor);
+        cdiff / M_PI // + cspec * powf(vDotr, shininess_factor)
+        ;
 
       // With shadows below
-      shadow = sphereTraceShadow(Ray(p,lightDir), shape);
-      outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+      //shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+      //outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+      //  / (float) (4 * dist2) // with square falloff
+      //  ;
+      outRadiance += brdf * light->getColor() * light->getIntensity() * nDotl
         / (float) (4 * dist2) // with square falloff
         ;
     }
@@ -113,6 +120,56 @@ Color SphereTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitSh
   }
   return outRadiance;
 }
+
+
+//Color SphereTracer::shade(const Point3& p, const Vec3& viewDir, const ImplicitShape *shape) {
+//  Vec3 n = shape->getNormalAt(p);
+//
+//  Color outRadiance = Color(0);
+//
+//  Vec3 lightDir, h;
+//  float nDotl, nDotv, nDoth, vDoth;
+//  Color brdf;
+//
+//  bool shadow;
+//  float dist2 = 0;
+//
+//  Color cdiff = shape->getAlbedo(p);
+//  float shininess_factor = shape->getShininess(p);
+//  Color cspec = shape->getSpecular(p);
+//
+//  for (const auto& light : scene_->getLights()) {
+//    lightDir = (light->getPosition() - p);
+//    dist2 = lightDir.length2(); // squared dist
+//    lightDir.normalize();
+//    nDotl = n.dot(lightDir);
+//
+//    if (nDotl > 0) {
+//      h = (viewDir+lightDir).normalize();
+//      vDoth = viewDir.dot(h);
+//      nDotv = viewDir.dot(h);
+//      nDoth = n.dot(h);
+//
+//      Vec3 r = 2 * nDotl * n - lightDir;
+//      float vDotr = viewDir.dot(r);
+//
+//      brdf =
+//        cdiff / M_PI +
+//        cspec * powf(vDotr, shininess_factor);
+//
+//      // With shadows below
+//      shadow = sphereTraceShadow(Ray(p,lightDir), shape);
+//      outRadiance += (1-shadow) * brdf * light->getColor() * light->getIntensity() * nDotl
+//        / (float) (4 * dist2) // with square falloff
+//        ;
+//    }
+//  }
+//  if (scene_->hasAmbientLight()) {
+//    Light* ambientLight = scene_->getAmbientLight();
+//    outRadiance += ambientLight->getColor() * ambientLight->getIntensity() * cdiff;
+//  }
+//  return outRadiance;
+//}
 
 
 bool SphereTracer::sphereTraceShadow(const Ray& r, const ImplicitShape *shapeToShadow) {
@@ -582,11 +639,11 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
         return HitRecord(exit_root_t); // miss
       }
 
-      if (ancestor_depth == 0) {
-        std::cout <<
-          "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
-          std::endl;
-      }
+      //if (ancestor_depth == 0) {
+      //  std::cout <<
+      //    "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
+      //    std::endl;
+      //}
 
       std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth]; // [anch_depth-1] // TODO check index correctness
       if (DEBUG_octTrace)
@@ -780,14 +837,14 @@ OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *p_info, const int 
   float t_max = fminf(c_info->tx1, fminf(c_info->ty1, c_info->tz1));
 
   if (!(t_min <= t_max)) {
-    std::cout <<
-      "\nWARNING in project_cube : not t_min <= t_max" <<
-      //"\nERROR in project_cube : not t_min <= t_max" <<
-      //"\nt_min = " << t_min <<
-      //"\nt_max = " << t_max <<
-      //"\nray_info = " << *ri << 
-      //"\nc_info = " << *c_info <<
-      std::endl;
+    //std::cout <<
+    //  "\nWARNING in project_cube : not t_min <= t_max" <<
+    //  //"\nERROR in project_cube : not t_min <= t_max" <<
+    //  //"\nt_min = " << t_min <<
+    //  //"\nt_max = " << t_max <<
+    //  //"\nray_info = " << *ri << 
+    //  //"\nc_info = " << *c_info <<
+    //  std::endl;
     //exit(1);
   }
 
