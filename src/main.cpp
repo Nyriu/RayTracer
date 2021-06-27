@@ -60,20 +60,6 @@ int main() {
 
   // Scene
   auto scene =
-    //makeScene_1();
-    //makeScene_Spheres();
-    //makeScene_Toruses();
-    //makeScene_CSG_1();
-    //makeScene_CSG_2();
-    //makeScene_CSG_3();
-    //makeScene_ShadowDebug();
-    //makeScene_TransformDebug();
-    //makeScene_CameraTransformDebug();
-    //makeScene_HierarchyTransformDebug();
-    //makeScene_HierarchyCSGTransformDebug();
-    //makeScene_Smooth();
-    //makeScene_Mix();
-    //makeScene_Operations();
     //makeScene_Octree();
     makeScene_Octree_1();
     //makeScene_Octree_2();
@@ -84,7 +70,7 @@ int main() {
   std::cout << "\nRendering without octree (default)" << std::endl;
   default_rendering(window, scene);
   using namespace std::this_thread; // sleep_for, sleep_until
-  sleep_for(std::chrono::nanoseconds(100));
+  sleep_for(std::chrono::seconds(1));
 
   std::cout << "\n\nRendering with octree" << std::endl;
   octree_rendering(window, scene);
