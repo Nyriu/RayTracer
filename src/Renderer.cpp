@@ -9,7 +9,6 @@
 #define DEBUG_FRAME_INFO
 
 using namespace utilities;
-
 // END // DEBUG STUFF
 
 Renderer Renderer::setScene(Scene* scene) {
@@ -80,10 +79,6 @@ void Renderer::generateFrame() {
       //target_i = 190; target_j = 229;
       //target_i = 187; target_j = 0;
       //target_i = 280; target_j = 120;
-      //target_i = 158; target_j = 239-50;
-      //target_i = 170; target_j = 182;
-      //target_i = 168; target_j = 239-61;
-      //target_i = 138; target_j = 119; // TODO
       if (debug_enabled || (i == target_i && j == target_j))
         std::cout <<
           "\n--------------------------------------------" << std::endl;
@@ -116,8 +111,6 @@ void Renderer::mainLoop() {
   if (!no_window_) {
     while (win_->keepRendering()) {
       if (current_tick_ < max_num_ticks_) {
-        //qui contare tempo per frame
-        //https://stackoverflow.com/questions/22387586/measuring-execution-time-of-a-function-in-c
         scene_->update();
 #ifdef DEBUG_FRAME_INFO
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -130,7 +123,6 @@ void Renderer::mainLoop() {
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 #endif
         current_tick_++;
       }
@@ -138,7 +130,6 @@ void Renderer::mainLoop() {
     }
   } else {
     std::string prefix = "./wip_imgs/time_";
-    //std::string prefix = "./wip_imgs/seq_";
     std::string suffix = ".ppm";
     while (current_tick_ < max_num_ticks_) {
       scene_->update();
@@ -153,9 +144,10 @@ void Renderer::mainLoop() {
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
         std::cout << "Frame Gen Time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 #endif
-      img_.writePPM(prefix + std::to_string(std::time(0)) + suffix);
+      std::string s = prefix + std::to_string(std::time(0)) + suffix;
+      std::cout << "output : " << s << std::endl;
+      img_.writePPM(s);
       current_tick_++;
     }
   }

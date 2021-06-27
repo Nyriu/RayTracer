@@ -16,7 +16,7 @@ class Node;
 class Octree {
   private:
     int root_dim_ = 1<<3;
-    int height_ = 2; // TODO atm it's more max_dept_ than an actual height_ // root = 0 child=1 ... leaf=height
+    int height_ = 2; // atm it's more max_dept_ than an actual height_ // root = 0 child=1 ... leaf=height
     Node *root_;
 
   public:
@@ -42,8 +42,8 @@ class Node {
   private:
     int depth_ = 0;
     unsigned char child_mask_ = 0x00;
-    Node *first_child_ = nullptr;  // TODO really needed?
-    Node *next_sibling_ = nullptr; // TODO really needed?
+    Node *first_child_ = nullptr;
+    Node *next_sibling_ = nullptr;
     ImplicitShape *shape_ = nullptr;
   public:
     Node() {};

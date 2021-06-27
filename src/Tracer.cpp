@@ -373,7 +373,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
     }
 
     if (parent_info->doesChildExist(child_idx) && t.min <= t.max)  {
-      if (false) { std::cout << "ERROR : LOD not implemented!" << std::endl;  exit(1); } //return t.min; // voxel is small enough // TODO use another formula // LOD related stuff // here disabled
+      if (false) { std::cout << "ERROR : LOD not implemented!" << std::endl;  exit(1); } //return t.min; // voxel is small enough // use another formula // LOD related stuff // here disabled
       // INTERSECT
       if (DEBUG_octTrace) std::cout << "\n--- INTERSECT ---" << std::endl;
 
@@ -384,7 +384,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
       }
 
 
-      NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx); // TODO work to remove child_info
+      NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx);
       HitRecord ht;
       if (!child_info_tmp->isEmpty() && parent_info->depth == oct_scene_->getHeight()-1) {
         float t_min = -1;
@@ -413,7 +413,6 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
             "\ntv = " << tv <<
             std::endl;
         }
-        //return child_idx; // for debugging // TODO REMOVEME
 
       } else if (DEBUG_octTrace) {
         std::cout << "\nNon leaf empty node" <<
@@ -431,7 +430,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
             std::cout <<
               "HitRecord shouldn't be a MISS!!" <<
               std::endl;
-            exit(1); // TODO if here... FIX IT
+            exit(1);
           }
           return ht; // because sphere trace has not moved tmin past the current leaf
         }
@@ -477,7 +476,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
         parent_info = get_child_info(parent_info, child_idx);
         child_idx = select_child(parent_info, ray_info, tv.min);
 
-        //return child_idx; // just for debugging // TODO REMOVEME
+        //return child_idx; // just for debugging
 
         if (child_idx < 0 || child_idx > 7) {
           std::cout << "select_child miss inside while!" << std::endl;
@@ -517,7 +516,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
     Pos old_pos(pos);
     // step along ray // assumed always possible then check
 
-    NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx); // TODO work to remove child_info
+    NodeInfo *child_info_tmp = get_child_info(parent_info, child_idx);
     int step_mask = 0;
     if (tc.max == child_info_tmp->tx1) step_mask^=4;
     if (tc.max == child_info_tmp->ty1) step_mask^=2;
@@ -560,7 +559,6 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
     bool pop_needed =
       parent_idx != old_parent_idx;
     // if at least the parent changes, we need a pop
-    // TODO is this completely safe? What if parent's parent chages but not direct parent? it's possible?
 
     if (DEBUG_octTrace) {
       std::cout <<
@@ -639,13 +637,7 @@ OctreeTracer::HitRecord OctreeTracer::octTrace(const Ray *r) {
         return HitRecord(exit_root_t); // miss
       }
 
-      //if (ancestor_depth == 0) {
-      //  std::cout <<
-      //    "\nExit by ancestor_depth > oct_scene_->getHeight()" <<
-      //    std::endl;
-      //}
-
-      std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth]; // [anch_depth-1] // TODO check index correctness
+      std::pair<NodeInfo*,float> tmp_pair = stack[ancestor_depth];
       if (DEBUG_octTrace)
         std::cout <<
           "tmp_pair = [" << tmp_pair.first << ", " << tmp_pair.second << "]" <<
@@ -693,14 +685,12 @@ OctreeTracer::HitRecord OctreeTracer::sphereTrace(const Ray *r, const ImplicitSh
       std::endl;
   }
 
-  //float t = tv.min;
-  float t = 0;
+  float t = tv.min;
 
   float minDistance = infinity;
   float d = infinity;
   Point3 p(0);
   while (t <= tv.max)
-  //while (t < tv.max)
   {
     p = r->at(t);
     d = shape->getDistance(p);
@@ -721,8 +711,6 @@ OctreeTracer::HitRecord OctreeTracer::sphereTrace(const Ray *r, const ImplicitSh
           "\nt = " << t <<
           "\nhit_threshold_ * t = " << hit_threshold_ * t <<
           "\n--- sphereTrace END ---";
-      //exit(1);
-      //return t;
       return HitRecord(
           r,
           shape,
@@ -738,18 +726,11 @@ OctreeTracer::HitRecord OctreeTracer::sphereTrace(const Ray *r, const ImplicitSh
     std::cout <<
       "\nMISS" <<
       "\nt = " << t <<
-      //"\nHit max distance " << tv.max <<
       "\n--- sphereTrace END ---";
-  //return tv.max;
-  //return t; // better because t > t.max and this will induce advance or pop
   return HitRecord(t); // this encodes a miss
 }
 
 Color OctreeTracer::shade(const HitRecord *hit_record) {
-  /// tmp stupid shading
-  //Color outRadiance = hit_record->alb_;
-  //return outRadiance;
-
   Point3 p = hit_record->p_;
   Vec3 viewDir = hit_record->r_->direction();
 
@@ -805,26 +786,7 @@ Color OctreeTracer::shade(const HitRecord *hit_record) {
 }
 
 
-//inline?
 OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *ni, const RayInfo *ri) {
-  // TODO // coordinate mirroring
-  // TODO // flippare z per compensare left-handedness del cubo?
-  // vado avanti senza flip e poi sistemo se e' tutto specchiato rispetto il piano xy
-  // per ora funziona sse la camera e' nel positivo e guarda nel negativo
-
-  // TODO clamp to zero?
-
-  //std::cout <<
-  //  "\n------------------------------------------------" <<
-  //  "\ntx0 = " << tx0 <<
-  //  "\nty0 = " << ty0 <<
-  //  "\ntz0 = " << tz0 <<
-  //  "\n" <<
-  //  "\ntx1 = " << tx1 <<
-  //  "\nty1 = " << ty1 <<
-  //  "\ntz1 = " << tz1 <<
-  //  std::endl;
-
   float t_min = fmaxf(ni->tx0, fmaxf(ni->ty0, ni->tz0));
   float t_max = fminf(ni->tx1, fminf(ni->ty1, ni->tz1));
 
@@ -835,19 +797,6 @@ OctreeTracer::Span OctreeTracer::project_cube(const NodeInfo *p_info, const int 
   const NodeInfo *c_info = get_child_info(p_info, child_idx);
   float t_min = fmaxf(c_info->tx0, fmaxf(c_info->ty0, c_info->tz0));
   float t_max = fminf(c_info->tx1, fminf(c_info->ty1, c_info->tz1));
-
-  if (!(t_min <= t_max)) {
-    //std::cout <<
-    //  "\nWARNING in project_cube : not t_min <= t_max" <<
-    //  //"\nERROR in project_cube : not t_min <= t_max" <<
-    //  //"\nt_min = " << t_min <<
-    //  //"\nt_max = " << t_max <<
-    //  //"\nray_info = " << *ri << 
-    //  //"\nc_info = " << *c_info <<
-    //  std::endl;
-    //exit(1);
-  }
-
 
   return Span(t_min, t_max);
 }
@@ -901,9 +850,6 @@ int OctreeTracer::select_child(const NodeInfo *p_info, const RayInfo *ri, float 
   if (DEBUG_octTrace) {
     std::cout <<
       "\nSelect Child = " <<
-      //"\nx_ok = " << x_ok <<
-      //"\ny_ok = " << y_ok <<
-      //"\nz_ok = " << z_ok <<
       "\nt_min = " << t_min <<
       "\nbox_center = " << Point3(x_center, y_center, z_center) <<
       "\nt_box_center = " << Point3(tx_center, ty_center, tz_center) <<
@@ -954,34 +900,6 @@ OctreeTracer::NodeInfo* OctreeTracer::get_child_info(const NodeInfo *p_info, int
     }
   }
 
-  /// // DEBUG stuff
-  /// Node *dbg_ptr = nullptr;
-  /// for (int idx=0; idx<8; idx++) {
-  ///   if (!(child_mask & 1<<(7-idx))) {
-  ///     std::cout <<
-  ///       "\nidx = " << idx <<
-  ///       "\tempty";
-  ///     continue;
-  ///   }
-  ///   // if it exists
-  ///   if (dbg_ptr == nullptr)
-  ///     dbg_ptr = p_info->getFirstChild();
-  ///   else
-  ///     dbg_ptr = dbg_ptr->getNextSibling();
-  ///   std::cout <<
-  ///     "\nidx = " << idx <<
-  ///     "\tptr = " << dbg_ptr;
-  /// }
-  /// std::cout <<
-  ///   "\nchild_idx = " << child_idx <<
-  ///   "\tnode_ptr = " << node_ptr <<
-  ///   std::endl;
-  /// // END // DEBUG stuff
-
-
-  //float offset_x0 =  (child_idx & 4) ?  half_psize : 0;
-  //float offset_y0 =  (child_idx & 2) ?  half_psize : 0;
-  //float offset_z0 = !(child_idx & 1) ? -half_psize : 0;
 
   float x_center = (p_info->x0 + p_info->x1)/2;
   float y_center = (p_info->y0 + p_info->y1)/2;
@@ -990,17 +908,6 @@ OctreeTracer::NodeInfo* OctreeTracer::get_child_info(const NodeInfo *p_info, int
   float offset_x0 =  (child_idx & 4) ?  half_psize : -half_psize;
   float offset_y0 =  (child_idx & 2) ?  half_psize : -half_psize;
   float offset_z0 =  (child_idx & 1) ?  half_psize : -half_psize;
-      // for reference
-     //   -oct_scene_->getRootDimension()/2.f,
-     //   -oct_scene_->getRootDimension()/2.f,
-     //    oct_scene_->getRootDimension()/2.f
-     //   ), // p0 // (-d/2,-d/2, d/2) bottom corner
-     // Point3(
-     //    oct_scene_->getRootDimension()/2.f,
-     //    oct_scene_->getRootDimension()/2.f,
-     //   -oct_scene_->getRootDimension()/2.f
-     //   ), // p1 // ( d/2, d/2,-d/2) top corner
-      // END // for reference
 
   return new OctreeTracer::NodeInfo (
       // here bottom left
@@ -1022,17 +929,11 @@ OctreeTracer::NodeInfo* OctreeTracer::get_child_info(const NodeInfo *p_info, int
 
 
 int OctreeTracer::gen_step_mask(const NodeInfo *ni, const RayInfo *ri, float t_max) {
-  // TODO // coordinate mirroring needed here??
-
-  //float tx1 = ni->x1*ri->tx_coef + ri->tx_bias; tx1 = (tx1 < 0)? -infinity : tx1;
-  //float ty1 = ni->y1*ri->ty_coef + ri->ty_bias; ty1 = (ty1 < 0)? -infinity : ty1;
-  //float tz1 = ni->z1*ri->tz_coef + ri->tz_bias; tz1 = (tz1 < 0)? -infinity : tz1;
   float tx1 = ni->tx1;
   float ty1 = ni->ty1;
   float tz1 = ni->tz1;
 
   int step_mask=0;
-  //if (tx1 <= t_max) // safer?
   if (tx1 == t_max) step_mask^=4;
   if (ty1 == t_max) step_mask^=2;
   if (tz1 == t_max) step_mask^=1;

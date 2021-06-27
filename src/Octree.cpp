@@ -6,9 +6,6 @@
 
 
 void Octree::fromScene(Scene *scene) {
-
-  // TODO only LEAF can be NonEmpty
-
   root_ = new Node;
   root_->depth_ = 0;
 
@@ -65,7 +62,7 @@ void Octree::fromScene(Scene *scene) {
           //if (d<=0 || d<current_dim/(2.f*1.414213f)) // external sphere
         {
           // child must contain something
-          node->child_mask_ = node->child_mask_ | 1<<(7-i); // bitmask is left-to-right eg. 001 haas only child num 2
+          node->child_mask_ = node->child_mask_ | 1<<(7-i); // bitmask is left-to-right eg. 001 has only child num 2
           Node *child = new Node;
           if (node->first_child_ == nullptr) {
             node->first_child_ = child;

@@ -134,7 +134,7 @@ class OctreeTracer : public Tracer {
 
     struct RayInfo {
       private:
-        float epsilon = 10e-7; // TODO adjust
+        float epsilon = 10e-7;
       public:
         Point3 origin;
         Vec3 direction;
@@ -149,8 +149,6 @@ class OctreeTracer : public Tracer {
           if (std::abs(d.x()) < epsilon) d.set_x(epsilon);
           if (std::abs(d.y()) < epsilon) d.set_y(epsilon);
           if (std::abs(d.z()) < epsilon) d.set_z(epsilon);
-
-          // TODO mirroring + octant_mask here?
 
           tx_coef = 1.f / d.x();
           ty_coef = 1.f / d.y();
@@ -221,10 +219,6 @@ class OctreeTracer : public Tracer {
             z1 = default_p1.z();
           }
 
-
-          //x0 = default_p0.x(); y0 = default_p0.y(); z0 = default_p0.z();
-          //x1 = default_p1.x(); y1 = default_p1.y(); z1 = default_p1.z();
-
           tx0 = x0*ri->tx_coef + ri->tx_bias;
           ty0 = y0*ri->ty_coef + ri->ty_bias;
           tz0 = z0*ri->tz_coef + ri->tz_bias;
@@ -234,30 +228,13 @@ class OctreeTracer : public Tracer {
           tz1 = z1*ri->tz_coef + ri->tz_bias;
 
           // If direction almost parallel, do not use
-          if (tx0 > 100) tx0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
-          if (ty0 > 100) ty0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
-          if (tz0 > 100) tz0 = -1.2345; // 0.0000012345;// TODO here a fixed tmax?
+          if (tx0 > 100) tx0 = -1.2345;
+          if (ty0 > 100) ty0 = -1.2345;
+          if (tz0 > 100) tz0 = -1.2345;
 
-          if (tx1 < 0) tx1 = utilities::infinity; // TODO here a fixed tmax?
-          if (ty1 < 0) ty1 = utilities::infinity; // TODO here a fixed tmax?
-          if (tz1 < 0) tz1 = utilities::infinity; // TODO here a fixed tmax?
-
-
-          //if (tx0 > tx1) {
-          //  float tmp_x = x0; float tmp_t = tx0;
-          //  x0 = x1; tx0 = tx1;
-          //  x1 = tmp_x; tx1 = tmp_t;
-          //}
-          //if (ty0 > ty1) {
-          //  float tmp_y = y0; float tmp_t = ty0;
-          //  y0 = y1; ty0 = ty1;
-          //  y1 = tmp_y; ty1 = tmp_t;
-          //}
-          //if (tz0 > tz1) {
-          //  float tmp_z = z0; float tmp_t = tz0;
-          //  z0 = z1; tz0 = tz1;
-          //  z1 = tmp_z; tz1 = tmp_t;
-          //}
+          if (tx1 < 0) tx1 = utilities::infinity;
+          if (ty1 < 0) ty1 = utilities::infinity;
+          if (tz1 < 0) tz1 = utilities::infinity;
 
           if (!(tx0 <= tx1 && ty0 <= ty1 && tz0 <= tz1)) {
             std::cout << "ERROR on NodeInfo" <<
